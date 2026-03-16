@@ -1,0 +1,233 @@
+# =============================================================================
+# sandcastle-sdk .gitignore
+# =============================================================================
+
+# =============================================================================
+# CRITICAL — SECRETS & CREDENTIALS
+# Never commit these under any circumstances
+# =============================================================================
+.env
+.env.*
+# .env.example is safe to commit — it contains no real values
+!.env.example
+.env.local
+.env.production
+.env.staging
+
+# Sandcastle-specific secrets
+sandcastle.key
+*.pem
+*.p12
+*.pfx
+*.key
+vault-token
+vault.json
+.vault-token
+
+# API keys and tokens that may be created during development
+api_keys.json
+secrets.json
+credentials.json
+service_account.json
+
+# =============================================================================
+# PYTHON
+# =============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+htmlcov/
+pytest-results.xml
+
+# Virtual environments — never commit these
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.python-version
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# ruff cache
+.ruff_cache/
+
+# pyright
+pyrightconfig.json        # local overrides only — project config belongs in pyproject.toml
+
+# =============================================================================
+# SANDCASTLE CLOUD — LOCAL DEV ARTEFACTS
+# These are generated during local cloud development and must never be committed
+# =============================================================================
+
+# Local database files
+*.db
+*.sqlite
+*.sqlite3
+local.db
+dev.db
+
+# HashiCorp Vault local dev data
+vault-data/
+vault.log
+
+# Local cloud config overrides
+cloud/.env
+cloud/config.local.yaml
+cloud/config.local.json
+
+# Docker local overrides
+docker-compose.override.yml
+docker-compose.local.yml
+
+# Alembic generated migration artifacts (keep migrations themselves)
+alembic.ini.local
+
+# =============================================================================
+# EDITOR & IDE
+# =============================================================================
+
+# VS Code — commit .vscode/extensions.json and .vscode/settings.json
+# only if they contain project-wide settings (not personal overrides)
+.vscode/launch.json
+.vscode/*.code-workspace
+.vscode/settings.json      # personal settings — use .vscode/settings.json.example instead
+
+# JetBrains (PyCharm, etc.)
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Vim / Neovim
+*.swp
+*.swo
+*~
+.netrwhist
+
+# Emacs
+\#*\#
+.\#*
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# =============================================================================
+# OS GENERATED
+# =============================================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# =============================================================================
+# LOGS & RUNTIME
+# =============================================================================
+*.log
+logs/
+*.pid
+*.seed
+*.pid.lock
+
+# =============================================================================
+# NODE / TYPESCRIPT (for the n8n adapter in adapters/n8n/)
+# =============================================================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+adapters/n8n/dist/
+adapters/n8n/.turbo/
+adapters/n8n/coverage/
+adapters/n8n/.nyc_output/
+
+# =============================================================================
+# DOCUMENTATION BUILD ARTEFACTS
+# =============================================================================
+docs/_build/
+docs/site/
+site/
+.sphinx_cache/
+
+# =============================================================================
+# BENCHMARKS & PROFILING
+# =============================================================================
+*.prof
+benchmarks/results/
+profiling/
+
+# =============================================================================
+# TESTING ARTEFACTS
+# =============================================================================
+# Real credentials used in local integration tests — NEVER commit
+tests/integration/.env
+tests/fixtures/real_credentials/
+tests/fixtures/*.key
+
+# =============================================================================
+# JUPYTER (if used for prototyping)
+# =============================================================================
+.ipynb_checkpoints/
+*.ipynb             # notebooks are for exploration, not production code
+
+# =============================================================================
+# MISC
+# =============================================================================
+*.bak
+*.tmp
+*.temp
+.scratch/
+scratch/
+TODO.local.md      # personal notes — use GitHub Issues instead
