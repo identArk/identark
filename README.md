@@ -90,11 +90,61 @@ pip install sandcastle-sdk[openai]
 # With Anthropic support
 pip install sandcastle-sdk[anthropic]
 
-# Both providers
+# With Mistral AI support (EU provider)
+pip install sandcastle-sdk[mistral]
+
+# All cloud providers
 pip install sandcastle-sdk[all]
 ```
 
 **Requirements:** Python 3.10+
+
+---
+
+## Data Sovereignty
+
+Sandcastle is designed from the ground up to work with **any LLM provider**, including those that
+keep your data inside the UK or EU. The AgentGateway Protocol decouples your agent logic from the
+inference provider — switching providers requires changing **one line**.
+
+### Run fully local with Ollama (zero data egress)
+
+```python
+from openai import AsyncOpenAI
+from sandcastle import DirectGateway
+
+gateway = DirectGateway(
+    llm_client=AsyncOpenAI(
+        base_url="http://localhost:11434/v1",
+        api_key="ollama",
+    ),
+    model="llama3.2",
+    provider="local",   # forces $0 cost tracking; inference stays on your machine
+)
+```
+
+Install Ollama: `brew install ollama && ollama pull llama3.2 && ollama serve`
+
+### Use Mistral AI (EU data residency)
+
+```python
+from openai import AsyncOpenAI
+from sandcastle import DirectGateway
+
+gateway = DirectGateway(
+    llm_client=AsyncOpenAI(
+        base_url="https://api.mistral.ai/v1",
+        api_key="your-mistral-api-key",
+    ),
+    model="mistral-small-latest",   # auto-detected as "mistral" provider
+)
+```
+
+Mistral AI is a French company. All inference runs in EU data centres, subject to EU data
+protection law (GDPR). Use this when UK/EU data governance requirements prohibit sending
+inference traffic to US-based cloud providers.
+
+See `examples/` for complete runnable scripts.
 
 ---
 
@@ -151,11 +201,13 @@ async def test_my_agent():
 
 ## Supported providers
 
-| Provider | DirectGateway | ControlPlaneGateway |
-|---|---|---|
-| OpenAI (gpt-4o, gpt-4o-mini, …) | ✓ | ✓ (via control plane) |
-| Anthropic (claude-3-5-sonnet, …) | ✓ | ✓ (via control plane) |
-| OpenAI-compatible (Ollama, Groq, …) | ✓ | Roadmap |
+| Provider | Data residency | DirectGateway | ControlPlaneGateway |
+|---|---|---|---|
+| OpenAI (gpt-4o, gpt-4o-mini, …) | US | ✓ | ✓ (via control plane) |
+| Anthropic (claude-3-5-sonnet, …) | US | ✓ | ✓ (via control plane) |
+| Mistral AI (mistral-large, mistral-small, …) | EU 🇪🇺 | ✓ | Roadmap |
+| Ollama (llama3.2, mistral, codellama, …) | Local 🏠 | ✓ | N/A |
+| Any OpenAI-compatible endpoint | Varies | ✓ | Roadmap |
 
 ---
 

@@ -225,3 +225,84 @@ class TestDirectGatewayInit:
             gw.reset()
             assert gw.history == []
             assert gw._total_cost == 0.0
+
+
+# ── DirectGateway provider detection ─────────────────────────────────────────
+
+class TestDirectGatewayProviderDetection:
+    """Tests for automatic and explicit provider detection."""
+
+    def test_explicit_provider_overrides_all(self):
+        from sandcastle import DirectGateway
+
+        gw = DirectGateway(llm_client=object(), model="gpt-4o", provider="local")
+        assert gw.provider == "local"
+
+    def test_explicit_mistral_provider(self):
+        from sandcastle import DirectGateway
+
+        gw = DirectGateway(llm_client=object(), model="mistral-small-latest", provider="mistral")
+        assert gw.provider == "mistral"
+
+    def test_explicit_openai_provider(self):
+        from sandcastle import DirectGateway
+
+        gw = DirectGateway(llm_client=object(), model="gpt-4o", provider="openai")
+        assert gw.provider == "openai"
+
+    def test_autodetect_anthropic_from_class_name(self):
+        from sandcastle import DirectGateway
+
+        class FakeAsyncAnthropic:
+            pass
+
+        gw = DirectGateway(llm_client=FakeAsyncAnthropic(), model="claude-3-5-sonnet-20241022")
+        assert gw.provider == "anthropic"
+
+    def test_autodetect_local_from_localhost_base_url(self):
+        from sandcastle import DirectGateway
+
+        class FakeLocalClient:
+            base_url = "http://localhost:11434/v1"
+
+        gw = DirectGateway(llm_client=FakeLocalClient(), model="llama3.2")
+        assert gw.provider == "local"
+
+    def test_autodetect_local_from_127_base_url(self):
+        from sandcastle import DirectGateway
+
+        class FakeLocalClient:
+            base_url = "http://127.0.0.1:11434/v1"
+
+        gw = DirectGateway(llm_client=FakeLocalClient(), model="llama3.2")
+        assert gw.provider == "local"
+
+    def test_autodetect_mistral_from_base_url(self):
+        from sandcastle import DirectGateway
+
+        class FakeMistralClient:
+            base_url = "https://api.mistral.ai/v1"
+
+        gw = DirectGateway(llm_client=FakeMistralClient(), model="mistral-large-latest")
+        assert gw.provider == "mistral"
+
+    def test_autodetect_openai_fallback(self):
+        from sandcastle import DirectGateway
+
+        class FakeOpenAIClient:
+            base_url = "https://api.openai.com/v1"
+
+        gw = DirectGateway(llm_client=FakeOpenAIClient(), model="gpt-4o")
+        assert gw.provider == "openai"
+
+    def test_autodetect_openai_no_base_url(self):
+        from sandcastle import DirectGateway
+
+        gw = DirectGateway(llm_client=object(), model="gpt-4o")
+        assert gw.provider == "openai"
+
+    def test_provider_property_readonly(self):
+        from sandcastle import DirectGateway
+
+        gw = DirectGateway(llm_client=object(), model="gpt-4o", provider="local")
+        assert isinstance(gw.provider, str)
