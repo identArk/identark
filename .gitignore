@@ -231,3 +231,4 @@ tests/fixtures/*.key
 .scratch/
 scratch/
 TODO.local.md      # personal notes — use GitHub Issues instead
+.claude/
