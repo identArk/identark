@@ -13,7 +13,7 @@ For anything beyond a small bug fix, **please open an issue first**. Describe wh
 ## Development setup
 
 ```bash
-git clone https://github.com/Goldokpa/Sandcastle.git
+git clone https://github.com/credseal/sdk.git
 cd credseal-sdk
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate

@@ -24,4 +24,4 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
-[1.0.0]: https://github.com/Goldokpa/Sandcastle/releases/tag/v1.0.0
+[1.0.0]: https://github.com/credseal/sdk/releases/tag/v1.0.0

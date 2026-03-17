@@ -2,7 +2,7 @@
 
 **The AgentGateway Protocol — secure, scalable AI agent execution infrastructure.**
 
-[![CI](https://github.com/Goldokpa/Sandcastle/actions/workflows/ci.yml/badge.svg)](https://github.com/Goldokpa/Sandcastle/actions)
+[![CI](https://github.com/credseal/sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/credseal/sdk/actions)
 [![PyPI](https://img.shields.io/pypi/v/credseal-sdk)](https://pypi.org/project/credseal-sdk/)
 [![Python](https://img.shields.io/pypi/pyversions/credseal-sdk)](https://pypi.org/project/credseal-sdk/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -266,7 +266,7 @@ Full exception hierarchy: `CredSealError > GatewayError > ControlPlaneError > Au
 Contributions are welcome. Please open an issue before submitting significant changes.
 
 ```bash
-git clone https://github.com/Goldokpa/Sandcastle.git
+git clone https://github.com/credseal/sdk.git
 cd credseal-sdk
 pip install -e ".[dev]"
 pre-commit install
@@ -290,8 +290,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for full guidelines.
 
 ## License
 
-MIT © [Gold Okpa](https://github.com/Goldokpa/Sandcastle)
+MIT © [Gold Okpa](https://github.com/credseal/sdk)
 
 ---
 
-*Built on the control plane pattern described in [How We Built Secure, Scalable Agent Sandbox Infrastructure](https://github.com/Goldokpa/Sandcastle).*
+*Built on the control plane pattern described in [How We Built Secure, Scalable Agent Sandbox Infrastructure](https://github.com/credseal/sdk).*

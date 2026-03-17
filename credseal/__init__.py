@@ -21,8 +21,8 @@ Quick start::
     from credseal import ControlPlaneGateway
     gateway = ControlPlaneGateway()  # auto-detects env vars in sandbox
 
-Full documentation: https://github.com/Goldokpa/Sandcastle#readme
-GitHub: https://github.com/Goldokpa/Sandcastle
+Full documentation: https://github.com/credseal/sdk#readme
+GitHub: https://github.com/credseal/sdk
 """
 
 from credseal.gateway import AgentGateway

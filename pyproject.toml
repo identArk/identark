@@ -56,11 +56,11 @@ dev = [
 ]
 
 [project.urls]
-Homepage      = "https://github.com/Goldokpa/Sandcastle"
-Documentation = "https://github.com/Goldokpa/Sandcastle#readme"
-Repository    = "https://github.com/Goldokpa/Sandcastle"
-Issues        = "https://github.com/Goldokpa/Sandcastle/issues"
-Changelog     = "https://github.com/Goldokpa/Sandcastle/blob/main/CHANGELOG.md"
+Homepage      = "https://github.com/credseal/sdk"
+Documentation = "https://github.com/credseal/sdk#readme"
+Repository    = "https://github.com/credseal/sdk"
+Issues        = "https://github.com/credseal/sdk/issues"
+Changelog     = "https://github.com/credseal/sdk/blob/main/CHANGELOG.md"
 
 [tool.hatch.build.targets.wheel]
 packages = ["credseal"]
