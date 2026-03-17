@@ -1,13 +1,19 @@
-"""Unit tests for CredSealChatModel (LangChain integration)."""
+"""Unit tests for LangChain and LlamaIndex integrations."""
 
 
 import pytest
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
+from llama_index.core.llms import ChatMessage, ChatResponse, MessageRole
 
 from credseal.integrations.langchain import (
     CredSealChatModel,
     credseal_to_ai_message,
     lc_to_credseal,
+)
+from credseal.integrations.llamaindex import (
+    CredSealLLM,
+    credseal_to_chat_response,
+    li_to_credseal,
 )
 from credseal.models import Function, LLMResponse, Message, Role, TokenUsage, ToolCall
 from credseal.testing import MockGateway
@@ -246,3 +252,187 @@ class TestCredSealChatModel:
 
         assert isinstance(result, AIMessage)
         assert result.content == "Sync works!"
+
+
+# ── LlamaIndex: li_to_credseal ────────────────────────────────────────────────
+
+
+class TestLiToCredseal:
+    def test_user_message(self) -> None:
+        msgs = li_to_credseal([ChatMessage(role=MessageRole.USER, content="Hi")])
+        assert msgs[0].role == Role.USER
+        assert msgs[0].content == "Hi"
+
+    def test_assistant_message(self) -> None:
+        msgs = li_to_credseal([ChatMessage(role=MessageRole.ASSISTANT, content="Hello")])
+        assert msgs[0].role == Role.ASSISTANT
+
+    def test_system_message(self) -> None:
+        msgs = li_to_credseal([ChatMessage(role=MessageRole.SYSTEM, content="Be helpful.")])
+        assert msgs[0].role == Role.SYSTEM
+
+    def test_tool_message(self) -> None:
+        msg = ChatMessage(
+            role=MessageRole.TOOL,
+            content='{"result": 42}',
+            additional_kwargs={"tool_call_id": "call_abc"},
+        )
+        msgs = li_to_credseal([msg])
+        assert msgs[0].role == Role.TOOL
+        assert msgs[0].tool_call_id == "call_abc"
+
+    def test_chatbot_maps_to_assistant(self) -> None:
+        msgs = li_to_credseal([ChatMessage(role=MessageRole.CHATBOT, content="Hey")])
+        assert msgs[0].role == Role.ASSISTANT
+
+    def test_developer_maps_to_system(self) -> None:
+        msgs = li_to_credseal([ChatMessage(role=MessageRole.DEVELOPER, content="Rules")])
+        assert msgs[0].role == Role.SYSTEM
+
+    def test_mixed_conversation(self) -> None:
+        li_msgs = [
+            ChatMessage(role=MessageRole.SYSTEM, content="Be concise."),
+            ChatMessage(role=MessageRole.USER, content="What is 2+2?"),
+            ChatMessage(role=MessageRole.ASSISTANT, content="4"),
+        ]
+        cs = li_to_credseal(li_msgs)
+        assert [m.role for m in cs] == [Role.SYSTEM, Role.USER, Role.ASSISTANT]
+
+
+# ── LlamaIndex: credseal_to_chat_response ─────────────────────────────────────
+
+
+class TestCredSealToChatResponse:
+    def test_basic_text_response(self) -> None:
+        resp = credseal_to_chat_response(_make_response("Hello!"))
+        assert isinstance(resp, ChatResponse)
+        assert resp.message.role == MessageRole.ASSISTANT
+        assert resp.message.content == "Hello!"
+
+    def test_raw_metadata_populated(self) -> None:
+        resp = credseal_to_chat_response(_make_response(cost=0.007))
+        assert resp.raw["cost_usd"] == pytest.approx(0.007)
+        assert resp.raw["model"] == "mock-gpt-4o"
+        assert resp.raw["input_tokens"] == 10
+        assert resp.raw["output_tokens"] == 5
+
+    def test_tool_calls_in_additional_kwargs(self) -> None:
+        resp = credseal_to_chat_response(_make_tool_response())
+        tcs = resp.message.additional_kwargs["tool_calls"]
+        assert len(tcs) == 1
+        assert tcs[0]["function"]["name"] == "get_weather"
+        assert tcs[0]["id"] == "call_abc123"
+
+    def test_no_tool_calls_when_absent(self) -> None:
+        resp = credseal_to_chat_response(_make_response())
+        assert "tool_calls" not in resp.message.additional_kwargs
+
+
+# ── CredSealLLM ───────────────────────────────────────────────────────────────
+
+
+class TestCredSealLLM:
+    @pytest.mark.asyncio
+    async def test_achat_returns_chat_response(self) -> None:
+        mock = MockGateway()
+        mock.queue_response(_make_response("Hi there!"))
+        llm = CredSealLLM(gateway=mock)
+
+        result = await llm.achat([ChatMessage(role=MessageRole.USER, content="Hello")])
+
+        assert isinstance(result, ChatResponse)
+        assert result.message.content == "Hi there!"
+
+    @pytest.mark.asyncio
+    async def test_gateway_receives_correct_messages(self) -> None:
+        mock = MockGateway()
+        mock.queue_response(_make_response())
+        llm = CredSealLLM(gateway=mock)
+
+        await llm.achat([
+            ChatMessage(role=MessageRole.SYSTEM, content="Be brief."),
+            ChatMessage(role=MessageRole.USER, content="What is AI?"),
+        ])
+
+        sent = mock.last_request["new_messages"]
+        assert sent[0].role == Role.SYSTEM
+        assert sent[1].role == Role.USER
+        assert sent[1].content == "What is AI?"
+
+    @pytest.mark.asyncio
+    async def test_acomplete_wraps_as_user_message(self) -> None:
+        mock = MockGateway()
+        mock.queue_response(_make_response("Completion result"))
+        llm = CredSealLLM(gateway=mock)
+
+        result = await llm.acomplete("Finish this sentence:")
+
+        assert result.text == "Completion result"
+        sent = mock.last_request["new_messages"]
+        assert sent[0].role == Role.USER
+        assert sent[0].content == "Finish this sentence:"
+
+    @pytest.mark.asyncio
+    async def test_tool_calls_in_response(self) -> None:
+        mock = MockGateway()
+        mock.queue_response(_make_tool_response())
+        llm = CredSealLLM(gateway=mock)
+
+        result = await llm.achat([ChatMessage(role=MessageRole.USER, content="Weather?")])
+
+        tcs = result.message.additional_kwargs["tool_calls"]
+        assert tcs[0]["function"]["name"] == "get_weather"
+
+    @pytest.mark.asyncio
+    async def test_tools_passed_to_gateway(self) -> None:
+        mock = MockGateway()
+        mock.queue_response(_make_tool_response())
+        llm = CredSealLLM(gateway=mock)
+
+        tools = [{"type": "function", "function": {"name": "get_weather"}}]
+        await llm.achat([ChatMessage(role=MessageRole.USER, content="x")], tools=tools)
+
+        assert mock.last_request["tools"] == tools
+
+    def test_metadata_has_model_name(self) -> None:
+        # MockGateway has no .model attr — falls back to "credseal"
+        llm = CredSealLLM(gateway=MockGateway())
+        assert llm.metadata.model_name == "credseal"
+
+    def test_metadata_uses_gateway_model_attr(self) -> None:
+        from credseal import DirectGateway
+        gw = DirectGateway(llm_client=object(), model="gpt-4o")
+        llm = CredSealLLM(gateway=gw)
+        assert llm.metadata.model_name == "gpt-4o"
+
+    def test_metadata_is_chat_model(self) -> None:
+        llm = CredSealLLM(gateway=MockGateway())
+        assert llm.metadata.is_chat_model is True
+
+    def test_sync_chat(self) -> None:
+        mock = MockGateway()
+        mock.queue_response(_make_response("Sync OK"))
+        llm = CredSealLLM(gateway=mock)
+
+        result = llm.chat([ChatMessage(role=MessageRole.USER, content="Hello")])
+
+        assert result.message.content == "Sync OK"
+
+    def test_sync_complete(self) -> None:
+        mock = MockGateway()
+        mock.queue_response(_make_response("Complete OK"))
+        llm = CredSealLLM(gateway=mock)
+
+        result = llm.complete("Hello")
+
+        assert result.text == "Complete OK"
+
+    def test_stream_complete_raises_not_implemented(self) -> None:
+        llm = CredSealLLM(gateway=MockGateway())
+        with pytest.raises(NotImplementedError, match="streaming"):
+            next(llm.stream_complete("x"))
+
+    def test_stream_chat_raises_not_implemented(self) -> None:
+        llm = CredSealLLM(gateway=MockGateway())
+        with pytest.raises(NotImplementedError, match="streaming"):
+            next(llm.stream_chat([ChatMessage(role=MessageRole.USER, content="x")]))

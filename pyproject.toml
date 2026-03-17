@@ -39,12 +39,12 @@ langchain = [
     "langchain-core>=0.2.0",
 ]
 llamaindex = [
-    "openai>=1.0.0",
     "llama-index-core>=0.10.0",
 ]
 dev = [
     "credseal-sdk[all]",
     "langchain-core>=0.2.0",
+    "llama-index-core>=0.10.0",
     "pytest>=8.0",
     "pytest-asyncio>=0.23",
     "pytest-cov>=5.0",
