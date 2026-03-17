@@ -1,5 +1,5 @@
 """
-sandcastle-sdk
+credseal-sdk
 ~~~~~~~~~~~~~~
 The AgentGateway Protocol — secure, scalable agent execution infrastructure.
 
@@ -7,7 +7,7 @@ Quick start::
 
     # Local development
     from openai import AsyncOpenAI
-    from sandcastle import DirectGateway, Message, Role
+    from credseal import DirectGateway, Message, Role
 
     gateway = DirectGateway(
         llm_client=AsyncOpenAI(),
@@ -18,17 +18,17 @@ Quick start::
     )
 
     # Production — two line change, agent code identical
-    from sandcastle import ControlPlaneGateway
+    from credseal import ControlPlaneGateway
     gateway = ControlPlaneGateway()  # auto-detects env vars in sandbox
 
 Full documentation: https://github.com/Goldokpa/Sandcastle#readme
 GitHub: https://github.com/Goldokpa/Sandcastle
 """
 
-from sandcastle.gateway import AgentGateway
-from sandcastle.gateways.control_plane import ControlPlaneGateway
-from sandcastle.gateways.direct import DirectGateway
-from sandcastle.models import (
+from credseal.gateway import AgentGateway
+from credseal.gateways.control_plane import ControlPlaneGateway
+from credseal.gateways.direct import DirectGateway
+from credseal.models import (
     Function,
     LLMResponse,
     Message,

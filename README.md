@@ -1,10 +1,10 @@
-# sandcastle-sdk
+# credseal-sdk
 
 **The AgentGateway Protocol — secure, scalable AI agent execution infrastructure.**
 
 [![CI](https://github.com/Goldokpa/Sandcastle/actions/workflows/ci.yml/badge.svg)](https://github.com/Goldokpa/Sandcastle/actions)
-[![PyPI](https://img.shields.io/pypi/v/sandcastle-sdk)](https://pypi.org/project/sandcastle-sdk/)
-[![Python](https://img.shields.io/pypi/pyversions/sandcastle-sdk)](https://pypi.org/project/sandcastle-sdk/)
+[![PyPI](https://img.shields.io/pypi/v/credseal-sdk)](https://pypi.org/project/credseal-sdk/)
+[![Python](https://img.shields.io/pypi/pyversions/credseal-sdk)](https://pypi.org/project/credseal-sdk/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ---
@@ -18,7 +18,7 @@ The naive solution — run your agent on the same backend as your REST API — c
 1. **Security**: The agent can access every secret on the machine.
 2. **Reliability**: A memory-hungry agent degrades your API. Redeploying your API kills all running agents.
 
-`sandcastle-sdk` solves both.
+`credseal-sdk` solves both.
 
 ---
 
@@ -29,7 +29,7 @@ The SDK implements the **AgentGateway Protocol** — a clean interface between y
 | Gateway | When to use | Credentials | History |
 |---|---|---|---|
 | `DirectGateway` | Local development, CI evals | Your API key | In-memory |
-| `ControlPlaneGateway` | Production on Sandcastle | **Zero** — none in the agent | Control plane DB |
+| `ControlPlaneGateway` | Production on CredSeal | **Zero** — none in the agent | Control plane DB |
 
 Your agent code is **identical** in both environments. The switch is two lines.
 
@@ -38,13 +38,13 @@ Your agent code is **identical** in both environments. The switch is two lines.
 ## Quick start
 
 ```bash
-pip install sandcastle-sdk[openai]
+pip install credseal-sdk[openai]
 ```
 
 ```python
 import asyncio
 from openai import AsyncOpenAI
-from sandcastle import DirectGateway, Message, Role
+from credseal import DirectGateway, Message, Role
 
 async def main():
     gateway = DirectGateway(
@@ -53,7 +53,7 @@ async def main():
     )
 
     response = await gateway.invoke_llm(
-        new_messages=[Message(role=Role.USER, content="Hello, Sandcastle!")]
+        new_messages=[Message(role=Role.USER, content="Hello, CredSeal!")]
     )
 
     print(response.message.content)
@@ -68,12 +68,12 @@ Change **two lines**. Your agent logic is untouched.
 
 ```python
 # Before (local)
-from sandcastle import DirectGateway
+from credseal import DirectGateway
 gateway = DirectGateway(llm_client=AsyncOpenAI(), model="gpt-4o")
 
 # After (production — agent holds zero secrets)
-from sandcastle import ControlPlaneGateway
-gateway = ControlPlaneGateway()  # auto-detects env vars inside a Sandcastle sandbox
+from credseal import ControlPlaneGateway
+gateway = ControlPlaneGateway()  # auto-detects env vars inside a CredSeal sandbox
 ```
 
 ---
@@ -82,19 +82,19 @@ gateway = ControlPlaneGateway()  # auto-detects env vars inside a Sandcastle san
 
 ```bash
 # Core SDK only
-pip install sandcastle-sdk
+pip install credseal-sdk
 
 # With OpenAI support
-pip install sandcastle-sdk[openai]
+pip install credseal-sdk[openai]
 
 # With Anthropic support
-pip install sandcastle-sdk[anthropic]
+pip install credseal-sdk[anthropic]
 
 # With Mistral AI support (EU provider)
-pip install sandcastle-sdk[mistral]
+pip install credseal-sdk[mistral]
 
 # All cloud providers
-pip install sandcastle-sdk[all]
+pip install credseal-sdk[all]
 ```
 
 **Requirements:** Python 3.10+
@@ -103,7 +103,7 @@ pip install sandcastle-sdk[all]
 
 ## Data Sovereignty
 
-Sandcastle is designed from the ground up to work with **any LLM provider**, including those that
+CredSeal is designed from the ground up to work with **any LLM provider**, including those that
 keep your data inside the UK or EU. The AgentGateway Protocol decouples your agent logic from the
 inference provider — switching providers requires changing **one line**.
 
@@ -111,7 +111,7 @@ inference provider — switching providers requires changing **one line**.
 
 ```python
 from openai import AsyncOpenAI
-from sandcastle import DirectGateway
+from credseal import DirectGateway
 
 gateway = DirectGateway(
     llm_client=AsyncOpenAI(
@@ -129,7 +129,7 @@ Install Ollama: `brew install ollama && ollama pull llama3.2 && ollama serve`
 
 ```python
 from openai import AsyncOpenAI
-from sandcastle import DirectGateway
+from credseal import DirectGateway
 
 gateway = DirectGateway(
     llm_client=AsyncOpenAI(
@@ -179,8 +179,8 @@ Write your agent against the protocol. The implementation — local or productio
 ## Testing your agents
 
 ```python
-from sandcastle.testing import MockGateway
-from sandcastle.models import LLMResponse, Message, Role
+from credseal.testing import MockGateway
+from credseal.models import LLMResponse, Message, Role
 
 async def test_my_agent():
     mock = MockGateway()
@@ -214,7 +214,7 @@ async def test_my_agent():
 ## Error handling
 
 ```python
-from sandcastle.exceptions import CostCapExceededError, RateLimitError, SandcastleError
+from credseal.exceptions import CostCapExceededError, RateLimitError, CredSealError
 
 try:
     response = await gateway.invoke_llm(new_messages=[...])
@@ -222,12 +222,12 @@ except CostCapExceededError as e:
     print(f"Cost cap of ${e.cap_usd} reached. Spent: ${e.consumed_usd}")
 except RateLimitError as e:
     await asyncio.sleep(e.retry_after_seconds)
-except SandcastleError as e:
+except CredSealError as e:
     # Catch-all for any SDK error
     raise
 ```
 
-Full exception hierarchy: `SandcastleError > GatewayError > ControlPlaneError > AuthenticationError | CostCapExceededError | SessionNotFoundError`
+Full exception hierarchy: `CredSealError > GatewayError > ControlPlaneError > AuthenticationError | CostCapExceededError | SessionNotFoundError`
 
 ---
 
@@ -253,7 +253,7 @@ Full exception hierarchy: `SandcastleError > GatewayError > ControlPlaneError > 
   └──────────┘  └────────┬─────────┘
                          │ HTTP
                 ┌────────▼─────────┐
-                │  Sandcastle      │
+                │  CredSeal        │
                 │  Control Plane   │
                 │  (holds creds)   │
                 └──────────────────┘
@@ -266,8 +266,8 @@ Full exception hierarchy: `SandcastleError > GatewayError > ControlPlaneError > 
 Contributions are welcome. Please open an issue before submitting significant changes.
 
 ```bash
-git clone https://github.com/Goldokpa/sandcastle-sdk.git
-cd sandcastle-sdk
+git clone https://github.com/Goldokpa/Sandcastle.git
+cd credseal-sdk
 pip install -e ".[dev]"
 pre-commit install
 pytest tests/unit/
@@ -279,18 +279,18 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for full guidelines.
 
 ## Roadmap
 
-- [ ] LangChain adapter (`SandcastleChatModel`)
-- [ ] LlamaIndex adapter (`SandcastleLLM`)
+- [ ] LangChain adapter (`CredSealChatModel`)
+- [ ] LlamaIndex adapter (`CredSealLLM`)
 - [ ] Streaming support (`invoke_llm_stream`)
 - [ ] CrewAI integration
 - [ ] Pluggable inference backends (distributed compute)
-- [ ] `sandcastle-cli` for one-command control plane deployment
+- [ ] `credseal-cli` for one-command control plane deployment
 
 ---
 
 ## License
 
-MIT © [Gold Okpa](https://github.com/Goldokpa/sandcastle-sdk)
+MIT © [Gold Okpa](https://github.com/Goldokpa/Sandcastle)
 
 ---
 

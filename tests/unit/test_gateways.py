@@ -2,12 +2,12 @@
 
 import pytest
 
-from sandcastle.exceptions import (
+from credseal.exceptions import (
     ConfigurationError,
     PathNotAllowedError,
 )
-from sandcastle.models import Function, LLMResponse, Message, Role, TokenUsage, ToolCall
-from sandcastle.testing import MockGateway
+from credseal.models import Function, LLMResponse, Message, Role, TokenUsage, ToolCall
+from credseal.testing import MockGateway
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -161,19 +161,19 @@ class TestMockGateway:
 
 class TestDirectGatewayInit:
     def test_raises_on_none_client(self):
-        from sandcastle import DirectGateway
+        from credseal import DirectGateway
         with pytest.raises(ConfigurationError):
             DirectGateway(llm_client=None, model="gpt-4o")
 
     def test_raises_on_empty_model(self):
-        from sandcastle import DirectGateway
+        from credseal import DirectGateway
         with pytest.raises(ConfigurationError):
             DirectGateway(llm_client=object(), model="")
 
     def test_workspace_path_resolution(self):
         import tempfile
 
-        from sandcastle import DirectGateway
+        from credseal import DirectGateway
 
         with tempfile.TemporaryDirectory() as tmp:
             gw = DirectGateway(llm_client=object(), model="gpt-4o", workspace_dir=tmp)
@@ -183,7 +183,7 @@ class TestDirectGatewayInit:
     async def test_path_not_allowed_raises(self):
         import tempfile
 
-        from sandcastle import DirectGateway
+        from credseal import DirectGateway
 
         with tempfile.TemporaryDirectory() as tmp:
             gw = DirectGateway(llm_client=object(), model="gpt-4o", workspace_dir=tmp)
@@ -194,7 +194,7 @@ class TestDirectGatewayInit:
     async def test_file_url_local_dev(self):
         import tempfile
 
-        from sandcastle import DirectGateway
+        from credseal import DirectGateway
 
         with tempfile.TemporaryDirectory() as tmp:
             gw = DirectGateway(llm_client=object(), model="gpt-4o", workspace_dir=tmp)
@@ -206,7 +206,7 @@ class TestDirectGatewayInit:
         import asyncio
         import tempfile
 
-        from sandcastle import DirectGateway
+        from credseal import DirectGateway
 
         with tempfile.TemporaryDirectory() as tmp:
             gw = DirectGateway(llm_client=object(), model="gpt-4o", workspace_dir=tmp)
@@ -216,7 +216,7 @@ class TestDirectGatewayInit:
     def test_reset_clears_history_and_cost(self):
         import tempfile
 
-        from sandcastle import DirectGateway
+        from credseal import DirectGateway
 
         with tempfile.TemporaryDirectory() as tmp:
             gw = DirectGateway(llm_client=object(), model="gpt-4o", workspace_dir=tmp)
@@ -233,25 +233,25 @@ class TestDirectGatewayProviderDetection:
     """Tests for automatic and explicit provider detection."""
 
     def test_explicit_provider_overrides_all(self):
-        from sandcastle import DirectGateway
+        from credseal import DirectGateway
 
         gw = DirectGateway(llm_client=object(), model="gpt-4o", provider="local")
         assert gw.provider == "local"
 
     def test_explicit_mistral_provider(self):
-        from sandcastle import DirectGateway
+        from credseal import DirectGateway
 
         gw = DirectGateway(llm_client=object(), model="mistral-small-latest", provider="mistral")
         assert gw.provider == "mistral"
 
     def test_explicit_openai_provider(self):
-        from sandcastle import DirectGateway
+        from credseal import DirectGateway
 
         gw = DirectGateway(llm_client=object(), model="gpt-4o", provider="openai")
         assert gw.provider == "openai"
 
     def test_autodetect_anthropic_from_class_name(self):
-        from sandcastle import DirectGateway
+        from credseal import DirectGateway
 
         class FakeAsyncAnthropic:
             pass
@@ -260,7 +260,7 @@ class TestDirectGatewayProviderDetection:
         assert gw.provider == "anthropic"
 
     def test_autodetect_local_from_localhost_base_url(self):
-        from sandcastle import DirectGateway
+        from credseal import DirectGateway
 
         class FakeLocalClient:
             base_url = "http://localhost:11434/v1"
@@ -269,7 +269,7 @@ class TestDirectGatewayProviderDetection:
         assert gw.provider == "local"
 
     def test_autodetect_local_from_127_base_url(self):
-        from sandcastle import DirectGateway
+        from credseal import DirectGateway
 
         class FakeLocalClient:
             base_url = "http://127.0.0.1:11434/v1"
@@ -278,7 +278,7 @@ class TestDirectGatewayProviderDetection:
         assert gw.provider == "local"
 
     def test_autodetect_mistral_from_base_url(self):
-        from sandcastle import DirectGateway
+        from credseal import DirectGateway
 
         class FakeMistralClient:
             base_url = "https://api.mistral.ai/v1"
@@ -287,7 +287,7 @@ class TestDirectGatewayProviderDetection:
         assert gw.provider == "mistral"
 
     def test_autodetect_openai_fallback(self):
-        from sandcastle import DirectGateway
+        from credseal import DirectGateway
 
         class FakeOpenAIClient:
             base_url = "https://api.openai.com/v1"
@@ -296,13 +296,13 @@ class TestDirectGatewayProviderDetection:
         assert gw.provider == "openai"
 
     def test_autodetect_openai_no_base_url(self):
-        from sandcastle import DirectGateway
+        from credseal import DirectGateway
 
         gw = DirectGateway(llm_client=object(), model="gpt-4o")
         assert gw.provider == "openai"
 
     def test_provider_property_readonly(self):
-        from sandcastle import DirectGateway
+        from credseal import DirectGateway
 
         gw = DirectGateway(llm_client=object(), model="gpt-4o", provider="local")
         assert isinstance(gw.provider, str)

@@ -1,5 +1,5 @@
 """
-sandcastle.gateway
+credseal.gateway
 ~~~~~~~~~~~~~~~~~~
 The AgentGateway Protocol — the core interface of the SDK.
 
@@ -9,7 +9,7 @@ whether it comes from this SDK or not. Python's structural subtyping
 
 Usage::
 
-    from sandcastle import AgentGateway
+    from credseal import AgentGateway
 
     def run_agent(gateway: AgentGateway) -> None:
         # Works with DirectGateway, ControlPlaneGateway, MockGateway,
@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from typing import Any, Protocol, runtime_checkable
 
-from sandcastle.models import LLMResponse, Message, PresignedURL
+from credseal.models import LLMResponse, Message, PresignedURL
 
 
 @runtime_checkable
@@ -61,7 +61,7 @@ class AgentGateway(Protocol):
                           tool dict ``{"type": "function", "function": {"name": "…"}}``.
 
         Returns:
-            An :class:`~sandcastle.models.LLMResponse` containing the
+            An :class:`~credseal.models.LLMResponse` containing the
             assistant message, cost, finish reason, and token usage.
 
         Raises:
@@ -106,7 +106,7 @@ class AgentGateway(Protocol):
             method:    ``'PUT'`` for upload, ``'GET'`` for download.
 
         Returns:
-            A :class:`~sandcastle.models.PresignedURL` with the URL,
+            A :class:`~credseal.models.PresignedURL` with the URL,
             expiry timestamp, method, and resolved file path.
 
         Raises:
@@ -120,7 +120,7 @@ class AgentGateway(Protocol):
         Return the total cost in USD consumed by this session so far.
 
         Reflects all :meth:`invoke_llm` calls made through this gateway
-        instance. With :class:`~sandcastle.gateways.ControlPlaneGateway`,
+        instance. With :class:`~credseal.gateways.ControlPlaneGateway`,
         this queries the control plane for the authoritative total.
 
         Returns:

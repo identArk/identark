@@ -1,5 +1,5 @@
 """
-sandcastle.models
+credseal.models
 ~~~~~~~~~~~~~~~~~
 Core data types used throughout the SDK.
 """

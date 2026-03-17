@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to `sandcastle-sdk` will be documented here.
+All notable changes to `credseal-sdk` will be documented here.
 
 This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
@@ -11,9 +11,9 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 - `AgentGateway` — the core Protocol interface defining how agents communicate with the outside world
 - `DirectGateway` — local development implementation with OpenAI and Anthropic support, and any OpenAI-compatible endpoint (Ollama, Groq, etc.)
-- `ControlPlaneGateway` — production implementation that routes all requests through the Sandcastle control plane; agents hold zero secrets
+- `ControlPlaneGateway` — production implementation that routes all requests through the CredSeal control plane; agents hold zero secrets
 - `MockGateway` — test implementation with response queueing and full call recording for assertions
-- Full exception hierarchy rooted at `SandcastleError` — `GatewayError`, `ControlPlaneError`, `AuthenticationError`, `CostCapExceededError`, `SessionNotFoundError`, `NetworkError`, `LLMError`, `RateLimitError`, `ContentPolicyError`, `FileError`, `PathNotAllowedError`, `PresignedURLExpiredError`, `ConfigurationError`
+- Full exception hierarchy rooted at `CredSealError` — `GatewayError`, `ControlPlaneError`, `AuthenticationError`, `CostCapExceededError`, `SessionNotFoundError`, `NetworkError`, `LLMError`, `RateLimitError`, `ContentPolicyError`, `FileError`, `PathNotAllowedError`, `PresignedURLExpiredError`, `ConfigurationError`
 - Data models: `Message`, `Role`, `LLMResponse`, `PresignedURL`, `TokenUsage`, `ToolCall`, `Function`
 - Built-in cost tracking on every `invoke_llm` call
 - Automatic retry with exponential backoff in `ControlPlaneGateway`
@@ -24,4 +24,4 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
-[1.0.0]: https://github.com/Goldokpa/sandcastle-sdk/releases/tag/v1.0.0
+[1.0.0]: https://github.com/Goldokpa/Sandcastle/releases/tag/v1.0.0

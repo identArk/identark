@@ -1,5 +1,5 @@
 """
-sandcastle.testing.mock_gateway
+credseal.testing.mock_gateway
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 MockGateway — a test double for AgentGateway.
 
@@ -14,24 +14,24 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from sandcastle.models import LLMResponse, Message, PresignedURL
+from credseal.models import LLMResponse, Message, PresignedURL
 
 
 class MockGateway:
     """
-    Test implementation of :class:`~sandcastle.gateway.AgentGateway`.
+    Test implementation of :class:`~credseal.gateway.AgentGateway`.
 
     Returns queued responses without any network or LLM calls.
     Records every call for assertion.
 
     Args:
         responses: Optional initial list of
-                   :class:`~sandcastle.models.LLMResponse` objects
+                   :class:`~credseal.models.LLMResponse` objects
                    to return in order.
         default_response: Returned when the queue is exhausted.
                           If ``None``, raises ``StopIteration``.
         workspace_dir:    Local directory for file URL resolution.
-                          Defaults to ``'/tmp/sandcastle-mock-workspace'``.
+                          Defaults to ``'/tmp/credseal-mock-workspace'``.
 
     Example::
 
@@ -49,7 +49,7 @@ class MockGateway:
         self,
         responses: list[LLMResponse] | None = None,
         default_response: LLMResponse | None = None,
-        workspace_dir: str = "/tmp/sandcastle-mock-workspace",
+        workspace_dir: str = "/tmp/credseal-mock-workspace",
     ) -> None:
         self._queue: deque[LLMResponse] = deque(responses or [])
         self._default = default_response

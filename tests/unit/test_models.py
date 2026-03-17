@@ -1,6 +1,6 @@
-"""Unit tests for sandcastle.models."""
+"""Unit tests for credseal.models."""
 
-from sandcastle.models import (
+from credseal.models import (
     Function,
     LLMResponse,
     Message,

@@ -1,11 +1,11 @@
 """
-sandcastle.gateways.direct
+credseal.gateways.direct
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 DirectGateway — local development implementation of AgentGateway.
 
 Calls LLM providers directly using your own API keys, keeps
 conversation history in memory, and resolves file paths to the
-local filesystem. No Sandcastle account or control plane required.
+local filesystem. No CredSeal account or control plane required.
 
 Supports OpenAI, Anthropic, Mistral (EU), and any OpenAI-compatible
 endpoint including Ollama for fully local, zero-egress inference.
@@ -18,7 +18,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, NoReturn
 
-from sandcastle.exceptions import (
+from credseal.exceptions import (
     ConfigurationError,
     ContentPolicyError,
     CostCapExceededError,
@@ -26,7 +26,7 @@ from sandcastle.exceptions import (
     ProviderError,
     RateLimitError,
 )
-from sandcastle.models import (
+from credseal.models import (
     Function,
     LLMResponse,
     Message,
@@ -36,7 +36,7 @@ from sandcastle.models import (
     ToolCall,
 )
 
-logger = logging.getLogger("sandcastle.direct")
+logger = logging.getLogger("credseal.direct")
 
 # Cost per 1M tokens (USD) — approximate, update as providers change pricing
 _OPENAI_PRICING: dict[str, dict[str, float]] = {
@@ -83,7 +83,7 @@ def _estimate_cost(
 
 class DirectGateway:
     """
-    Local development implementation of :class:`~sandcastle.gateway.AgentGateway`.
+    Local development implementation of :class:`~credseal.gateway.AgentGateway`.
 
     Calls LLM providers directly. Keeps conversation history in memory.
     Resolves ``/workspace/`` file paths to the local filesystem.
@@ -99,7 +99,7 @@ class DirectGateway:
                        ``'llama3.2'``.
         system_prompt: Optional system prompt prepended to every conversation.
         cost_cap_usd:  Optional soft cost cap. Raises
-                       :exc:`~sandcastle.exceptions.CostCapExceededError`
+                       :exc:`~credseal.exceptions.CostCapExceededError`
                        when exceeded. Not enforced server-side.
         workspace_dir: Local directory for file operations.
                        Defaults to ``'/workspace'``.
@@ -112,7 +112,7 @@ class DirectGateway:
     OpenAI example::
 
         from openai import AsyncOpenAI
-        from sandcastle import DirectGateway
+        from credseal import DirectGateway
 
         gateway = DirectGateway(
             llm_client=AsyncOpenAI(),
@@ -123,7 +123,7 @@ class DirectGateway:
     Ollama (fully local, zero cost, zero data egress)::
 
         from openai import AsyncOpenAI
-        from sandcastle import DirectGateway
+        from credseal import DirectGateway
 
         gateway = DirectGateway(
             llm_client=AsyncOpenAI(
@@ -137,7 +137,7 @@ class DirectGateway:
     Mistral (EU/French provider, data stays in the EU)::
 
         from openai import AsyncOpenAI
-        from sandcastle import DirectGateway
+        from credseal import DirectGateway
 
         gateway = DirectGateway(
             llm_client=AsyncOpenAI(
@@ -457,7 +457,7 @@ class DirectGateway:
         )
 
     def _classify_openai_error(self, exc: Exception) -> NoReturn:
-        """Re-raise an OpenAI-compatible SDK exception as a Sandcastle exception."""
+        """Re-raise an OpenAI-compatible SDK exception as a CredSeal exception."""
         exc_type = type(exc).__name__
         if "RateLimitError" in exc_type:
             raise RateLimitError(str(exc), provider=self._provider) from exc

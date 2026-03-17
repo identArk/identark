@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "sandcastle-sdk"
+name = "credseal-sdk"
 version = "1.0.0"
 description = "The AgentGateway Protocol — secure, scalable AI agent execution infrastructure"
 readme = "README.md"
@@ -45,7 +45,7 @@ llamaindex = [
     "llama-index-core>=0.10.0",
 ]
 dev = [
-    "sandcastle-sdk[all]",
+    "credseal-sdk[all]",
     "pytest>=8.0",
     "pytest-asyncio>=0.23",
     "pytest-cov>=5.0",
@@ -63,7 +63,7 @@ Issues        = "https://github.com/Goldokpa/Sandcastle/issues"
 Changelog     = "https://github.com/Goldokpa/Sandcastle/blob/main/CHANGELOG.md"
 
 [tool.hatch.build.targets.wheel]
-packages = ["sandcastle"]
+packages = ["credseal"]
 
 # ── Ruff (linting + formatting) ───────────────────────────────────────────────
 [tool.ruff]
@@ -92,8 +92,8 @@ filterwarnings  = ["ignore::DeprecationWarning"]
 
 # ── Coverage ──────────────────────────────────────────────────────────────────
 [tool.coverage.run]
-source = ["sandcastle"]
-omit   = ["sandcastle/integrations/*", "tests/*"]
+source = ["credseal"]
+omit   = ["credseal/integrations/*", "tests/*"]
 
 [tool.coverage.report]
 exclude_lines = [

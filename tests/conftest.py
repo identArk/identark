@@ -1,5 +1,5 @@
 """
-Shared pytest fixtures for sandcastle-sdk tests.
+Shared pytest fixtures for credseal-sdk tests.
 """
 
 from __future__ import annotations
@@ -9,8 +9,8 @@ import tempfile
 
 import pytest
 
-from sandcastle.models import LLMResponse, Message, Role, TokenUsage
-from sandcastle.testing import MockGateway
+from credseal.models import LLMResponse, Message, Role, TokenUsage
+from credseal.testing import MockGateway
 
 # ── Response factory ─────────────────────────────────────────────────────────
 
@@ -50,7 +50,7 @@ def mock_gateway_with_response(mock_gateway: MockGateway) -> MockGateway:
 @pytest.fixture
 def tmp_workspace() -> str:
     """Temporary directory to use as a workspace in DirectGateway tests."""
-    with tempfile.TemporaryDirectory(prefix="sandcastle-test-") as tmp:
+    with tempfile.TemporaryDirectory(prefix="credseal-test-") as tmp:
         yield tmp
 
 
@@ -68,7 +68,7 @@ def direct_gateway(tmp_workspace: str):
 
     from openai import AsyncOpenAI
 
-    from sandcastle import DirectGateway
+    from credseal import DirectGateway
 
     return DirectGateway(
         llm_client=AsyncOpenAI(api_key=api_key),

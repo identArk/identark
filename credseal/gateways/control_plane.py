@@ -1,9 +1,9 @@
 """
-sandcastle.gateways.control_plane
+credseal.gateways.control_plane
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ControlPlaneGateway — production implementation of AgentGateway.
 
-Routes all requests through the Sandcastle control plane. The agent
+Routes all requests through the CredSeal control plane. The agent
 holds zero API keys or credentials. All credentialed operations are
 executed by the control plane on the agent's behalf.
 """
@@ -17,7 +17,7 @@ from typing import Any, NoReturn
 
 import httpx
 
-from sandcastle.exceptions import (
+from credseal.exceptions import (
     AuthenticationError,
     ConfigurationError,
     ControlPlaneError,
@@ -26,7 +26,7 @@ from sandcastle.exceptions import (
     PathNotAllowedError,
     SessionNotFoundError,
 )
-from sandcastle.models import (
+from credseal.models import (
     Function,
     LLMResponse,
     Message,
@@ -36,7 +36,7 @@ from sandcastle.models import (
     ToolCall,
 )
 
-logger = logging.getLogger("sandcastle.control_plane")
+logger = logging.getLogger("credseal.control_plane")
 
 _ERROR_CODE_MAP: dict[str, type[ControlPlaneError]] = {
     "authentication_failed": AuthenticationError,
@@ -47,14 +47,14 @@ _ERROR_CODE_MAP: dict[str, type[ControlPlaneError]] = {
 
 class ControlPlaneGateway:
     """
-    Production implementation of :class:`~sandcastle.gateway.AgentGateway`.
+    Production implementation of :class:`~credseal.gateway.AgentGateway`.
 
-    Routes all requests through the Sandcastle control plane. When running
-    inside a Sandcastle sandbox, all parameters are auto-detected from
+    Routes all requests through the CredSeal control plane. When running
+    inside a CredSeal sandbox, all parameters are auto-detected from
     environment variables — no arguments required.
 
     Args:
-        api_key:     Sandcastle API key. Auto-detected from
+        api_key:     CredSeal API key. Auto-detected from
                      ``SANDCASTLE_API_KEY`` or ``SESSION_TOKEN`` env vars.
         url:         Control plane base URL. Auto-detected from
                      ``SANDCASTLE_CONTROL_PLANE_URL`` or ``CONTROL_PLANE_URL``.
@@ -117,7 +117,7 @@ class ControlPlaneGateway:
             headers={
                 "Authorization": f"Bearer {self._api_key}",
                 "Content-Type": "application/json",
-                "X-Sandcastle-SDK": "1.0.0",
+                "X-CredSeal-SDK": "1.0.0",
             },
             timeout=timeout,
         )

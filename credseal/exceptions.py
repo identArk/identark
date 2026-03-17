@@ -1,12 +1,12 @@
 """
-sandcastle.exceptions
+credseal.exceptions
 ~~~~~~~~~~~~~~~~~~~~~
-All exceptions raised by the SDK. Rooted at ``SandcastleError`` so
+All exceptions raised by the SDK. Rooted at ``CredSealError`` so
 callers can catch broadly or specifically.
 
 Hierarchy
 ---------
-SandcastleError
+CredSealError
 ├── GatewayError
 │   ├── ControlPlaneError
 │   │   ├── AuthenticationError
@@ -26,14 +26,14 @@ SandcastleError
 from __future__ import annotations
 
 
-class SandcastleError(Exception):
+class CredSealError(Exception):
     """Base class for all SDK exceptions."""
 
 
 # ── Gateway ───────────────────────────────────────────────────────────────────
 
 
-class GatewayError(SandcastleError):
+class GatewayError(CredSealError):
     """Raised when a gateway communication operation fails."""
 
 
@@ -132,7 +132,7 @@ class NetworkError(GatewayError):
 # ── LLM ──────────────────────────────────────────────────────────────────────
 
 
-class LLMError(SandcastleError):
+class LLMError(CredSealError):
     """Raised when the LLM provider returns an error."""
 
 
@@ -167,7 +167,7 @@ class ProviderError(LLMError):
 # ── File ──────────────────────────────────────────────────────────────────────
 
 
-class FileError(SandcastleError):
+class FileError(CredSealError):
     """Raised when a file operation fails."""
 
 
@@ -210,5 +210,5 @@ class PresignedURLExpiredError(FileError):
 # ── Config ────────────────────────────────────────────────────────────────────
 
 
-class ConfigurationError(SandcastleError):
+class ConfigurationError(CredSealError):
     """The gateway was misconfigured at initialisation time."""

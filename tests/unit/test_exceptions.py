@@ -1,10 +1,11 @@
-"""Unit tests for sandcastle.exceptions."""
+"""Unit tests for credseal.exceptions."""
 
-from sandcastle.exceptions import (
+from credseal.exceptions import (
     AuthenticationError,
     ConfigurationError,
     ControlPlaneError,
     CostCapExceededError,
+    CredSealError,
     FileError,
     GatewayError,
     LLMError,
@@ -12,14 +13,13 @@ from sandcastle.exceptions import (
     PathNotAllowedError,
     PresignedURLExpiredError,
     RateLimitError,
-    SandcastleError,
     SessionNotFoundError,
 )
 
 
 class TestExceptionHierarchy:
-    def test_gateway_error_is_sandcastle_error(self):
-        assert issubclass(GatewayError, SandcastleError)
+    def test_gateway_error_is_credseal_error(self):
+        assert issubclass(GatewayError, CredSealError)
 
     def test_control_plane_error_is_gateway_error(self):
         assert issubclass(ControlPlaneError, GatewayError)
@@ -36,20 +36,20 @@ class TestExceptionHierarchy:
     def test_network_error_is_gateway_error(self):
         assert issubclass(NetworkError, GatewayError)
 
-    def test_llm_error_is_sandcastle_error(self):
-        assert issubclass(LLMError, SandcastleError)
+    def test_llm_error_is_credseal_error(self):
+        assert issubclass(LLMError, CredSealError)
 
     def test_rate_limit_is_llm_error(self):
         assert issubclass(RateLimitError, LLMError)
 
-    def test_file_error_is_sandcastle_error(self):
-        assert issubclass(FileError, SandcastleError)
+    def test_file_error_is_credseal_error(self):
+        assert issubclass(FileError, CredSealError)
 
     def test_path_not_allowed_is_file_error(self):
         assert issubclass(PathNotAllowedError, FileError)
 
-    def test_configuration_error_is_sandcastle_error(self):
-        assert issubclass(ConfigurationError, SandcastleError)
+    def test_configuration_error_is_credseal_error(self):
+        assert issubclass(ConfigurationError, CredSealError)
 
 
 class TestExceptionAttributes:
@@ -96,7 +96,7 @@ class TestExceptionAttributes:
 
 
 class TestCatchingBroadly:
-    def test_catch_all_with_sandcastle_error(self):
+    def test_catch_all_with_credseal_error(self):
         exceptions = [
             AuthenticationError("test"),
             CostCapExceededError("test"),
@@ -106,4 +106,4 @@ class TestCatchingBroadly:
             ConfigurationError("test"),
         ]
         for exc in exceptions:
-            assert isinstance(exc, SandcastleError)
+            assert isinstance(exc, CredSealError)

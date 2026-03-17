@@ -1,4 +1,4 @@
-# Contributing to sandcastle-sdk
+# Contributing to credseal-sdk
 
 Thank you for considering a contribution. This document explains how to get involved.
 
@@ -13,8 +13,8 @@ For anything beyond a small bug fix, **please open an issue first**. Describe wh
 ## Development setup
 
 ```bash
-git clone https://github.com/Goldokpa/sandcastle-sdk.git
-cd sandcastle-sdk
+git clone https://github.com/Goldokpa/Sandcastle.git
+cd credseal-sdk
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
@@ -30,13 +30,13 @@ pre-commit install
 pytest tests/unit/ -v
 
 # With coverage
-pytest tests/unit/ --cov=sandcastle --cov-report=term-missing
+pytest tests/unit/ --cov=credseal --cov-report=term-missing
 
 # Type checking
-mypy sandcastle/
+mypy credseal/
 
 # Linting
-ruff check sandcastle/ tests/
+ruff check credseal/ tests/
 ```
 
 All CI checks must pass before a PR is merged.

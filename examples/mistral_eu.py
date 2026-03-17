@@ -15,7 +15,7 @@ import os
 
 from openai import AsyncOpenAI
 
-from sandcastle import DirectGateway, Message, Role
+from credseal import DirectGateway, Message, Role
 
 
 async def main() -> None:

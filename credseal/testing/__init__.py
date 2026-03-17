@@ -1,5 +1,5 @@
 """
-sandcastle.testing
+credseal.testing
 ~~~~~~~~~~~~~~~~~~
 Testing utilities for agents built with the SDK.
 
@@ -11,8 +11,8 @@ calls for assertion in tests.
 
 Usage::
 
-    from sandcastle.testing import MockGateway
-    from sandcastle.models import LLMResponse, Message, Role
+    from credseal.testing import MockGateway
+    from credseal.models import LLMResponse, Message, Role
 
     mock = MockGateway()
     mock.queue_response(LLMResponse(
@@ -26,6 +26,6 @@ Usage::
     assert mock.invoke_llm_call_count == 1
 """
 
-from sandcastle.testing.mock_gateway import MockGateway
+from credseal.testing.mock_gateway import MockGateway
 
 __all__ = ["MockGateway"]
