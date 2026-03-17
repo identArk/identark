@@ -2,7 +2,7 @@
 
 **The AgentGateway Protocol — secure, scalable AI agent execution infrastructure.**
 
-[![CI](https://github.com/Goldokpa/sandcastle-sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/Goldokpa/sandcastle-sdk/actions)
+[![CI](https://github.com/Goldokpa/Sandcastle/actions/workflows/ci.yml/badge.svg)](https://github.com/Goldokpa/Sandcastle/actions)
 [![PyPI](https://img.shields.io/pypi/v/sandcastle-sdk)](https://pypi.org/project/sandcastle-sdk/)
 [![Python](https://img.shields.io/pypi/pyversions/sandcastle-sdk)](https://pypi.org/project/sandcastle-sdk/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)

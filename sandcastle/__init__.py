@@ -21,8 +21,8 @@ Quick start::
     from sandcastle import ControlPlaneGateway
     gateway = ControlPlaneGateway()  # auto-detects env vars in sandbox
 
-Full documentation: https://docs.sandcastlehq.com
-GitHub: https://github.com/Goldokpa/sandcastle-sdk
+Full documentation: https://github.com/Goldokpa/Sandcastle#readme
+GitHub: https://github.com/Goldokpa/Sandcastle
 """
 
 from sandcastle.gateway import AgentGateway
