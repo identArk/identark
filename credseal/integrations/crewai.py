@@ -43,11 +43,11 @@ logger = logging.getLogger("credseal.integrations.crewai")
 
 try:
     # CrewAI exposes BaseLLM for custom model integrations.
-    from crewai import BaseLLM  # type: ignore[import-not-found]
+    from crewai import BaseLLM
 
     _CREWAI_AVAILABLE = True
 except Exception:  # pragma: no cover
-    BaseLLM = object  # type: ignore[assignment]
+    BaseLLM = object
     _CREWAI_AVAILABLE = False
 
 
@@ -156,7 +156,7 @@ class CredSealCrewAILLM(BaseLLM):  # type: ignore[misc]
     def call(
         self,
         messages: CrewAIMessages,
-        tools: list[dict] | None = None,
+        tools: list[dict[str, Any]] | None = None,
         callbacks: list[Any] | None = None,
         available_functions: dict[str, Any] | None = None,
     ) -> str | Any:
@@ -183,7 +183,7 @@ class CredSealCrewAILLM(BaseLLM):  # type: ignore[misc]
     async def _call_async(
         self,
         messages: CrewAIMessages,
-        tools: list[dict] | None,
+        tools: list[dict[str, Any]] | None,
         available_functions: dict[str, Any] | None,
     ) -> str:
         # Normalize CrewAI inputs to the list[dict] representation so we can
