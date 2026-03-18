@@ -33,8 +33,9 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+from collections.abc import Sequence
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any, Dict, List, Optional, Sequence, Union, cast
+from typing import Any, cast
 
 from credseal.models import Message, Role
 
@@ -50,7 +51,7 @@ except Exception:  # pragma: no cover
     _CREWAI_AVAILABLE = False
 
 
-CrewAIMessages = Union[str, List[Dict[str, Any]]]
+CrewAIMessages = str | list[dict[str, Any]]
 
 
 def _ensure_crewai_available() -> None:
@@ -89,16 +90,16 @@ def crewai_to_credseal(messages: CrewAIMessages) -> list[Message]:
             Message(
                 role=role,
                 content=cast(str | list[dict[str, Any]], content),
-                tool_call_id=cast(Optional[str], tool_call_id),
-                name=cast(Optional[str], name),
+                tool_call_id=cast(str | None, tool_call_id),
+                name=cast(str | None, name),
             )
         )
     return result
 
 
 def _messages_prefix_len(
-    prev: Sequence[Dict[str, Any]],
-    curr: Sequence[Dict[str, Any]],
+    prev: Sequence[dict[str, Any]],
+    curr: Sequence[dict[str, Any]],
 ) -> int:
     """Return the shared prefix length for two message lists."""
     n = min(len(prev), len(curr))
@@ -120,13 +121,16 @@ class CredSealCrewAILLM(BaseLLM):  # type: ignore[misc]
     def __init__(
         self,
         gateway: Any,
-        model: Optional[str] = None,
-        temperature: Optional[float] = None,
+        model: str | None = None,
+        temperature: float | None = None,
         context_window_size: int = 8192,
     ) -> None:
         _ensure_crewai_available()
 
-        super().__init__(model=model or getattr(gateway, "model", "credseal"), temperature=temperature)
+        super().__init__(
+            model=model or getattr(gateway, "model", "credseal"),
+            temperature=temperature,
+        )
         self._gateway = gateway
         self._context_window_size = context_window_size
 
@@ -152,10 +156,10 @@ class CredSealCrewAILLM(BaseLLM):  # type: ignore[misc]
     def call(
         self,
         messages: CrewAIMessages,
-        tools: Optional[List[dict]] = None,
-        callbacks: Optional[List[Any]] = None,
-        available_functions: Optional[Dict[str, Any]] = None,
-    ) -> Union[str, Any]:
+        tools: list[dict] | None = None,
+        callbacks: list[Any] | None = None,
+        available_functions: dict[str, Any] | None = None,
+    ) -> str | Any:
         """
         Synchronous CrewAI entry point.
 
@@ -179,8 +183,8 @@ class CredSealCrewAILLM(BaseLLM):  # type: ignore[misc]
     async def _call_async(
         self,
         messages: CrewAIMessages,
-        tools: Optional[List[dict]],
-        available_functions: Optional[Dict[str, Any]],
+        tools: list[dict] | None,
+        available_functions: dict[str, Any] | None,
     ) -> str:
         # Normalize CrewAI inputs to the list[dict] representation so we can
         # compute a delta against the last call.
