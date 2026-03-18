@@ -5,7 +5,7 @@
 [![CI](https://github.com/credseal/sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/credseal/sdk/actions)
 [![PyPI](https://img.shields.io/pypi/v/credseal-sdk)](https://pypi.org/project/credseal-sdk/)
 [![Python](https://img.shields.io/pypi/pyversions/credseal-sdk)](https://pypi.org/project/credseal-sdk/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 
 ---
 
@@ -279,10 +279,11 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for full guidelines.
 
 ## Roadmap
 
-- [ ] LangChain adapter (`CredSealChatModel`)
-- [ ] LlamaIndex adapter (`CredSealLLM`)
-- [ ] Streaming support (`invoke_llm_stream`)
-- [ ] CrewAI integration
+- [x] LangChain adapter (`CredSealChatModel`)
+- [x] LlamaIndex adapter (`CredSealLLM`)
+- [x] Streaming support (`invoke_llm_stream`)
+- [x] CrewAI integration
+- [x] LangGraph integration (`CredSealNode`, `CredSealStreamNode`)
 - [ ] Pluggable inference backends (distributed compute)
 - [ ] `credseal-cli` for one-command control plane deployment
 
@@ -290,7 +291,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for full guidelines.
 
 ## License
 
-MIT © [Gold Okpa](https://github.com/credseal/sdk)
+AGPL-3.0 © [Gold Okpa](https://github.com/credseal/sdk)
 
 ---
 
