@@ -90,6 +90,9 @@ pip install credseal-sdk[openai]
 # With Anthropic support
 pip install credseal-sdk[anthropic]
 
+# With Google Gemini support
+pip install credseal-sdk[gemini]
+
 # With Mistral AI support (EU provider)
 pip install credseal-sdk[mistral]
 
@@ -201,13 +204,16 @@ async def test_my_agent():
 
 ## Supported providers
 
-| Provider | Data residency | DirectGateway | ControlPlaneGateway |
-|---|---|---|---|
-| OpenAI (gpt-4o, gpt-4o-mini, …) | US | ✓ | ✓ (via control plane) |
-| Anthropic (claude-3-5-sonnet, …) | US | ✓ | ✓ (via control plane) |
-| Mistral AI (mistral-large, mistral-small, …) | EU 🇪🇺 | ✓ | Roadmap |
-| Ollama (llama3.2, mistral, codellama, …) | Local 🏠 | ✓ | N/A |
-| Any OpenAI-compatible endpoint | Varies | ✓ | Roadmap |
+| Provider | Data residency | DirectGateway | GeminiGateway | ControlPlaneGateway |
+|---|---|---|---|---|
+| OpenAI (gpt-4o, gpt-4o-mini, …) | US | ✓ | — | ✓ (via control plane) |
+| Anthropic (claude-3-5-sonnet, …) | US | ✓ | — | ✓ (via control plane) |
+| Google Gemini (gemini-1.5-pro, gemini-1.5-flash, …) | US | ✓* | ✓ | Roadmap |
+| Mistral AI (mistral-large, mistral-small, …) | EU 🇪🇺 | ✓ | — | Roadmap |
+| Ollama (llama3.2, mistral, codellama, …) | Local 🏠 | ✓ | — | N/A |
+| Any OpenAI-compatible endpoint | Varies | ✓ | — | Roadmap |
+
+*Gemini via OpenAI-compatible endpoint. Use `GeminiGateway` for native SDK features.
 
 ---
 
@@ -261,6 +267,14 @@ Full exception hierarchy: `CredSealError > GatewayError > ControlPlaneError > Au
 
 ---
 
+## Community
+
+- **Discussions**: [GitHub Discussions](https://github.com/credseal/sdk/discussions) — ask questions, share ideas
+- **Issues**: [GitHub Issues](https://github.com/credseal/sdk/issues) — bug reports and feature requests
+- **Live Demo**: [credseal.vercel.app/demo](https://credseal.vercel.app/demo) — try CredSeal in your browser
+
+---
+
 ## Contributing
 
 Contributions are welcome. Please open an issue before submitting significant changes.
@@ -291,7 +305,12 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for full guidelines.
 
 ## License
 
-AGPL-3.0 © [Gold Okpa](https://github.com/credseal/sdk)
+CredSeal SDK is dual-licensed:
+
+- **AGPL-3.0** — Free for open source projects. See [LICENSE](LICENSE).
+- **Commercial License** — For proprietary/enterprise use. See [LICENSE-COMMERCIAL.md](LICENSE-COMMERCIAL.md).
+
+If you're building a closed-source product and cannot comply with AGPL, contact us at enterprise@credseal.com for a commercial license.
 
 ---
 
