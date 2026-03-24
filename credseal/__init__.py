@@ -34,13 +34,14 @@ from credseal.models import (
     Message,
     PresignedURL,
     Role,
+    StreamChunk,
     TokenUsage,
     ToolCall,
 )
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __author__ = "Gold Okpa"
-__license__ = "MIT"
+__license__ = "AGPL-3.0-only"
 
 __all__ = [
     # Protocol
@@ -52,6 +53,7 @@ __all__ = [
     "Message",
     "Role",
     "LLMResponse",
+    "StreamChunk",
     "PresignedURL",
     "TokenUsage",
     "ToolCall",

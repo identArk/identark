@@ -19,9 +19,10 @@ Usage::
 
 from __future__ import annotations
 
+from collections.abc import AsyncGenerator
 from typing import Any, Protocol, runtime_checkable
 
-from credseal.models import LLMResponse, Message, PresignedURL
+from credseal.models import LLMResponse, Message, PresignedURL, StreamChunk
 
 
 @runtime_checkable
@@ -125,5 +126,33 @@ class AgentGateway(Protocol):
 
         Returns:
             Total accumulated cost in USD as a ``float``.
+        """
+        ...
+
+    async def invoke_llm_stream(
+        self,
+        new_messages: list[Message],
+        tools: list[dict[str, Any]] | None = None,
+        tool_choice: str | dict[str, Any] = "auto",
+    ) -> AsyncGenerator[StreamChunk, None]:
+        """
+        Stream a response from the LLM token by token.
+
+        Yields :class:`~credseal.models.StreamChunk` objects as they arrive.
+        The final chunk has ``finish_reason`` set and ``input_tokens`` /
+        ``output_tokens`` populated. All prior chunks have ``finish_reason=None``.
+
+        Args:
+            new_messages: New messages to send this turn.
+            tools:        OpenAI-format tool/function definitions.
+            tool_choice:  Tool selection mode.
+
+        Yields:
+            :class:`~credseal.models.StreamChunk` — one per token delta.
+
+        Raises:
+            CostCapExceededError: If the session cost cap has been reached.
+            RateLimitError:       If the provider rate-limits the request.
+            ContentPolicyError:   If the output is blocked by content filtering.
         """
         ...

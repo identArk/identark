@@ -14,6 +14,7 @@ endpoint including Ollama for fully local, zero-egress inference.
 from __future__ import annotations
 
 import logging
+from collections.abc import AsyncGenerator
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, NoReturn
@@ -32,6 +33,7 @@ from credseal.models import (
     Message,
     PresignedURL,
     Role,
+    StreamChunk,
     TokenUsage,
     ToolCall,
 )
@@ -414,6 +416,9 @@ class DirectGateway:
         try:
             response = await self._client.messages.create(**kwargs)
         except Exception as exc:
+            exc_str = str(exc).lower()
+            if "content filtering policy" in exc_str or "output blocked" in exc_str:
+                raise ContentPolicyError(str(exc)) from exc
             raise ProviderError(f"Anthropic API error: {exc}") from exc
 
         # Extract text content
@@ -459,8 +464,153 @@ class DirectGateway:
     def _classify_openai_error(self, exc: Exception) -> NoReturn:
         """Re-raise an OpenAI-compatible SDK exception as a CredSeal exception."""
         exc_type = type(exc).__name__
+        exc_str = str(exc).lower()
         if "RateLimitError" in exc_type:
             raise RateLimitError(str(exc), provider=self._provider) from exc
-        if "ContentFilter" in exc_type or "content_filter" in str(exc).lower():
+        if (
+            "ContentFilter" in exc_type
+            or "content_filter" in exc_str
+            or "content filtering policy" in exc_str
+            or "output blocked" in exc_str
+        ):
             raise ContentPolicyError(str(exc)) from exc
         raise ProviderError(f"{self._provider.capitalize()} API error: {exc}") from exc
+
+    # ── Streaming ─────────────────────────────────────────────────────────────
+
+    async def invoke_llm_stream(
+        self,
+        new_messages: list[Message],
+        tools: list[dict[str, Any]] | None = None,
+        tool_choice: str | dict[str, Any] = "auto",
+    ) -> AsyncGenerator[StreamChunk, None]:
+        """Stream the LLM response token by token.
+
+        Yields :class:`~credseal.models.StreamChunk` objects as they arrive.
+        The final chunk has ``finish_reason`` set and token counts populated.
+        """
+        if self._cost_cap is not None and self._total_cost >= self._cost_cap:
+            raise CostCapExceededError(
+                f"Cost cap of ${self._cost_cap:.4f} reached.",
+                cap_usd=self._cost_cap,
+                consumed_usd=self._total_cost,
+            )
+
+        messages = self._build_messages(new_messages)
+
+        delegate = (
+            self._stream_anthropic(messages, tools, tool_choice)
+            if self._provider == "anthropic"
+            else self._stream_openai(messages, tools, tool_choice)
+        )
+        async for chunk in delegate:
+            yield chunk
+
+    async def _stream_openai(
+        self,
+        messages: list[dict[str, Any]],
+        tools: list[dict[str, Any]] | None,
+        tool_choice: str | dict[str, Any],
+    ) -> AsyncGenerator[StreamChunk, None]:
+        """Stream using the OpenAI-compatible API (OpenAI, Mistral, Ollama, etc.)."""
+        kwargs: dict[str, Any] = {
+            "model": self._model,
+            "messages": messages,
+            "stream": True,
+            "stream_options": {"include_usage": True},
+        }
+        if tools:
+            kwargs["tools"] = tools
+            kwargs["tool_choice"] = tool_choice
+
+        try:
+            stream = await self._client.chat.completions.create(**kwargs)
+            input_tokens = output_tokens = 0
+            async for chunk in stream:
+                choice = chunk.choices[0] if chunk.choices else None
+                # Usage is populated on the final chunk by some providers
+                if chunk.usage:
+                    input_tokens = chunk.usage.prompt_tokens or 0
+                    output_tokens = chunk.usage.completion_tokens or 0
+
+                if choice is None:
+                    continue
+
+                delta_content = choice.delta.content or ""
+                finish_reason = choice.finish_reason
+
+                if delta_content:
+                    yield StreamChunk(
+                        content=delta_content,
+                        finish_reason=None,
+                        model=self._model,
+                    )
+
+                if finish_reason:
+                    cost = _estimate_cost(self._model, input_tokens, output_tokens, self._provider)
+                    self._total_cost += cost
+                    yield StreamChunk(
+                        content="",
+                        finish_reason=finish_reason,
+                        model=self._model,
+                        input_tokens=input_tokens,
+                        output_tokens=output_tokens,
+                    )
+        except Exception as exc:
+            self._classify_openai_error(exc)
+
+    async def _stream_anthropic(
+        self,
+        messages: list[dict[str, Any]],
+        tools: list[dict[str, Any]] | None,
+        tool_choice: str | dict[str, Any],
+    ) -> AsyncGenerator[StreamChunk, None]:
+        """Stream using the Anthropic messages streaming API."""
+        system: str | None = None
+        filtered = [m for m in messages if m["role"] != "system"]
+        for m in messages:
+            if m["role"] == "system":
+                system = str(m["content"])
+
+        kwargs: dict[str, Any] = {
+            "model": self._model,
+            "max_tokens": 4096,
+            "messages": filtered,
+        }
+        if system:
+            kwargs["system"] = system
+        if tools:
+            kwargs["tools"] = [
+                {
+                    "name": t["function"]["name"],
+                    "description": t["function"].get("description", ""),
+                    "input_schema": t["function"].get("parameters", {}),
+                }
+                for t in tools
+            ]
+
+        try:
+            async with self._client.messages.stream(**kwargs) as stream:
+                async for text in stream.text_stream:
+                    yield StreamChunk(content=text, finish_reason=None, model=self._model)
+
+                final = await stream.get_final_message()
+                input_tokens = final.usage.input_tokens
+                output_tokens = final.usage.output_tokens
+                cost = _estimate_cost(self._model, input_tokens, output_tokens, "anthropic")
+                self._total_cost += cost
+
+                finish_map = {"end_turn": "stop", "tool_use": "tool_calls", "max_tokens": "length"}
+                finish_reason = finish_map.get(final.stop_reason or "end_turn", "stop")
+                yield StreamChunk(
+                    content="",
+                    finish_reason=finish_reason,
+                    model=self._model,
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens,
+                )
+        except Exception as exc:
+            exc_str = str(exc).lower()
+            if "content filtering policy" in exc_str or "output blocked" in exc_str:
+                raise ContentPolicyError(str(exc)) from exc
+            raise ProviderError(f"Anthropic streaming error: {exc}") from exc

@@ -33,6 +33,8 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import queue
+import threading
 from collections.abc import Sequence
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
@@ -174,22 +176,63 @@ class CredSealLLM(CustomLLM):
     def stream_complete(
         self, prompt: str, formatted: bool = False, **kwargs: Any
     ) -> CompletionResponseGen:
-        """Streaming not yet supported."""
-        raise NotImplementedError(
-            "CredSealLLM does not yet support streaming. "
-            "Use complete() or chat() instead. Streaming is on the roadmap."
-        )
-        yield  # pragma: no cover  # makes this a generator function for the type checker
+        """Stream a completion by wrapping the prompt as a user message."""
+        accumulated = ""
+        for chat_resp in self.stream_chat(
+            [ChatMessage(role=MessageRole.USER, content=prompt)], **kwargs
+        ):
+            accumulated = chat_resp.message.content or ""
+            yield CompletionResponse(
+                text=accumulated,
+                delta=chat_resp.delta,
+            )
 
     def stream_chat(
         self, messages: Sequence[ChatMessage], **kwargs: Any
     ) -> ChatResponseGen:
-        """Streaming not yet supported."""
-        raise NotImplementedError(
-            "CredSealLLM does not yet support streaming. "
-            "Use chat() or achat() instead. Streaming is on the roadmap."
+        """Stream a chat response token by token via the gateway."""
+        cs_messages = li_to_credseal(list(messages))
+        tools: list[dict[str, Any]] | None = kwargs.get("tools")
+        raw_choice = kwargs.get("tool_choice", "auto")
+        tool_choice: str | dict[str, Any] = (
+            raw_choice if isinstance(raw_choice, (str, dict)) else "auto"
         )
-        yield  # pragma: no cover
+
+        # Bridge async generator → sync generator via a thread + queue
+        _sentinel = object()
+        chunk_queue: queue.Queue[Any] = queue.Queue()
+
+        async def _collect() -> None:
+            try:
+                async for chunk in self.gateway.invoke_llm_stream(
+                    new_messages=cs_messages,
+                    tools=tools,
+                    tool_choice=tool_choice,
+                ):
+                    chunk_queue.put(chunk)
+            finally:
+                chunk_queue.put(_sentinel)
+
+        def _run() -> None:
+            asyncio.run(_collect())
+
+        t = threading.Thread(target=_run, daemon=True)
+        t.start()
+
+        accumulated = ""
+        while True:
+            item = chunk_queue.get()
+            if item is _sentinel:
+                break
+            accumulated += item.content
+            yield ChatResponse(
+                message=ChatMessage(
+                    role=MessageRole.ASSISTANT,
+                    content=accumulated,
+                ),
+                delta=item.content,
+                raw={"finish_reason": item.finish_reason, "model": item.model},
+            )
 
     # ── Chat (primary) ────────────────────────────────────────────────────────
 

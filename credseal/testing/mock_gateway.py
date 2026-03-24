@@ -10,11 +10,12 @@ Records every call so tests can assert on what was sent.
 from __future__ import annotations
 
 from collections import deque
+from collections.abc import AsyncGenerator
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from credseal.models import LLMResponse, Message, PresignedURL
+from credseal.models import LLMResponse, Message, PresignedURL, StreamChunk
 
 
 class MockGateway:
@@ -77,7 +78,7 @@ class MockGateway:
             return self._queue.popleft()
         if self._default is not None:
             return self._default
-        raise StopIteration(
+        raise RuntimeError(
             "MockGateway response queue is empty and no default_response was set. "
             "Call mock.queue_response() to add more responses."
         )
@@ -160,6 +161,38 @@ class MockGateway:
     def all_persisted_messages(self) -> list[Message]:
         """All messages that have been persisted, flattened."""
         return [m for batch in self._persist_calls for m in batch]
+
+    async def invoke_llm_stream(
+        self,
+        new_messages: list[Message],
+        tools: list[dict[str, Any]] | None = None,
+        tool_choice: str | dict[str, Any] = "auto",
+    ) -> AsyncGenerator[StreamChunk, None]:
+        """Stream the next queued response word by word, then yield a final chunk."""
+        self._invoke_calls.append({
+            "new_messages": new_messages,
+            "tools": tools,
+            "tool_choice": tool_choice,
+        })
+        response = self._next_response()
+        self._total_cost += response.cost_usd
+
+        content = response.message.content
+        text = content if isinstance(content, str) else ""
+
+        # Yield each word as a separate chunk to simulate streaming
+        words = text.split(" ")
+        for i, word in enumerate(words):
+            chunk_text = word if i == len(words) - 1 else word + " "
+            yield StreamChunk(content=chunk_text, finish_reason=None, model=response.model)
+
+        yield StreamChunk(
+            content="",
+            finish_reason=response.finish_reason,
+            model=response.model,
+            input_tokens=response.usage.input_tokens,
+            output_tokens=response.usage.output_tokens,
+        )
 
     def reset(self) -> None:
         """Clear all recorded calls and reset cost. Does not clear the queue."""

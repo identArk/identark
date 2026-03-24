@@ -59,10 +59,9 @@ class TestMockGateway:
         assert r2.message.content == "Second"
 
     @pytest.mark.asyncio
-    async def test_raises_stop_iteration_when_queue_empty(self):
-        # PEP 479: StopIteration raised inside a coroutine becomes RuntimeError
+    async def test_raises_runtime_error_when_queue_empty(self):
         mock = MockGateway()
-        with pytest.raises(RuntimeError, match="StopIteration"):
+        with pytest.raises(RuntimeError, match="queue is empty"):
             await mock.invoke_llm(new_messages=[Message(role=Role.USER, content="hi")])
 
     @pytest.mark.asyncio

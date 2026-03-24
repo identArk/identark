@@ -427,12 +427,22 @@ class TestCredSealLLM:
 
         assert result.text == "Complete OK"
 
-    def test_stream_complete_raises_not_implemented(self) -> None:
-        llm = CredSealLLM(gateway=MockGateway())
-        with pytest.raises(NotImplementedError, match="streaming"):
-            next(llm.stream_complete("x"))
+    def test_stream_complete_yields_chunks(self) -> None:
+        mock = MockGateway()
+        mock.queue_response(_make_response("Hello world"))
+        llm = CredSealLLM(gateway=mock)
 
-    def test_stream_chat_raises_not_implemented(self) -> None:
-        llm = CredSealLLM(gateway=MockGateway())
-        with pytest.raises(NotImplementedError, match="streaming"):
-            next(llm.stream_chat([ChatMessage(role=MessageRole.USER, content="x")]))
+        chunks = list(llm.stream_complete("Say hi"))
+
+        assert len(chunks) >= 1
+        assert chunks[-1].text == "Hello world"
+
+    def test_stream_chat_yields_chunks(self) -> None:
+        mock = MockGateway()
+        mock.queue_response(_make_response("Hi there"))
+        llm = CredSealLLM(gateway=mock)
+
+        chunks = list(llm.stream_chat([ChatMessage(role=MessageRole.USER, content="Hello")]))
+
+        assert len(chunks) >= 1
+        assert chunks[-1].message.content == "Hi there"

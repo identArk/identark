@@ -115,6 +115,27 @@ class LLMResponse:
 
 
 @dataclass
+class StreamChunk:
+    """
+    A single chunk from a streaming ``invoke_llm_stream`` call.
+
+    Attributes:
+        content:       The text delta for this chunk. Empty string on the final chunk.
+        finish_reason: ``None`` for mid-stream chunks. ``'stop'``, ``'tool_calls'``,
+                       or ``'length'`` on the final chunk.
+        model:         The model that generated the chunk.
+        input_tokens:  Populated only on the final chunk (when finish_reason is set).
+        output_tokens: Populated only on the final chunk (when finish_reason is set).
+    """
+
+    content: str
+    finish_reason: str | None
+    model: str
+    input_tokens: int = 0
+    output_tokens: int = 0
+
+
+@dataclass
 class PresignedURL:
     """
     A time-limited, scoped URL for reading or writing a workspace file.

@@ -4,11 +4,11 @@ build-backend = "hatchling.build"
 
 [project]
 name = "credseal-sdk"
-version = "1.0.0"
+version = "1.1.0"
 description = "The AgentGateway Protocol — secure, scalable AI agent execution infrastructure"
 readme = "README.md"
-license = { text = "MIT" }
-authors = [{ name = "Gold Okpa", email = "gold@sandcastlehq.com" }]
+license = { text = "AGPL-3.0-only" }
+authors = [{ name = "Gold Okpa", email = "gold@credseal.com" }]
 keywords = [
     "ai", "agents", "llm", "sandbox", "infrastructure",
     "openai", "anthropic", "mistral", "langchain", "gateway",
@@ -16,7 +16,7 @@ keywords = [
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: GNU Affero General Public License v3",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -34,12 +34,17 @@ dependencies = [
 openai = ["openai>=1.0.0"]
 anthropic = ["anthropic>=0.18.0"]
 mistral = ["mistralai>=1.0.0"]
-all = ["openai>=1.0.0", "anthropic>=0.18.0", "mistralai>=1.0.0"]
+gemini = ["google-generativeai>=0.5.0"]
+all = ["openai>=1.0.0", "anthropic>=0.18.0", "mistralai>=1.0.0", "google-generativeai>=0.5.0", "langgraph>=0.2.0", "langchain-core>=0.2.0", "llama-index-core>=0.10.0"]
 langchain = [
     "langchain-core>=0.2.0",
 ]
 llamaindex = [
     "llama-index-core>=0.10.0",
+]
+langgraph = [
+    "langgraph>=0.2.0",
+    "langchain-core>=0.2.0",
 ]
 dev = [
     "credseal-sdk[all]",

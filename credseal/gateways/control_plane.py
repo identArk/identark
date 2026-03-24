@@ -10,8 +10,10 @@ executed by the control plane on the agent's behalf.
 
 from __future__ import annotations
 
+import json
 import logging
 import os
+from collections.abc import AsyncGenerator
 from types import TracebackType
 from typing import Any, NoReturn
 
@@ -20,6 +22,7 @@ import httpx
 from credseal.exceptions import (
     AuthenticationError,
     ConfigurationError,
+    ContentPolicyError,
     ControlPlaneError,
     CostCapExceededError,
     NetworkError,
@@ -32,6 +35,7 @@ from credseal.models import (
     Message,
     PresignedURL,
     Role,
+    StreamChunk,
     TokenUsage,
     ToolCall,
 )
@@ -55,10 +59,10 @@ class ControlPlaneGateway:
 
     Args:
         api_key:     CredSeal API key. Auto-detected from
-                     ``SANDCASTLE_API_KEY`` or ``SESSION_TOKEN`` env vars.
+                     ``CREDSEAL_API_KEY`` or ``CREDSEAL_SESSION_TOKEN`` env vars.
         url:         Control plane base URL. Auto-detected from
-                     ``SANDCASTLE_CONTROL_PLANE_URL`` or ``CONTROL_PLANE_URL``.
-        session_id:  Session identifier. Auto-detected from ``SESSION_ID``.
+                     ``CREDSEAL_CONTROL_PLANE_URL``.
+        session_id:  Session identifier. Auto-detected from ``CREDSEAL_SESSION_ID``.
         timeout:     Per-request timeout in seconds. Default: 30.
         max_retries: Retry attempts on transient failures. Default: 3.
 
@@ -69,8 +73,8 @@ class ControlPlaneGateway:
 
         # Outside a sandbox — explicit config
         gateway = ControlPlaneGateway(
-            api_key=os.environ["SANDCASTLE_API_KEY"],
-            url=os.environ["SANDCASTLE_CONTROL_PLANE_URL"],
+            api_key=os.environ["CREDSEAL_API_KEY"],
+            url=os.environ["CREDSEAL_CONTROL_PLANE_URL"],
         )
 
         # As an async context manager
@@ -89,25 +93,24 @@ class ControlPlaneGateway:
         # Resolve credentials — constructor args take precedence over env vars
         self._api_key = (
             api_key
-            or os.environ.get("SESSION_TOKEN")
-            or os.environ.get("SANDCASTLE_API_KEY")
+            or os.environ.get("CREDSEAL_SESSION_TOKEN")
+            or os.environ.get("CREDSEAL_API_KEY")
         )
         self._url = (
             url
-            or os.environ.get("CONTROL_PLANE_URL")
-            or os.environ.get("SANDCASTLE_CONTROL_PLANE_URL")
+            or os.environ.get("CREDSEAL_CONTROL_PLANE_URL")
         )
-        self._session_id = session_id or os.environ.get("SESSION_ID")
+        self._session_id = session_id or os.environ.get("CREDSEAL_SESSION_ID")
 
         if not self._api_key:
             raise ConfigurationError(
-                "No API key found. Provide api_key= or set SANDCASTLE_API_KEY "
-                "(outside sandbox) / SESSION_TOKEN (inside sandbox)."
+                "No API key found. Provide api_key= or set CREDSEAL_API_KEY "
+                "(outside sandbox) / CREDSEAL_SESSION_TOKEN (inside sandbox)."
             )
         if not self._url:
             raise ConfigurationError(
                 "No control plane URL found. Provide url= or set "
-                "SANDCASTLE_CONTROL_PLANE_URL / CONTROL_PLANE_URL."
+                "CREDSEAL_CONTROL_PLANE_URL."
             )
 
         self._timeout = timeout
@@ -205,6 +208,46 @@ class ControlPlaneGateway:
             file_path=data["file_path"],
         )
 
+    async def invoke_llm_stream(
+        self,
+        new_messages: list[Message],
+        tools: list[dict[str, Any]] | None = None,
+        tool_choice: str | dict[str, Any] = "auto",
+    ) -> AsyncGenerator[StreamChunk, None]:
+        """Stream the LLM response via SSE from the control plane."""
+        payload: dict[str, Any] = {
+            "new_messages": [m.to_openai_dict() for m in new_messages],
+        }
+        if self._session_id:
+            payload["session_id"] = self._session_id
+        if tools:
+            payload["tools"] = tools
+            payload["tool_choice"] = tool_choice
+
+        async with self._client.stream("POST", "/llm/stream", json=payload) as response:
+            if response.status_code >= 400:
+                await response.aread()
+                self._raise_4xx(response)
+
+            async for line in response.aiter_lines():
+                if not line.startswith("data:"):
+                    continue
+                data = line.removeprefix("data:").strip()
+                if data == "[DONE]":
+                    break
+                try:
+                    event = json.loads(data)
+                except json.JSONDecodeError:
+                    continue
+
+                yield StreamChunk(
+                    content=event.get("content", ""),
+                    finish_reason=event.get("finish_reason"),
+                    model=event.get("model", "unknown"),
+                    input_tokens=event.get("input_tokens", 0),
+                    output_tokens=event.get("output_tokens", 0),
+                )
+
     async def get_session_cost(self) -> float:
         """Return the authoritative total session cost from the control plane."""
         params = {}
@@ -293,6 +336,8 @@ class ControlPlaneGateway:
             )
         if status == 404 or error_code == "session_not_found":
             raise SessionNotFoundError(body.get("session_id", "unknown"))
+        if error_code == "content_policy":
+            raise ContentPolicyError(message)
 
         raise ControlPlaneError(message, status_code=status, error_code=error_code)
 

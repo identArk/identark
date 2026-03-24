@@ -1,5 +1,5 @@
 # =============================================================================
-# sandcastle-sdk .gitignore
+# credseal-sdk .gitignore
 # =============================================================================
 
 # =============================================================================
@@ -14,8 +14,8 @@
 .env.production
 .env.staging
 
-# Sandcastle-specific secrets
-sandcastle.key
+# CredSeal-specific secrets
+credseal.key
 *.pem
 *.p12
 *.pfx
@@ -102,7 +102,7 @@ dmypy.json
 pyrightconfig.json        # local overrides only — project config belongs in pyproject.toml
 
 # =============================================================================
-# SANDCASTLE CLOUD — LOCAL DEV ARTEFACTS
+# CREDSEAL CLOUD — LOCAL DEV ARTEFACTS
 # These are generated during local cloud development and must never be committed
 # =============================================================================
 
@@ -232,3 +232,4 @@ tests/fixtures/*.key
 scratch/
 TODO.local.md      # personal notes — use GitHub Issues instead
 .claude/
+.vercel
