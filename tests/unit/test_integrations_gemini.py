@@ -53,7 +53,7 @@ def mock_genai():
 
 
 @pytest.fixture
-def gemini_gateway(mock_genai):
+def gemini_gateway(mock_genai, tmp_path):
     """Create a GeminiGateway with mocked SDK."""
     from credseal.integrations.gemini import GeminiGateway
 
@@ -61,6 +61,7 @@ def gemini_gateway(mock_genai):
         api_key="test-api-key",
         model="gemini-1.5-flash",
         system_prompt="You are a helpful assistant.",
+        workspace_dir=str(tmp_path),
     )
 
 
