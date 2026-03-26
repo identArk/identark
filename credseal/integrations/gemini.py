@@ -221,7 +221,7 @@ class GeminiGateway:
         self._total_cost: float = 0.0
 
         # Configure the SDK
-        genai.configure(api_key=api_key)
+        genai.configure(api_key=api_key)  # type: ignore[attr-defined]
         self._genai = genai
 
         # Create model instance
@@ -233,7 +233,7 @@ class GeminiGateway:
         if generation_config:
             model_kwargs["generation_config"] = generation_config
 
-        self._model = genai.GenerativeModel(model, **model_kwargs)
+        self._model = genai.GenerativeModel(model, **model_kwargs)  # type: ignore[attr-defined]
 
         logger.debug(
             "GeminiGateway initialised model=%s workspace=%s",
@@ -266,7 +266,7 @@ class GeminiGateway:
 
         try:
             # Create a chat session with history
-            chat = self._model.start_chat(history=gemini_history)
+            chat = self._model.start_chat(history=gemini_history)  # type: ignore[arg-type]
 
             # Prepare generation kwargs
             gen_kwargs: dict[str, Any] = {}
@@ -400,7 +400,7 @@ class GeminiGateway:
                     }
                 })
             elif isinstance(msg.content, str):
-                parts.append({"text": msg.content})
+                parts.append({"text": msg.content})  # type: ignore[dict-item]
             elif isinstance(msg.content, list):
                 # Multimodal content
                 for block in msg.content:
@@ -421,7 +421,7 @@ class GeminiGateway:
                                     }
                                 })
                             else:
-                                parts.append({"text": f"[Image: {url}]"})
+                                parts.append({"text": f"[Image: {url}]"})  # type: ignore[dict-item]
                     else:
                         parts.append({"text": str(block)})
             else:
@@ -434,7 +434,7 @@ class GeminiGateway:
 
         # Extract text content
         content = ""
-        tool_calls = None
+        tool_calls: list[ToolCall] | None = None
 
         for part in candidate.content.parts:
             if hasattr(part, "text") and part.text:
@@ -534,7 +534,7 @@ class GeminiGateway:
         gemini_content = self._messages_to_gemini_content(new_messages)
 
         try:
-            chat = self._model.start_chat(history=gemini_history)
+            chat = self._model.start_chat(history=gemini_history)  # type: ignore[arg-type]
 
             gen_kwargs: dict[str, Any] = {}
             if tools:
