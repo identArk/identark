@@ -16,7 +16,6 @@ from credseal.exceptions import (
     AuthenticationError,
     ConfigurationError,
     ContentPolicyError,
-    ControlPlaneError,
     CostCapExceededError,
     NetworkError,
     PathNotAllowedError,
@@ -24,7 +23,6 @@ from credseal.exceptions import (
 )
 from credseal.gateways.control_plane import ControlPlaneGateway
 from credseal.models import Message, Role
-
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 

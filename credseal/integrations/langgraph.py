@@ -35,11 +35,9 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-logger = logging.getLogger("credseal.integrations.langgraph")
-
-# LangGraph / LangChain message conversion is reused from the LangChain integration
 from credseal.integrations.langchain import credseal_to_ai_message, lc_to_credseal
-from credseal.models import Message, Role
+
+logger = logging.getLogger("credseal.integrations.langgraph")
 
 
 def _normalise_messages(raw: list[Any]) -> list[Any]:

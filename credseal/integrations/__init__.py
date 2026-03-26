@@ -18,7 +18,7 @@ __all__ = [
 ]
 
 
-def __getattr__(name: str):
+def __getattr__(name: str) -> type:
     if name in ("GeminiGateway", "CredSealGeminiGateway"):
         from credseal.integrations.gemini import GeminiGateway
         return GeminiGateway

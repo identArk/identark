@@ -25,6 +25,7 @@ def _make_response(content: str = "Hello!", model: str = "mock") -> LLMResponse:
 class TestNormaliseMessages:
     def test_passthrough_langchain_messages(self) -> None:
         from langchain_core.messages import HumanMessage
+
         from credseal.integrations.langgraph import _normalise_messages
 
         msg = HumanMessage(content="Hello")
@@ -33,6 +34,7 @@ class TestNormaliseMessages:
 
     def test_converts_user_dict(self) -> None:
         from langchain_core.messages import HumanMessage
+
         from credseal.integrations.langgraph import _normalise_messages
 
         result = _normalise_messages([{"role": "user", "content": "Hi"}])
@@ -41,6 +43,7 @@ class TestNormaliseMessages:
 
     def test_converts_assistant_dict(self) -> None:
         from langchain_core.messages import AIMessage
+
         from credseal.integrations.langgraph import _normalise_messages
 
         result = _normalise_messages([{"role": "assistant", "content": "Hi back"}])
@@ -49,6 +52,7 @@ class TestNormaliseMessages:
 
     def test_converts_system_dict(self) -> None:
         from langchain_core.messages import SystemMessage
+
         from credseal.integrations.langgraph import _normalise_messages
 
         result = _normalise_messages([{"role": "system", "content": "Be helpful"}])
@@ -56,6 +60,7 @@ class TestNormaliseMessages:
 
     def test_converts_tool_dict(self) -> None:
         from langchain_core.messages import ToolMessage
+
         from credseal.integrations.langgraph import _normalise_messages
 
         result = _normalise_messages([
@@ -66,6 +71,7 @@ class TestNormaliseMessages:
 
     def test_unknown_role_falls_back_to_human(self) -> None:
         from langchain_core.messages import HumanMessage
+
         from credseal.integrations.langgraph import _normalise_messages
 
         result = _normalise_messages([{"role": "unknown_role", "content": "x"}])
@@ -82,6 +88,7 @@ class TestNormaliseMessages:
 class TestCredSealNode:
     async def test_returns_updated_state(self) -> None:
         from langchain_core.messages import AIMessage, HumanMessage
+
         from credseal.integrations.langgraph import CredSealNode
 
         mock = MockGateway()
@@ -116,6 +123,7 @@ class TestCredSealNode:
 
     async def test_uses_custom_messages_key(self) -> None:
         from langchain_core.messages import HumanMessage
+
         from credseal.integrations.langgraph import CredSealNode
 
         mock = MockGateway()
@@ -129,6 +137,7 @@ class TestCredSealNode:
 
     async def test_records_gateway_call(self) -> None:
         from langchain_core.messages import HumanMessage
+
         from credseal.integrations.langgraph import CredSealNode
 
         mock = MockGateway()
@@ -139,7 +148,8 @@ class TestCredSealNode:
         assert mock.invoke_llm_call_count == 1
 
     async def test_response_metadata_populated(self) -> None:
-        from langchain_core.messages import HumanMessage, AIMessage
+        from langchain_core.messages import AIMessage, HumanMessage
+
         from credseal.integrations.langgraph import CredSealNode
 
         mock = MockGateway()
@@ -153,6 +163,7 @@ class TestCredSealNode:
 
     async def test_tools_passed_to_gateway(self) -> None:
         from langchain_core.messages import HumanMessage
+
         from credseal.integrations.langgraph import CredSealNode
 
         mock = MockGateway()
@@ -167,6 +178,7 @@ class TestCredSealNode:
 
     def test_sync_invoke(self) -> None:
         from langchain_core.messages import HumanMessage
+
         from credseal.integrations.langgraph import CredSealNode
 
         mock = MockGateway()
@@ -181,7 +193,8 @@ class TestCredSealNode:
 
 class TestCredSealStreamNode:
     async def test_returns_accumulated_content(self) -> None:
-        from langchain_core.messages import HumanMessage, AIMessage
+        from langchain_core.messages import AIMessage, HumanMessage
+
         from credseal.integrations.langgraph import CredSealStreamNode
 
         mock = MockGateway()
@@ -203,7 +216,8 @@ class TestCredSealStreamNode:
         assert result["messages"] == []
 
     async def test_final_chunk_metadata_captured(self) -> None:
-        from langchain_core.messages import HumanMessage, AIMessage
+        from langchain_core.messages import AIMessage, HumanMessage
+
         from credseal.integrations.langgraph import CredSealStreamNode
 
         mock = MockGateway()
@@ -226,6 +240,7 @@ class TestCredSealStreamNode:
 
     async def test_records_gateway_call(self) -> None:
         from langchain_core.messages import HumanMessage
+
         from credseal.integrations.langgraph import CredSealStreamNode
 
         mock = MockGateway()

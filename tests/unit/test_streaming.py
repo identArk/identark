@@ -6,10 +6,8 @@ from __future__ import annotations
 
 import pytest
 
-from credseal.exceptions import CostCapExceededError
 from credseal.models import LLMResponse, Message, Role, StreamChunk, TokenUsage
 from credseal.testing import MockGateway
-
 
 # ── MockGateway streaming ─────────────────────────────────────────────────────
 

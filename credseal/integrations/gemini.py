@@ -412,7 +412,6 @@ class GeminiGateway:
                             url = block.get("image_url", {}).get("url", "")
                             if url.startswith("data:"):
                                 # Base64 image
-                                import base64
                                 header, data = url.split(",", 1)
                                 mime_type = header.split(";")[0].split(":")[1]
                                 parts.append({
@@ -500,7 +499,6 @@ class GeminiGateway:
 
     def _classify_gemini_error(self, exc: Exception) -> None:
         """Re-raise a Gemini SDK exception as a CredSeal exception."""
-        exc_type = type(exc).__name__
         exc_str = str(exc).lower()
 
         if "quota" in exc_str or "rate" in exc_str or "429" in exc_str:
