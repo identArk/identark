@@ -39,7 +39,7 @@ from identark.models import (
     ToolCall,
 )
 
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __author__ = "Gold Okpa"
 __license__ = "AGPL-3.0-only"
 
