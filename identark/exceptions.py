@@ -1,12 +1,12 @@
 """
-credseal.exceptions
+identark.exceptions
 ~~~~~~~~~~~~~~~~~~~~~
-All exceptions raised by the SDK. Rooted at ``CredSealError`` so
+All exceptions raised by the SDK. Rooted at ``IdentArkError`` so
 callers can catch broadly or specifically.
 
 Hierarchy
 ---------
-CredSealError
+IdentArkError
 ├── GatewayError
 │   ├── ControlPlaneError
 │   │   ├── AuthenticationError
@@ -26,14 +26,14 @@ CredSealError
 from __future__ import annotations
 
 
-class CredSealError(Exception):
+class IdentArkError(Exception):
     """Base class for all SDK exceptions."""
 
 
 # ── Gateway ───────────────────────────────────────────────────────────────────
 
 
-class GatewayError(CredSealError):
+class GatewayError(IdentArkError):
     """Raised when a gateway communication operation fails."""
 
 
@@ -132,7 +132,7 @@ class NetworkError(GatewayError):
 # ── LLM ──────────────────────────────────────────────────────────────────────
 
 
-class LLMError(CredSealError):
+class LLMError(IdentArkError):
     """Raised when the LLM provider returns an error."""
 
 
@@ -167,7 +167,7 @@ class ProviderError(LLMError):
 # ── File ──────────────────────────────────────────────────────────────────────
 
 
-class FileError(CredSealError):
+class FileError(IdentArkError):
     """Raised when a file operation fails."""
 
 
@@ -210,5 +210,5 @@ class PresignedURLExpiredError(FileError):
 # ── Config ────────────────────────────────────────────────────────────────────
 
 
-class ConfigurationError(CredSealError):
+class ConfigurationError(IdentArkError):
     """The gateway was misconfigured at initialisation time."""

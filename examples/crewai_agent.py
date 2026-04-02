@@ -1,8 +1,8 @@
 """
-CrewAI agent — CredSealCrewAILLM (routes calls through CredSeal gateway).
+CrewAI agent — IdentArkCrewAILLM (routes calls through IdentArk gateway).
 
 Run:
-    pip install credseal-sdk crewai openai
+    pip install identark-sdk crewai openai
     export OPENAI_API_KEY=sk-...
     python examples/crewai_agent.py
 """
@@ -11,8 +11,8 @@ from __future__ import annotations
 
 from openai import AsyncOpenAI
 
-from credseal import DirectGateway
-from credseal.integrations.crewai import CredSealCrewAILLM
+from identark import DirectGateway
+from identark.integrations.crewai import IdentArkCrewAILLM
 
 
 def main() -> None:
@@ -27,7 +27,7 @@ def main() -> None:
         cost_cap_usd=0.05,
     )
 
-    llm = CredSealCrewAILLM(gateway=gateway)
+    llm = IdentArkCrewAILLM(gateway=gateway)
 
     agent = Agent(
         role="Research assistant",

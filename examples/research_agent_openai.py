@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-CredSeal Research Agent — Deep product research with OpenAI
+IdentArk Research Agent — Deep product research with OpenAI
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Same research agent but using DirectGateway with OpenAI.
@@ -21,7 +21,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from credseal import DirectGateway, Message, Role
+from identark import DirectGateway, Message, Role
 
 # ── Research Tools ─────────────────────────────────────────────────────────────
 
@@ -134,7 +134,7 @@ async def main():
     from openai import AsyncOpenAI
     gateway = DirectGateway(llm_client=AsyncOpenAI(api_key=api_key), model=args.model)
 
-    print(f"🔬 CredSeal Research Agent\nQuery: {args.query}\nModel: {args.model}")
+    print(f"🔬 IdentArk Research Agent\nQuery: {args.query}\nModel: {args.model}")
 
     report = await run_research_agent(args.query, gateway)
     print(f"\n📋 REPORT:\n{report}")

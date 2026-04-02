@@ -1,10 +1,10 @@
-# credseal-sdk
+# identark-sdk
 
 **The AgentGateway Protocol — secure, scalable AI agent execution infrastructure.**
 
-[![CI](https://github.com/credseal/sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/credseal/sdk/actions)
-[![PyPI](https://img.shields.io/pypi/v/credseal-sdk)](https://pypi.org/project/credseal-sdk/)
-[![Python](https://img.shields.io/pypi/pyversions/credseal-sdk)](https://pypi.org/project/credseal-sdk/)
+[![CI](https://github.com/identark/sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/identark/sdk/actions)
+[![PyPI](https://img.shields.io/pypi/v/identark-sdk)](https://pypi.org/project/identark-sdk/)
+[![Python](https://img.shields.io/pypi/pyversions/identark-sdk)](https://pypi.org/project/identark-sdk/)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 
 ---
@@ -18,7 +18,7 @@ The naive solution — run your agent on the same backend as your REST API — c
 1. **Security**: The agent can access every secret on the machine.
 2. **Reliability**: A memory-hungry agent degrades your API. Redeploying your API kills all running agents.
 
-`credseal-sdk` solves both.
+`identark-sdk` solves both.
 
 ---
 
@@ -29,7 +29,7 @@ The SDK implements the **AgentGateway Protocol** — a clean interface between y
 | Gateway | When to use | Credentials | History |
 |---|---|---|---|
 | `DirectGateway` | Local development, CI evals | Your API key | In-memory |
-| `ControlPlaneGateway` | Production on CredSeal | **Zero** — none in the agent | Control plane DB |
+| `ControlPlaneGateway` | Production on IdentArk | **Zero** — none in the agent | Control plane DB |
 
 Your agent code is **identical** in both environments. The switch is two lines.
 
@@ -38,13 +38,13 @@ Your agent code is **identical** in both environments. The switch is two lines.
 ## Quick start
 
 ```bash
-pip install credseal-sdk[openai]
+pip install identark-sdk[openai]
 ```
 
 ```python
 import asyncio
 from openai import AsyncOpenAI
-from credseal import DirectGateway, Message, Role
+from identark import DirectGateway, Message, Role
 
 async def main():
     gateway = DirectGateway(
@@ -53,7 +53,7 @@ async def main():
     )
 
     response = await gateway.invoke_llm(
-        new_messages=[Message(role=Role.USER, content="Hello, CredSeal!")]
+        new_messages=[Message(role=Role.USER, content="Hello, IdentArk!")]
     )
 
     print(response.message.content)
@@ -68,12 +68,12 @@ Change **two lines**. Your agent logic is untouched.
 
 ```python
 # Before (local)
-from credseal import DirectGateway
+from identark import DirectGateway
 gateway = DirectGateway(llm_client=AsyncOpenAI(), model="gpt-4o")
 
 # After (production — agent holds zero secrets)
-from credseal import ControlPlaneGateway
-gateway = ControlPlaneGateway()  # auto-detects env vars inside a CredSeal sandbox
+from identark import ControlPlaneGateway
+gateway = ControlPlaneGateway()  # auto-detects env vars inside a IdentArk sandbox
 ```
 
 ---
@@ -82,22 +82,22 @@ gateway = ControlPlaneGateway()  # auto-detects env vars inside a CredSeal sandb
 
 ```bash
 # Core SDK only
-pip install credseal-sdk
+pip install identark-sdk
 
 # With OpenAI support
-pip install credseal-sdk[openai]
+pip install identark-sdk[openai]
 
 # With Anthropic support
-pip install credseal-sdk[anthropic]
+pip install identark-sdk[anthropic]
 
 # With Google Gemini support
-pip install credseal-sdk[gemini]
+pip install identark-sdk[gemini]
 
 # With Mistral AI support (EU provider)
-pip install credseal-sdk[mistral]
+pip install identark-sdk[mistral]
 
 # All cloud providers
-pip install credseal-sdk[all]
+pip install identark-sdk[all]
 ```
 
 **Requirements:** Python 3.10+
@@ -106,7 +106,7 @@ pip install credseal-sdk[all]
 
 ## Data Sovereignty
 
-CredSeal is designed from the ground up to work with **any LLM provider**, including those that
+IdentArk is designed from the ground up to work with **any LLM provider**, including those that
 keep your data inside the UK or EU. The AgentGateway Protocol decouples your agent logic from the
 inference provider — switching providers requires changing **one line**.
 
@@ -114,7 +114,7 @@ inference provider — switching providers requires changing **one line**.
 
 ```python
 from openai import AsyncOpenAI
-from credseal import DirectGateway
+from identark import DirectGateway
 
 gateway = DirectGateway(
     llm_client=AsyncOpenAI(
@@ -132,7 +132,7 @@ Install Ollama: `brew install ollama && ollama pull llama3.2 && ollama serve`
 
 ```python
 from openai import AsyncOpenAI
-from credseal import DirectGateway
+from identark import DirectGateway
 
 gateway = DirectGateway(
     llm_client=AsyncOpenAI(
@@ -182,8 +182,8 @@ Write your agent against the protocol. The implementation — local or productio
 ## Testing your agents
 
 ```python
-from credseal.testing import MockGateway
-from credseal.models import LLMResponse, Message, Role
+from identark.testing import MockGateway
+from identark.models import LLMResponse, Message, Role
 
 async def test_my_agent():
     mock = MockGateway()
@@ -220,7 +220,7 @@ async def test_my_agent():
 ## Error handling
 
 ```python
-from credseal.exceptions import CostCapExceededError, RateLimitError, CredSealError
+from identark.exceptions import CostCapExceededError, RateLimitError, IdentArkError
 
 try:
     response = await gateway.invoke_llm(new_messages=[...])
@@ -228,12 +228,12 @@ except CostCapExceededError as e:
     print(f"Cost cap of ${e.cap_usd} reached. Spent: ${e.consumed_usd}")
 except RateLimitError as e:
     await asyncio.sleep(e.retry_after_seconds)
-except CredSealError as e:
+except IdentArkError as e:
     # Catch-all for any SDK error
     raise
 ```
 
-Full exception hierarchy: `CredSealError > GatewayError > ControlPlaneError > AuthenticationError | CostCapExceededError | SessionNotFoundError`
+Full exception hierarchy: `IdentArkError > GatewayError > ControlPlaneError > AuthenticationError | CostCapExceededError | SessionNotFoundError`
 
 ---
 
@@ -259,7 +259,7 @@ Full exception hierarchy: `CredSealError > GatewayError > ControlPlaneError > Au
   └──────────┘  └────────┬─────────┘
                          │ HTTP
                 ┌────────▼─────────┐
-                │  CredSeal        │
+                │  IdentArk        │
                 │  Control Plane   │
                 │  (holds creds)   │
                 └──────────────────┘
@@ -269,9 +269,9 @@ Full exception hierarchy: `CredSealError > GatewayError > ControlPlaneError > Au
 
 ## Community
 
-- **Discussions**: [GitHub Discussions](https://github.com/credseal/sdk/discussions) — ask questions, share ideas
-- **Issues**: [GitHub Issues](https://github.com/credseal/sdk/issues) — bug reports and feature requests
-- **Live Demo**: [credseal.vercel.app/demo](https://credseal.vercel.app/demo) — try CredSeal in your browser
+- **Discussions**: [GitHub Discussions](https://github.com/identark/sdk/discussions) — ask questions, share ideas
+- **Issues**: [GitHub Issues](https://github.com/identark/sdk/issues) — bug reports and feature requests
+- **Live Demo**: [identark.vercel.app/demo](https://identark.vercel.app/demo) — try IdentArk in your browser
 
 ---
 
@@ -280,8 +280,8 @@ Full exception hierarchy: `CredSealError > GatewayError > ControlPlaneError > Au
 Contributions are welcome. Please open an issue before submitting significant changes.
 
 ```bash
-git clone https://github.com/credseal/sdk.git
-cd credseal-sdk
+git clone https://github.com/identark/sdk.git
+cd identark-sdk
 pip install -e ".[dev]"
 pre-commit install
 pytest tests/unit/
@@ -293,25 +293,25 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for full guidelines.
 
 ## Roadmap
 
-- [x] LangChain adapter (`CredSealChatModel`)
-- [x] LlamaIndex adapter (`CredSealLLM`)
+- [x] LangChain adapter (`IdentArkChatModel`)
+- [x] LlamaIndex adapter (`IdentArkLLM`)
 - [x] Streaming support (`invoke_llm_stream`)
 - [x] CrewAI integration
-- [x] LangGraph integration (`CredSealNode`, `CredSealStreamNode`)
+- [x] LangGraph integration (`IdentArkNode`, `IdentArkStreamNode`)
 - [ ] Pluggable inference backends (distributed compute)
-- [ ] `credseal-cli` for one-command control plane deployment
+- [ ] `identark-cli` for one-command control plane deployment
 
 ---
 
 ## License
 
-CredSeal SDK is dual-licensed:
+IdentArk SDK is dual-licensed:
 
 - **AGPL-3.0** — Free for open source projects. See [LICENSE](LICENSE).
 - **Commercial License** — For proprietary/enterprise use. See [LICENSE-COMMERCIAL.md](LICENSE-COMMERCIAL.md).
 
-If you're building a closed-source product and cannot comply with AGPL, contact us at enterprise@credseal.com for a commercial license.
+If you're building a closed-source product and cannot comply with AGPL, contact us at enterprise@identark.io for a commercial license.
 
 ---
 
-*Built on the control plane pattern described in [How We Built Secure, Scalable Agent Sandbox Infrastructure](https://github.com/credseal/sdk).*
+*Built on the control plane pattern described in [How We Built Secure, Scalable Agent Sandbox Infrastructure](https://github.com/identark/sdk).*

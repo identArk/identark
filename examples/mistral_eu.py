@@ -15,7 +15,7 @@ import os
 
 from openai import AsyncOpenAI
 
-from credseal import DirectGateway, Message, Role
+from identark import DirectGateway, Message, Role
 
 
 async def main() -> None:

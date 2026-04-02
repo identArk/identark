@@ -1,5 +1,5 @@
 """
-credseal.models
+identark.models
 ~~~~~~~~~~~~~~~~~
 Core data types used throughout the SDK.
 """

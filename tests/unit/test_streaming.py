@@ -6,8 +6,8 @@ from __future__ import annotations
 
 import pytest
 
-from credseal.models import LLMResponse, Message, Role, StreamChunk, TokenUsage
-from credseal.testing import MockGateway
+from identark.models import LLMResponse, Message, Role, StreamChunk, TokenUsage
+from identark.testing import MockGateway
 
 # ── MockGateway streaming ─────────────────────────────────────────────────────
 

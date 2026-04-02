@@ -1,8 +1,8 @@
 """
-LangChain agent — CredSealChatModel with tool calling.
+LangChain agent — IdentArkChatModel with tool calling.
 
 Run:
-    pip install credseal-sdk[langchain] openai
+    pip install identark-sdk[langchain] openai
     export OPENAI_API_KEY=sk-...
     python examples/langchain_agent.py
 """
@@ -13,8 +13,8 @@ import json
 from langchain_core.messages import HumanMessage, ToolMessage
 from openai import AsyncOpenAI
 
-from credseal import DirectGateway
-from credseal.integrations.langchain import CredSealChatModel
+from identark import DirectGateway
+from identark.integrations.langchain import IdentArkChatModel
 
 # ── Tool definition (OpenAI function-calling format) ─────────────────────────
 
@@ -48,7 +48,7 @@ async def main() -> None:
         model="gpt-4o-mini",
         system_prompt="You are a helpful assistant. Use tools when appropriate.",
     )
-    llm = CredSealChatModel(gateway=gateway)
+    llm = IdentArkChatModel(gateway=gateway)
 
     messages = [HumanMessage(content="What is the weather like in London right now?")]
 

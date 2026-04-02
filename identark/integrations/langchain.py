@@ -1,26 +1,26 @@
 """
-credseal.integrations.langchain
+identark.integrations.langchain
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-LangChain integration — CredSealChatModel.
+LangChain integration — IdentArkChatModel.
 
 Wraps any AgentGateway as a LangChain BaseChatModel so you can use
-CredSeal's credential-isolated gateway inside any LangChain chain,
+IdentArk's credential-isolated gateway inside any LangChain chain,
 agent, or pipeline. Conversation history is maintained by the gateway,
 not by LangChain memory objects.
 
 Install::
 
-    pip install credseal-sdk[langchain]
+    pip install identark-sdk[langchain]
 
 Usage::
 
-    from credseal import DirectGateway
-    from credseal.integrations.langchain import CredSealChatModel
+    from identark import DirectGateway
+    from identark.integrations.langchain import IdentArkChatModel
     from openai import AsyncOpenAI
     from langchain_core.messages import HumanMessage
 
     gateway = DirectGateway(llm_client=AsyncOpenAI(), model="gpt-4o")
-    llm = CredSealChatModel(gateway=gateway)
+    llm = IdentArkChatModel(gateway=gateway)
 
     # Async (recommended)
     response = await llm.ainvoke([HumanMessage(content="Hello!")])
@@ -52,16 +52,16 @@ from langchain_core.messages import (
 from langchain_core.outputs import ChatGeneration, ChatResult
 from pydantic import ConfigDict, Field
 
-from credseal.models import LLMResponse, Message, Role
+from identark.models import LLMResponse, Message, Role
 
-logger = logging.getLogger("credseal.integrations.langchain")
+logger = logging.getLogger("identark.integrations.langchain")
 
 
 # ── Message conversion helpers ────────────────────────────────────────────────
 
 
 def _extract_content(msg: BaseMessage) -> str | list[dict[str, Any]]:
-    """Return message content in a form compatible with credseal.models.Message."""
+    """Return message content in a form compatible with identark.models.Message."""
     if isinstance(msg.content, str):
         return msg.content
     # Multimodal / structured content blocks
@@ -74,8 +74,8 @@ def _extract_content(msg: BaseMessage) -> str | list[dict[str, Any]]:
     return result
 
 
-def lc_to_credseal(messages: list[BaseMessage]) -> list[Message]:
-    """Convert a list of LangChain messages to CredSeal Message objects."""
+def lc_to_identark(messages: list[BaseMessage]) -> list[Message]:
+    """Convert a list of LangChain messages to IdentArk Message objects."""
     result: list[Message] = []
     for msg in messages:
         content = _extract_content(msg)
@@ -100,8 +100,8 @@ def lc_to_credseal(messages: list[BaseMessage]) -> list[Message]:
     return result
 
 
-def credseal_to_ai_message(response: LLMResponse) -> AIMessage:
-    """Convert a CredSeal LLMResponse to a LangChain AIMessage."""
+def identark_to_ai_message(response: LLMResponse) -> AIMessage:
+    """Convert a IdentArk LLMResponse to a LangChain AIMessage."""
     tool_calls: list[dict[str, Any]] = []
     if response.tool_calls:
         for tc in response.tool_calls:
@@ -129,27 +129,27 @@ def credseal_to_ai_message(response: LLMResponse) -> AIMessage:
     )
 
 
-# ── CredSealChatModel ─────────────────────────────────────────────────────────
+# ── IdentArkChatModel ─────────────────────────────────────────────────────────
 
 
-class CredSealChatModel(BaseChatModel):
+class IdentArkChatModel(BaseChatModel):
     """
-    LangChain ``BaseChatModel`` backed by a CredSeal ``AgentGateway``.
+    LangChain ``BaseChatModel`` backed by a IdentArk ``AgentGateway``.
 
     Drop-in replacement for any LangChain chat model. Routes all LLM
     calls through the gateway so credentials never enter the agent loop.
 
     Args:
-        gateway: Any :class:`~credseal.gateway.AgentGateway` implementation
+        gateway: Any :class:`~identark.gateway.AgentGateway` implementation
                  (``DirectGateway``, ``ControlPlaneGateway``, ``MockGateway``, …).
 
     Example::
 
-        from credseal import DirectGateway
-        from credseal.integrations.langchain import CredSealChatModel
+        from identark import DirectGateway
+        from identark.integrations.langchain import IdentArkChatModel
         from openai import AsyncOpenAI
 
-        llm = CredSealChatModel(
+        llm = IdentArkChatModel(
             gateway=DirectGateway(llm_client=AsyncOpenAI(), model="gpt-4o")
         )
         chain = prompt | llm | StrOutputParser()
@@ -163,7 +163,7 @@ class CredSealChatModel(BaseChatModel):
 
     @property
     def _llm_type(self) -> str:
-        return "credseal"
+        return "identark"
 
     @property
     def _identifying_params(self) -> dict[str, Any]:
@@ -182,9 +182,9 @@ class CredSealChatModel(BaseChatModel):
         tool_choice: str | dict[str, Any],
     ) -> ChatResult:
         """Shared async core used by both _generate and _agenerate."""
-        cs_messages = lc_to_credseal(messages)
+        cs_messages = lc_to_identark(messages)
         logger.debug(
-            "CredSealChatModel invoke messages=%d tools=%s",
+            "IdentArkChatModel invoke messages=%d tools=%s",
             len(cs_messages),
             len(tools) if tools else 0,
         )
@@ -193,7 +193,7 @@ class CredSealChatModel(BaseChatModel):
             tools=tools,
             tool_choice=tool_choice,
         )
-        return ChatResult(generations=[ChatGeneration(message=credseal_to_ai_message(response))])
+        return ChatResult(generations=[ChatGeneration(message=identark_to_ai_message(response))])
 
     def _generate(
         self,

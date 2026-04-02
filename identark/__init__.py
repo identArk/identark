@@ -1,5 +1,5 @@
 """
-credseal-sdk
+identark-sdk
 ~~~~~~~~~~~~~~
 The AgentGateway Protocol — secure, scalable agent execution infrastructure.
 
@@ -7,7 +7,7 @@ Quick start::
 
     # Local development
     from openai import AsyncOpenAI
-    from credseal import DirectGateway, Message, Role
+    from identark import DirectGateway, Message, Role
 
     gateway = DirectGateway(
         llm_client=AsyncOpenAI(),
@@ -18,17 +18,17 @@ Quick start::
     )
 
     # Production — two line change, agent code identical
-    from credseal import ControlPlaneGateway
+    from identark import ControlPlaneGateway
     gateway = ControlPlaneGateway()  # auto-detects env vars in sandbox
 
-Full documentation: https://github.com/credseal/sdk#readme
-GitHub: https://github.com/credseal/sdk
+Full documentation: https://github.com/identark/sdk#readme
+GitHub: https://github.com/identark/sdk
 """
 
-from credseal.gateway import AgentGateway
-from credseal.gateways.control_plane import ControlPlaneGateway
-from credseal.gateways.direct import DirectGateway
-from credseal.models import (
+from identark.gateway import AgentGateway
+from identark.gateways.control_plane import ControlPlaneGateway
+from identark.gateways.direct import DirectGateway
+from identark.models import (
     Function,
     LLMResponse,
     Message,

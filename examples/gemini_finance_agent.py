@@ -4,7 +4,7 @@ Gemini Finance Agent Example
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A complete example of a finance AI agent for Lloyds banking
-using CredSeal with Google Gemini.
+using IdentArk with Google Gemini.
 
 This demonstrates:
 - Tool calling for banking operations
@@ -14,7 +14,7 @@ This demonstrates:
 
 Setup:
     export GEMINI_API_KEY=your-key
-    pip install credseal-sdk[gemini]
+    pip install identark-sdk[gemini]
     python examples/gemini_finance_agent.py
 """
 
@@ -23,8 +23,8 @@ import json
 import os
 from datetime import datetime
 
-from credseal import Message, Role
-from credseal.integrations.gemini import GeminiGateway
+from identark import Message, Role
+from identark.integrations.gemini import GeminiGateway
 
 
 # Simulated banking data
@@ -167,7 +167,7 @@ def execute_tool(name: str, args: dict) -> str:
 async def run_finance_agent():
     """Run the interactive finance agent."""
     print("=" * 60)
-    print("Lloyds Finance Agent (powered by Gemini + CredSeal)")
+    print("Lloyds Finance Agent (powered by Gemini + IdentArk)")
     print("=" * 60)
     print()
 

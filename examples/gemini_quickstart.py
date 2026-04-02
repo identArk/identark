@@ -3,20 +3,20 @@
 Gemini Quickstart Example
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Demonstrates using CredSeal with Google's Gemini models.
+Demonstrates using IdentArk with Google's Gemini models.
 
 Setup:
     1. Get an API key from https://aistudio.google.com/apikey
     2. Set the environment variable: export GEMINI_API_KEY=your-key
-    3. Install: pip install credseal-sdk[gemini]
+    3. Install: pip install identark-sdk[gemini]
     4. Run: python examples/gemini_quickstart.py
 """
 
 import asyncio
 import os
 
-from credseal import Message, Role
-from credseal.integrations.gemini import GeminiGateway
+from identark import Message, Role
+from identark.integrations.gemini import GeminiGateway
 
 
 async def basic_chat():

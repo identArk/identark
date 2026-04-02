@@ -1,19 +1,19 @@
 # LangGraph Integration
 
-CredSeal provides `CredSealNode` and `CredSealStreamNode` for use in LangGraph state machines.
+IdentArk provides `IdentArkNode` and `IdentArkStreamNode` for use in LangGraph state machines.
 
 ## Installation
 
 ```bash
-pip install credseal-sdk[langgraph]
+pip install identark-sdk[langgraph]
 ```
 
 ## Quick Start
 
 ```python
 from langgraph.graph import StateGraph, END
-from credseal.integrations.langgraph import CredSealNode
-from credseal import DirectGateway
+from identark.integrations.langgraph import IdentArkNode
+from identark import DirectGateway
 from openai import AsyncOpenAI
 from typing import TypedDict, Annotated
 import operator
@@ -24,7 +24,7 @@ class AgentState(TypedDict):
 
 # Create gateway and node
 gateway = DirectGateway(llm_client=AsyncOpenAI(), model="gpt-4o")
-llm_node = CredSealNode(gateway=gateway)
+llm_node = IdentArkNode(gateway=gateway)
 
 # Build graph
 graph = StateGraph(AgentState)
@@ -42,9 +42,9 @@ result = app.invoke({
 ## Streaming Node
 
 ```python
-from credseal.integrations.langgraph import CredSealStreamNode
+from identark.integrations.langgraph import IdentArkStreamNode
 
-stream_node = CredSealStreamNode(gateway=gateway)
+stream_node = IdentArkStreamNode(gateway=gateway)
 
 # In a graph with streaming
 async for chunk in app.astream({
@@ -77,33 +77,33 @@ app = graph.compile()
 ## Production Setup
 
 ```python
-from credseal import ControlPlaneGateway
+from identark import ControlPlaneGateway
 
 # Zero credentials in the agent
 gateway = ControlPlaneGateway()
-llm_node = CredSealNode(gateway=gateway)
+llm_node = IdentArkNode(gateway=gateway)
 ```
 
 ## Node Classes
 
-### CredSealNode
+### IdentArkNode
 
 Standard node that returns complete responses.
 
 ```python
-CredSealNode(
+IdentArkNode(
     gateway: AgentGateway,
     tools: list[dict] | None = None,
     tool_choice: str = "auto",
 )
 ```
 
-### CredSealStreamNode
+### IdentArkStreamNode
 
 Streaming node for real-time token output.
 
 ```python
-CredSealStreamNode(
+IdentArkStreamNode(
     gateway: AgentGateway,
     tools: list[dict] | None = None,
     tool_choice: str = "auto",

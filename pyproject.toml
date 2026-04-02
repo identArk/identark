@@ -3,12 +3,12 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "credseal-sdk"
+name = "identark-sdk"
 version = "1.1.0"
 description = "The AgentGateway Protocol — secure, scalable AI agent execution infrastructure"
 readme = "README.md"
 license = { text = "AGPL-3.0-only" }
-authors = [{ name = "Gold Okpa", email = "gold@credseal.com" }]
+authors = [{ name = "Gold Okpa", email = "gold@identark.io" }]
 keywords = [
     "ai", "agents", "llm", "sandbox", "infrastructure",
     "openai", "anthropic", "mistral", "langchain", "gateway",
@@ -47,7 +47,7 @@ langgraph = [
     "langchain-core>=0.2.0",
 ]
 dev = [
-    "credseal-sdk[all]",
+    "identark-sdk[all]",
     "langchain-core>=0.2.0",
     "llama-index-core>=0.10.0",
     "pytest>=8.0",
@@ -60,14 +60,14 @@ dev = [
 ]
 
 [project.urls]
-Homepage      = "https://github.com/credseal/sdk"
-Documentation = "https://github.com/credseal/sdk#readme"
-Repository    = "https://github.com/credseal/sdk"
-Issues        = "https://github.com/credseal/sdk/issues"
-Changelog     = "https://github.com/credseal/sdk/blob/main/CHANGELOG.md"
+Homepage      = "https://github.com/identark/sdk"
+Documentation = "https://github.com/identark/sdk#readme"
+Repository    = "https://github.com/identark/sdk"
+Issues        = "https://github.com/identark/sdk/issues"
+Changelog     = "https://github.com/identark/sdk/blob/main/CHANGELOG.md"
 
 [tool.hatch.build.targets.wheel]
-packages = ["credseal"]
+packages = ["identark"]
 
 # ── Ruff (linting + formatting) ───────────────────────────────────────────────
 [tool.ruff]
@@ -89,7 +89,7 @@ ignore_missing_imports = true
 warn_unused_ignores = false
 
 [[tool.mypy.overrides]]
-module = "credseal.integrations.*"
+module = "identark.integrations.*"
 disable_error_code = ["override", "arg-type", "misc", "assignment"]
 
 # ── Pytest ────────────────────────────────────────────────────────────────────
@@ -98,11 +98,14 @@ asyncio_mode    = "auto"
 testpaths       = ["tests"]
 addopts         = "-v --tb=short"
 filterwarnings  = ["ignore::DeprecationWarning"]
+markers = [
+    "integration: integration test requiring mock server",
+]
 
 # ── Coverage ──────────────────────────────────────────────────────────────────
 [tool.coverage.run]
-source = ["credseal"]
-omit   = ["credseal/integrations/*", "tests/*"]
+source = ["identark"]
+omit   = ["identark/integrations/*", "tests/*"]
 
 [tool.coverage.report]
 exclude_lines = [

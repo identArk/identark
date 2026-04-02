@@ -1,18 +1,18 @@
 # Gemini Integration
 
-Native Google Gemini integration for CredSeal using the `google-generativeai` SDK.
+Native Google Gemini integration for IdentArk using the `google-generativeai` SDK.
 
 ## Installation
 
 ```bash
-pip install credseal-sdk[gemini]
+pip install identark-sdk[gemini]
 ```
 
 ## Quick Start
 
 ```python
-from credseal.integrations.gemini import GeminiGateway
-from credseal import Message, Role
+from identark.integrations.gemini import GeminiGateway
+from identark import Message, Role
 
 gateway = GeminiGateway(
     api_key="your-gemini-api-key",  # From https://aistudio.google.com/apikey
@@ -191,7 +191,7 @@ response = await gateway.invoke_llm(
 ## Error Handling
 
 ```python
-from credseal.exceptions import (
+from identark.exceptions import (
     ConfigurationError,
     CostCapExceededError,
     ContentPolicyError,
@@ -217,12 +217,12 @@ You can also use Gemini via the OpenAI-compatible API:
 
 ```python
 # Native GeminiGateway (recommended)
-from credseal.integrations.gemini import GeminiGateway
+from identark.integrations.gemini import GeminiGateway
 gateway = GeminiGateway(api_key="...", model="gemini-1.5-pro")
 
 # OR via OpenAI-compatible endpoint (alternative)
 from openai import AsyncOpenAI
-from credseal import DirectGateway
+from identark import DirectGateway
 
 gateway = DirectGateway(
     llm_client=AsyncOpenAI(

@@ -1,11 +1,11 @@
 """
-credseal.gateways.direct
+identark.gateways.direct
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 DirectGateway — local development implementation of AgentGateway.
 
 Calls LLM providers directly using your own API keys, keeps
 conversation history in memory, and resolves file paths to the
-local filesystem. No CredSeal account or control plane required.
+local filesystem. No IdentArk account or control plane required.
 
 Supports OpenAI, Anthropic, Mistral (EU), and any OpenAI-compatible
 endpoint including Ollama for fully local, zero-egress inference.
@@ -19,7 +19,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, NoReturn
 
-from credseal.exceptions import (
+from identark.exceptions import (
     ConfigurationError,
     ContentPolicyError,
     CostCapExceededError,
@@ -27,7 +27,7 @@ from credseal.exceptions import (
     ProviderError,
     RateLimitError,
 )
-from credseal.models import (
+from identark.models import (
     Function,
     LLMResponse,
     Message,
@@ -38,7 +38,7 @@ from credseal.models import (
     ToolCall,
 )
 
-logger = logging.getLogger("credseal.direct")
+logger = logging.getLogger("identark.direct")
 
 # Cost per 1M tokens (USD) — approximate, update as providers change pricing
 _OPENAI_PRICING: dict[str, dict[str, float]] = {
@@ -85,7 +85,7 @@ def _estimate_cost(
 
 class DirectGateway:
     """
-    Local development implementation of :class:`~credseal.gateway.AgentGateway`.
+    Local development implementation of :class:`~identark.gateway.AgentGateway`.
 
     Calls LLM providers directly. Keeps conversation history in memory.
     Resolves ``/workspace/`` file paths to the local filesystem.
@@ -101,7 +101,7 @@ class DirectGateway:
                        ``'llama3.2'``.
         system_prompt: Optional system prompt prepended to every conversation.
         cost_cap_usd:  Optional soft cost cap. Raises
-                       :exc:`~credseal.exceptions.CostCapExceededError`
+                       :exc:`~identark.exceptions.CostCapExceededError`
                        when exceeded. Not enforced server-side.
         workspace_dir: Local directory for file operations.
                        Defaults to ``'/workspace'``.
@@ -114,7 +114,7 @@ class DirectGateway:
     OpenAI example::
 
         from openai import AsyncOpenAI
-        from credseal import DirectGateway
+        from identark import DirectGateway
 
         gateway = DirectGateway(
             llm_client=AsyncOpenAI(),
@@ -125,7 +125,7 @@ class DirectGateway:
     Ollama (fully local, zero cost, zero data egress)::
 
         from openai import AsyncOpenAI
-        from credseal import DirectGateway
+        from identark import DirectGateway
 
         gateway = DirectGateway(
             llm_client=AsyncOpenAI(
@@ -139,7 +139,7 @@ class DirectGateway:
     Mistral (EU/French provider, data stays in the EU)::
 
         from openai import AsyncOpenAI
-        from credseal import DirectGateway
+        from identark import DirectGateway
 
         gateway = DirectGateway(
             llm_client=AsyncOpenAI(
@@ -462,7 +462,7 @@ class DirectGateway:
         )
 
     def _classify_openai_error(self, exc: Exception) -> NoReturn:
-        """Re-raise an OpenAI-compatible SDK exception as a CredSeal exception."""
+        """Re-raise an OpenAI-compatible SDK exception as a IdentArk exception."""
         exc_type = type(exc).__name__
         exc_str = str(exc).lower()
         if "RateLimitError" in exc_type:
@@ -486,7 +486,7 @@ class DirectGateway:
     ) -> AsyncGenerator[StreamChunk, None]:
         """Stream the LLM response token by token.
 
-        Yields :class:`~credseal.models.StreamChunk` objects as they arrive.
+        Yields :class:`~identark.models.StreamChunk` objects as they arrive.
         The final chunk has ``finish_reason`` set and token counts populated.
         """
         if self._cost_cap is not None and self._total_cost >= self._cost_cap:

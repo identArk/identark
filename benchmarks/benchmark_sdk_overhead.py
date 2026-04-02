@@ -2,7 +2,7 @@
 """
 Benchmark: SDK Overhead Measurement
 
-Measures the overhead introduced by the CredSeal SDK, excluding actual LLM latency.
+Measures the overhead introduced by the IdentArk SDK, excluding actual LLM latency.
 This validates the "under 1.5ms SDK overhead per call" claim.
 
 Components measured:
@@ -22,7 +22,7 @@ import time
 from dataclasses import dataclass, asdict
 
 # Import SDK components
-from credseal.models import (
+from identark.models import (
     Message,
     Role,
     LLMResponse,
@@ -242,7 +242,7 @@ def bench_dataclass_to_dict():
 
 def main():
     print("=" * 70)
-    print("CredSeal SDK Overhead Benchmark")
+    print("IdentArk SDK Overhead Benchmark")
     print("=" * 70)
     print()
     print("Measuring SDK overhead components (excludes actual LLM latency)")

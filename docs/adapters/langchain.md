@@ -1,18 +1,18 @@
 # LangChain Integration
 
-CredSeal provides `CredSealChatModel`, a drop-in replacement for LangChain chat models.
+IdentArk provides `IdentArkChatModel`, a drop-in replacement for LangChain chat models.
 
 ## Installation
 
 ```bash
-pip install credseal-sdk[langchain]
+pip install identark-sdk[langchain]
 ```
 
 ## Quick Start
 
 ```python
-from credseal.integrations.langchain import CredSealChatModel
-from credseal import DirectGateway
+from identark.integrations.langchain import IdentArkChatModel
+from identark import DirectGateway
 from openai import AsyncOpenAI
 
 # Create gateway
@@ -22,7 +22,7 @@ gateway = DirectGateway(
 )
 
 # Create LangChain-compatible model
-model = CredSealChatModel(gateway=gateway)
+model = IdentArkChatModel(gateway=gateway)
 
 # Use like any LangChain chat model
 response = model.invoke("What is the capital of France?")
@@ -32,12 +32,12 @@ print(response.content)
 ## With ControlPlaneGateway (Production)
 
 ```python
-from credseal.integrations.langchain import CredSealChatModel
-from credseal import ControlPlaneGateway
+from identark.integrations.langchain import IdentArkChatModel
+from identark import ControlPlaneGateway
 
 # Zero credentials in agent — all fetched from control plane
 gateway = ControlPlaneGateway()
-model = CredSealChatModel(gateway=gateway)
+model = IdentArkChatModel(gateway=gateway)
 
 response = model.invoke("Hello!")
 ```
@@ -94,7 +94,7 @@ result = chain.invoke({"input": "Hello!"})
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `gateway` | `AgentGateway` | CredSeal gateway instance |
+| `gateway` | `AgentGateway` | IdentArk gateway instance |
 | `temperature` | `float` | Sampling temperature (optional) |
 | `max_tokens` | `int` | Maximum response tokens (optional) |
 

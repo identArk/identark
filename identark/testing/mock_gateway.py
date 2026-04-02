@@ -1,5 +1,5 @@
 """
-credseal.testing.mock_gateway
+identark.testing.mock_gateway
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 MockGateway — a test double for AgentGateway.
 
@@ -15,24 +15,24 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from credseal.models import LLMResponse, Message, PresignedURL, StreamChunk
+from identark.models import LLMResponse, Message, PresignedURL, StreamChunk
 
 
 class MockGateway:
     """
-    Test implementation of :class:`~credseal.gateway.AgentGateway`.
+    Test implementation of :class:`~identark.gateway.AgentGateway`.
 
     Returns queued responses without any network or LLM calls.
     Records every call for assertion.
 
     Args:
         responses: Optional initial list of
-                   :class:`~credseal.models.LLMResponse` objects
+                   :class:`~identark.models.LLMResponse` objects
                    to return in order.
         default_response: Returned when the queue is exhausted.
                           If ``None``, raises ``StopIteration``.
         workspace_dir:    Local directory for file URL resolution.
-                          Defaults to ``'/tmp/credseal-mock-workspace'``.
+                          Defaults to ``'/tmp/identark-mock-workspace'``.
 
     Example::
 
@@ -50,7 +50,7 @@ class MockGateway:
         self,
         responses: list[LLMResponse] | None = None,
         default_response: LLMResponse | None = None,
-        workspace_dir: str = "/tmp/credseal-mock-workspace",
+        workspace_dir: str = "/tmp/identark-mock-workspace",
     ) -> None:
         self._queue: deque[LLMResponse] = deque(responses or [])
         self._default = default_response

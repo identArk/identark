@@ -1,11 +1,11 @@
 # CrewAI Integration
 
-CredSeal provides `CredSealCrewAILLM` for use with CrewAI agents and crews.
+IdentArk provides `IdentArkCrewAILLM` for use with CrewAI agents and crews.
 
 ## Installation
 
 ```bash
-pip install credseal-sdk[all]
+pip install identark-sdk[all]
 pip install crewai
 ```
 
@@ -13,8 +13,8 @@ pip install crewai
 
 ```python
 from crewai import Agent, Task, Crew
-from credseal.integrations.crewai import CredSealCrewAILLM
-from credseal import DirectGateway
+from identark.integrations.crewai import IdentArkCrewAILLM
+from identark import DirectGateway
 from openai import AsyncOpenAI
 
 # Create gateway
@@ -24,9 +24,9 @@ gateway = DirectGateway(
 )
 
 # Create CrewAI-compatible LLM
-llm = CredSealCrewAILLM(gateway=gateway)
+llm = IdentArkCrewAILLM(gateway=gateway)
 
-# Create agent with CredSeal LLM
+# Create agent with IdentArk LLM
 researcher = Agent(
     role="Researcher",
     goal="Research and summarize topics",
@@ -50,10 +50,10 @@ print(result)
 ## Production Setup
 
 ```python
-from credseal import ControlPlaneGateway
+from identark import ControlPlaneGateway
 
 gateway = ControlPlaneGateway()
-llm = CredSealCrewAILLM(gateway=gateway)
+llm = IdentArkCrewAILLM(gateway=gateway)
 
 # All agents use the secure gateway
 agent = Agent(
@@ -71,7 +71,7 @@ agent = Agent(
 # Or use separate gateways for isolated sessions
 
 gateway = DirectGateway(llm_client=AsyncOpenAI(), model="gpt-4o")
-llm = CredSealCrewAILLM(gateway=gateway)
+llm = IdentArkCrewAILLM(gateway=gateway)
 
 researcher = Agent(role="Researcher", goal="Research", backstory="...", llm=llm)
 writer = Agent(role="Writer", goal="Write", backstory="...", llm=llm)
@@ -89,7 +89,7 @@ crew = Crew(
 For UK/EU compliance:
 
 ```python
-from credseal import DirectGateway
+from identark import DirectGateway
 from openai import AsyncOpenAI
 
 # Use Mistral AI (EU data centres)
@@ -101,7 +101,7 @@ gateway = DirectGateway(
     model="mistral-large-latest",
 )
 
-llm = CredSealCrewAILLM(gateway=gateway)
+llm = IdentArkCrewAILLM(gateway=gateway)
 ```
 
 ## Cost Tracking
@@ -121,6 +121,6 @@ print(f"Crew execution cost: ${cost:.6f}")
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `gateway` | `AgentGateway` | CredSeal gateway instance |
+| `gateway` | `AgentGateway` | IdentArk gateway instance |
 
 Model and provider configuration is done on the gateway level.

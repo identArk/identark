@@ -1,14 +1,14 @@
-# credseal-sdk — Claude Code Instructions
+# identark-sdk — Claude Code Instructions
 
 See @README.md for project overview and @pyproject.toml for dependencies and build config.
 
 ## What This Project Is
 
-credseal-sdk implements the **AgentGateway Protocol (AGP)** — a credential isolation layer for
+identark-sdk implements the **AgentGateway Protocol (AGP)** — a credential isolation layer for
 production AI agents. Agents never hold raw credentials. Every tool call routes through a gateway
 that fetches credentials, executes, logs, and returns results. The agent only ever sees an agent ID.
 
-This is both an open-source Python SDK and the foundation of credseal-cloud (hosted SaaS).
+This is both an open-source Python SDK and the foundation of identark-cloud (hosted SaaS).
 
 ---
 
@@ -19,13 +19,13 @@ This is both an open-source Python SDK and the foundation of credseal-cloud (hos
 pip install -e ".[dev]"
 
 # Lint (MUST pass before any commit)
-ruff check credseal/ tests/
+ruff check identark/ tests/
 
 # Type check (MUST pass before any commit)
-mypy credseal/
+mypy identark/
 
 # Run unit tests
-pytest tests/unit/ -v --cov=credseal --cov-report=term-missing
+pytest tests/unit/ -v --cov=identark --cov-report=term-missing
 
 # Run all tests
 pytest -v
@@ -34,7 +34,7 @@ pytest -v
 python -m build
 
 # Format code
-ruff format credseal/ tests/
+ruff format identark/ tests/
 ```
 
 IMPORTANT: Always run `ruff check` and `mypy` after making changes. Never leave type errors unresolved.
@@ -44,16 +44,16 @@ IMPORTANT: Always run `ruff check` and `mypy` after making changes. Never leave 
 ## Project Structure
 
 ```
-credseal/
+identark/
 ├── __init__.py              # Public API exports
-├── gateway.py               # Abstract base: CredSealGateway
+├── gateway.py               # Abstract base: IdentArkGateway
 ├── models.py                # Pydantic models: AgentConfig, GatewayRequest, GatewayResponse
 ├── exceptions.py            # All custom exceptions
 ├── py.typed                 # PEP 561 marker
 ├── gateways/
 │   ├── __init__.py
 │   ├── direct.py            # DirectGateway — local, no network, for dev/testing
-│   └── control_plane.py     # ControlPlaneGateway — calls credseal-cloud API
+│   └── control_plane.py     # ControlPlaneGateway — calls identark-cloud API
 ├── integrations/
 │   ├── __init__.py
 │   ├── langchain.py         # LangChain tool wrapper
@@ -70,7 +70,7 @@ tests/
 │   ├── test_exceptions.py
 │   ├── test_gateways.py
 │   └── test_integrations.py
-└── integration/             # Requires live credseal-cloud (skip in CI by default)
+└── integration/             # Requires live identark-cloud (skip in CI by default)
 ```
 
 ---
@@ -94,7 +94,7 @@ tests/
 - All public functions and classes MUST have type annotations. mypy strict mode is enforced.
 - Use Pydantic v2 models for all data structures (already a dependency via httpx).
 - Async-first: all gateway operations are `async`. Provide sync wrappers only where explicitly needed.
-- Exception hierarchy: all exceptions inherit from `CredSealError` in `exceptions.py`.
+- Exception hierarchy: all exceptions inherit from `IdentArkError` in `exceptions.py`.
 - Use `httpx.AsyncClient` for all HTTP calls. Never use `requests`.
 - Line length: 100 characters (configured in pyproject.toml).
 
@@ -115,10 +115,10 @@ tests/
 ## Testing Conventions
 
 - Every new gateway method needs a corresponding unit test in `tests/unit/test_gateways.py`.
-- Use `MockGateway` from `credseal.testing` for all tests that would otherwise need real credentials.
+- Use `MockGateway` from `identark.testing` for all tests that would otherwise need real credentials.
 - Async tests use `pytest-asyncio` with `asyncio_mode = "auto"` (already configured).
 - Test file naming: `test_<module>.py` mirroring the source path.
-- Aim for >90% coverage on `credseal/` core. Integrations can be lower.
+- Aim for >90% coverage on `identark/` core. Integrations can be lower.
 - Mark integration tests with `@pytest.mark.integration` so CI can skip them:
   `pytest tests/unit/ -v` for CI, `pytest -v -m "not integration"` locally.
 
@@ -134,7 +134,7 @@ tests/
 
 ---
 
-## credseal-cloud (Cloud Control Plane)
+## identark-cloud (Cloud Control Plane)
 
 The hosted SaaS layer lives in `cloud/` (to be scaffolded). Stack:
 
@@ -158,9 +158,9 @@ via Supabase RLS. An agent from org A cannot query credentials belonging to org 
 ## Adapters Build Order
 
 1. **n8n** — custom node for n8n community registry (TypeScript/Node.js in `adapters/n8n/`)
-2. **LangChain** — tool wrapper in `credseal/integrations/langchain.py`
-3. **CrewAI** — agent wrapper in `credseal/integrations/crewai.py`
-4. **LangGraph** — graph node binding in `credseal/integrations/langgraph.py`
+2. **LangChain** — tool wrapper in `identark/integrations/langchain.py`
+3. **CrewAI** — agent wrapper in `identark/integrations/crewai.py`
+4. **LangGraph** — graph node binding in `identark/integrations/langgraph.py`
 
 Each adapter must include: a working example in `examples/`, tests in `tests/unit/`, and
 a section in `docs/adapters/<name>.md`.
@@ -171,8 +171,8 @@ a section in `docs/adapters/<name>.md`.
 
 - `hatchling` is the build backend. Do not switch to setuptools or poetry.
 - `asyncio_mode = "auto"` in pytest config means you do NOT need `@pytest.mark.asyncio` decorators.
-- The `credseal/py.typed` file must always exist — it marks the package as typed for mypy users.
-- When adding a new public export, add it to `credseal/__init__.py` AND document it in README.md.
+- The `identark/py.typed` file must always exist — it marks the package as typed for mypy users.
+- When adding a new public export, add it to `identark/__init__.py` AND document it in README.md.
 - The PyPI publish workflow only triggers on `git tag v*` pushes, not on every main commit.
 - `ruff` replaces both `flake8` and `isort`. Do not add either as a dependency.
 
@@ -181,9 +181,9 @@ a section in `docs/adapters/<name>.md`.
 ## What NOT to Do
 
 - Do not add `__all__` lists unless the module has >10 public exports.
-- Do not use `print()` for debugging. Use `logging` with the `credseal` logger namespace.
+- Do not use `print()` for debugging. Use `logging` with the `identark` logger namespace.
 - Do not introduce new top-level dependencies without updating `pyproject.toml` and confirming
   with the project owner (Gold Okpa).
 - Do not implement credential storage logic in the open-source SDK layer. That belongs in
-  `credseal-cloud` only.
+  `identark-cloud` only.
 - Do not write docstrings longer than 3 lines for internal functions.

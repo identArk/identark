@@ -1,19 +1,19 @@
 """
-credseal.integrations.gemini
+identark.integrations.gemini
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Google Gemini integration — CredSealGeminiGateway.
+Google Gemini integration — IdentArkGeminiGateway.
 
 Native integration with Google's Gemini API using the google-generativeai SDK.
 Supports multimodal inputs, function calling, and proper cost tracking.
 
 Install::
 
-    pip install credseal-sdk[gemini]
+    pip install identark-sdk[gemini]
 
 Usage::
 
-    from credseal.integrations.gemini import GeminiGateway
-    from credseal import Message, Role
+    from identark.integrations.gemini import GeminiGateway
+    from identark import Message, Role
 
     gateway = GeminiGateway(
         api_key="your-gemini-api-key",
@@ -36,7 +36,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from credseal.exceptions import (
+from identark.exceptions import (
     ConfigurationError,
     ContentPolicyError,
     CostCapExceededError,
@@ -44,7 +44,7 @@ from credseal.exceptions import (
     ProviderError,
     RateLimitError,
 )
-from credseal.models import (
+from identark.models import (
     Function,
     LLMResponse,
     Message,
@@ -55,7 +55,7 @@ from credseal.models import (
     ToolCall,
 )
 
-logger = logging.getLogger("credseal.integrations.gemini")
+logger = logging.getLogger("identark.integrations.gemini")
 
 # Gemini pricing per 1M tokens (USD) — as of 2024
 # See: https://ai.google.dev/pricing
@@ -103,7 +103,7 @@ def _estimate_gemini_cost(
 
 
 def _convert_role_to_gemini(role: Role) -> str:
-    """Convert CredSeal role to Gemini role."""
+    """Convert IdentArk role to Gemini role."""
     if role == Role.USER:
         return "user"
     elif role == Role.ASSISTANT:
@@ -131,7 +131,7 @@ def _convert_tools_to_gemini(tools: list[dict[str, Any]]) -> list[dict[str, Any]
 
 class GeminiGateway:
     """
-    Native Google Gemini implementation of :class:`~credseal.gateway.AgentGateway`.
+    Native Google Gemini implementation of :class:`~identark.gateway.AgentGateway`.
 
     Uses the google-generativeai SDK directly for optimal performance and
     access to Gemini-specific features like multimodal inputs and grounding.
@@ -142,7 +142,7 @@ class GeminiGateway:
                         ``'gemini-1.5-flash'``, ``'gemini-2.0-flash-exp'``.
         system_prompt:  Optional system instruction prepended to every conversation.
         cost_cap_usd:   Optional soft cost cap. Raises
-                        :exc:`~credseal.exceptions.CostCapExceededError`
+                        :exc:`~identark.exceptions.CostCapExceededError`
                         when exceeded.
         workspace_dir:  Local directory for file operations.
                         Defaults to ``'/workspace'``.
@@ -151,8 +151,8 @@ class GeminiGateway:
 
     Example::
 
-        from credseal.integrations.gemini import GeminiGateway
-        from credseal import Message, Role
+        from identark.integrations.gemini import GeminiGateway
+        from identark import Message, Role
 
         gateway = GeminiGateway(
             api_key="your-api-key",
@@ -207,7 +207,7 @@ class GeminiGateway:
         except ImportError as exc:
             raise ConfigurationError(
                 "google-generativeai package not installed. "
-                "Run: pip install credseal-sdk[gemini]"
+                "Run: pip install identark-sdk[gemini]"
             ) from exc
 
         self._api_key = api_key
@@ -498,7 +498,7 @@ class GeminiGateway:
         )
 
     def _classify_gemini_error(self, exc: Exception) -> None:
-        """Re-raise a Gemini SDK exception as a CredSeal exception."""
+        """Re-raise a Gemini SDK exception as a IdentArk exception."""
         exc_str = str(exc).lower()
 
         if "quota" in exc_str or "rate" in exc_str or "429" in exc_str:
@@ -525,7 +525,7 @@ class GeminiGateway:
     ) -> AsyncGenerator[StreamChunk, None]:
         """Stream the LLM response token by token.
 
-        Yields :class:`~credseal.models.StreamChunk` objects as they arrive.
+        Yields :class:`~identark.models.StreamChunk` objects as they arrive.
         The final chunk has ``finish_reason`` set and token counts populated.
         """
         self._check_cost_cap()
@@ -588,4 +588,4 @@ class GeminiGateway:
 
 
 # Convenience alias
-CredSealGeminiGateway = GeminiGateway
+IdentArkGeminiGateway = GeminiGateway

@@ -1,8 +1,8 @@
-# n8n-nodes-credseal
+# n8n-nodes-identark
 
-This is an n8n community node for [CredSeal](https://github.com/credseal/sdk) — the secure AI agent gateway.
+This is an n8n community node for [IdentArk](https://github.com/identark/sdk) — the secure AI agent gateway.
 
-**CredSeal lets your n8n workflows invoke LLMs without exposing API keys.** Your credentials stay in a secure vault; n8n only holds a session reference.
+**IdentArk lets your n8n workflows invoke LLMs without exposing API keys.** Your credentials stay in a secure vault; n8n only holds a session reference.
 
 ## Installation
 
@@ -10,19 +10,19 @@ This is an n8n community node for [CredSeal](https://github.com/credseal/sdk) �
 
 1. Go to **Settings > Community Nodes**
 2. Select **Install**
-3. Enter `n8n-nodes-credseal`
+3. Enter `n8n-nodes-identark`
 4. Agree to the risks and click **Install**
 
 ### Manual Installation
 
 ```bash
 cd ~/.n8n/custom
-npm install n8n-nodes-credseal
+npm install n8n-nodes-identark
 ```
 
 ## Prerequisites
 
-1. A CredSeal account — sign up at your control plane (e.g., `https://credseal-cloud.fly.dev`)
+1. A IdentArk account — sign up at your control plane (e.g., `https://identark-cloud.fly.dev`)
 2. An API key from `/v1/orgs/signup`
 3. LLM credentials registered via `/v1/credentials`
 
@@ -57,12 +57,12 @@ Retrieve the running cost for a session — useful for monitoring and billing wo
 
 | Field | Description |
 |-------|-------------|
-| API Key | Your CredSeal API key (starts with `csk_`) |
-| Control Plane URL | Your CredSeal instance URL |
+| API Key | Your IdentArk API key (starts with `csk_`) |
+| Control Plane URL | Your IdentArk instance URL |
 
 ## Data Residency
 
-CredSeal supports UK/EU data residency:
+IdentArk supports UK/EU data residency:
 - **Azure OpenAI UK South** — GPT-4o inference stays in UK
 - **AWS Bedrock eu-west-2** — Claude in London
 - **Mistral AI** — EU data centres (French company)
@@ -75,5 +75,5 @@ AGPL-3.0 — see [LICENSE](../../LICENSE)
 
 ## Links
 
-- [CredSeal SDK](https://github.com/credseal/sdk)
+- [IdentArk SDK](https://github.com/identark/sdk)
 - [n8n Community Nodes](https://docs.n8n.io/integrations/community-nodes/)

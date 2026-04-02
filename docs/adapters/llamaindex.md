@@ -1,18 +1,18 @@
 # LlamaIndex Integration
 
-CredSeal provides `CredSealLLM`, a custom LLM class for LlamaIndex.
+IdentArk provides `IdentArkLLM`, a custom LLM class for LlamaIndex.
 
 ## Installation
 
 ```bash
-pip install credseal-sdk[llamaindex]
+pip install identark-sdk[llamaindex]
 ```
 
 ## Quick Start
 
 ```python
-from credseal.integrations.llamaindex import CredSealLLM
-from credseal import DirectGateway
+from identark.integrations.llamaindex import IdentArkLLM
+from identark import DirectGateway
 from openai import AsyncOpenAI
 
 # Create gateway
@@ -22,7 +22,7 @@ gateway = DirectGateway(
 )
 
 # Create LlamaIndex LLM
-llm = CredSealLLM(gateway=gateway)
+llm = IdentArkLLM(gateway=gateway)
 
 # Use directly
 response = llm.complete("What is the meaning of life?")
@@ -63,7 +63,7 @@ from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
 # Load documents
 documents = SimpleDirectoryReader("./data").load_data()
 
-# Create index with CredSeal LLM
+# Create index with IdentArk LLM
 index = VectorStoreIndex.from_documents(
     documents,
     llm=llm,
@@ -77,10 +77,10 @@ response = query_engine.query("What is this document about?")
 ## Production Setup
 
 ```python
-from credseal import ControlPlaneGateway
+from identark import ControlPlaneGateway
 
 gateway = ControlPlaneGateway()
-llm = CredSealLLM(gateway=gateway)
+llm = IdentArkLLM(gateway=gateway)
 ```
 
 ## Async Support
@@ -103,7 +103,7 @@ asyncio.run(main())
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `gateway` | `AgentGateway` | CredSeal gateway instance |
+| `gateway` | `AgentGateway` | IdentArk gateway instance |
 
 The model and provider are configured on the gateway, not the LLM wrapper.
 

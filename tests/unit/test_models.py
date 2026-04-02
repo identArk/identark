@@ -1,6 +1,6 @@
-"""Unit tests for credseal.models."""
+"""Unit tests for identark.models."""
 
-from credseal.models import (
+from identark.models import (
     Function,
     LLMResponse,
     Message,

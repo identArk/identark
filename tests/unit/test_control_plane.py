@@ -12,7 +12,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from credseal.exceptions import (
+from identark.exceptions import (
     AuthenticationError,
     ConfigurationError,
     ContentPolicyError,
@@ -21,13 +21,13 @@ from credseal.exceptions import (
     PathNotAllowedError,
     SessionNotFoundError,
 )
-from credseal.gateways.control_plane import ControlPlaneGateway
-from credseal.models import Message, Role
+from identark.gateways.control_plane import ControlPlaneGateway
+from identark.models import Message, Role
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 def _make_gateway(**kwargs: Any) -> ControlPlaneGateway:
-    defaults = {"api_key": "test-key", "url": "https://api.credseal.com/v1"}
+    defaults = {"api_key": "test-key", "url": "https://api.identark.io/v1"}
     return ControlPlaneGateway(**{**defaults, **kwargs})
 
 
@@ -69,7 +69,7 @@ class TestControlPlaneGatewayInit:
         with pytest.raises(ConfigurationError, match="No control plane URL"):
             ControlPlaneGateway(api_key="k")
 
-    def test_api_key_from_env_credseal(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_api_key_from_env_identark(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("CREDSEAL_API_KEY", "env-key")
         monkeypatch.setenv("CREDSEAL_CONTROL_PLANE_URL", "https://example.com")
         gw = ControlPlaneGateway()

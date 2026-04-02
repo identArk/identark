@@ -1,9 +1,9 @@
 """
-credseal.gateways.control_plane
+identark.gateways.control_plane
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ControlPlaneGateway — production implementation of AgentGateway.
 
-Routes all requests through the CredSeal control plane. The agent
+Routes all requests through the IdentArk control plane. The agent
 holds zero API keys or credentials. All credentialed operations are
 executed by the control plane on the agent's behalf.
 """
@@ -19,7 +19,7 @@ from typing import Any, NoReturn
 
 import httpx
 
-from credseal.exceptions import (
+from identark.exceptions import (
     AuthenticationError,
     ConfigurationError,
     ContentPolicyError,
@@ -29,7 +29,7 @@ from credseal.exceptions import (
     PathNotAllowedError,
     SessionNotFoundError,
 )
-from credseal.models import (
+from identark.models import (
     Function,
     LLMResponse,
     Message,
@@ -40,7 +40,7 @@ from credseal.models import (
     ToolCall,
 )
 
-logger = logging.getLogger("credseal.control_plane")
+logger = logging.getLogger("identark.control_plane")
 
 _ERROR_CODE_MAP: dict[str, type[ControlPlaneError]] = {
     "authentication_failed": AuthenticationError,
@@ -51,14 +51,14 @@ _ERROR_CODE_MAP: dict[str, type[ControlPlaneError]] = {
 
 class ControlPlaneGateway:
     """
-    Production implementation of :class:`~credseal.gateway.AgentGateway`.
+    Production implementation of :class:`~identark.gateway.AgentGateway`.
 
-    Routes all requests through the CredSeal control plane. When running
-    inside a CredSeal sandbox, all parameters are auto-detected from
+    Routes all requests through the IdentArk control plane. When running
+    inside a IdentArk sandbox, all parameters are auto-detected from
     environment variables — no arguments required.
 
     Args:
-        api_key:     CredSeal API key. Auto-detected from
+        api_key:     IdentArk API key. Auto-detected from
                      ``CREDSEAL_API_KEY`` or ``CREDSEAL_SESSION_TOKEN`` env vars.
         url:         Control plane base URL. Auto-detected from
                      ``CREDSEAL_CONTROL_PLANE_URL``.
@@ -120,7 +120,7 @@ class ControlPlaneGateway:
             headers={
                 "Authorization": f"Bearer {self._api_key}",
                 "Content-Type": "application/json",
-                "X-CredSeal-SDK": "1.0.0",
+                "X-IdentArk-SDK": "1.0.0",
             },
             timeout=timeout,
         )

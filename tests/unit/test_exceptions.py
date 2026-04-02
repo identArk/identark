@@ -1,11 +1,11 @@
-"""Unit tests for credseal.exceptions."""
+"""Unit tests for identark.exceptions."""
 
-from credseal.exceptions import (
+from identark.exceptions import (
     AuthenticationError,
     ConfigurationError,
     ControlPlaneError,
     CostCapExceededError,
-    CredSealError,
+    IdentArkError,
     FileError,
     GatewayError,
     LLMError,
@@ -18,8 +18,8 @@ from credseal.exceptions import (
 
 
 class TestExceptionHierarchy:
-    def test_gateway_error_is_credseal_error(self):
-        assert issubclass(GatewayError, CredSealError)
+    def test_gateway_error_is_identark_error(self):
+        assert issubclass(GatewayError, IdentArkError)
 
     def test_control_plane_error_is_gateway_error(self):
         assert issubclass(ControlPlaneError, GatewayError)
@@ -36,20 +36,20 @@ class TestExceptionHierarchy:
     def test_network_error_is_gateway_error(self):
         assert issubclass(NetworkError, GatewayError)
 
-    def test_llm_error_is_credseal_error(self):
-        assert issubclass(LLMError, CredSealError)
+    def test_llm_error_is_identark_error(self):
+        assert issubclass(LLMError, IdentArkError)
 
     def test_rate_limit_is_llm_error(self):
         assert issubclass(RateLimitError, LLMError)
 
-    def test_file_error_is_credseal_error(self):
-        assert issubclass(FileError, CredSealError)
+    def test_file_error_is_identark_error(self):
+        assert issubclass(FileError, IdentArkError)
 
     def test_path_not_allowed_is_file_error(self):
         assert issubclass(PathNotAllowedError, FileError)
 
-    def test_configuration_error_is_credseal_error(self):
-        assert issubclass(ConfigurationError, CredSealError)
+    def test_configuration_error_is_identark_error(self):
+        assert issubclass(ConfigurationError, IdentArkError)
 
 
 class TestExceptionAttributes:
@@ -96,7 +96,7 @@ class TestExceptionAttributes:
 
 
 class TestCatchingBroadly:
-    def test_catch_all_with_credseal_error(self):
+    def test_catch_all_with_identark_error(self):
         exceptions = [
             AuthenticationError("test"),
             CostCapExceededError("test"),
@@ -106,4 +106,4 @@ class TestCatchingBroadly:
             ConfigurationError("test"),
         ]
         for exc in exceptions:
-            assert isinstance(exc, CredSealError)
+            assert isinstance(exc, IdentArkError)

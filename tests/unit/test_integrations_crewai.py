@@ -1,7 +1,7 @@
 import pytest
 
-from credseal.models import Function, LLMResponse, Message, Role, TokenUsage, ToolCall
-from credseal.testing import MockGateway
+from identark.models import Function, LLMResponse, Message, Role, TokenUsage, ToolCall
+from identark.testing import MockGateway
 
 
 def _crewai_installed() -> bool:
@@ -42,13 +42,13 @@ def _make_text_response(content: str) -> LLMResponse:
     )
 
 
-class TestCredSealCrewAIIntegration:
+class TestIdentArkCrewAIIntegration:
     def test_basic_string_prompt(self) -> None:
-        from credseal.integrations.crewai import CredSealCrewAILLM
+        from identark.integrations.crewai import IdentArkCrewAILLM
 
         mock = MockGateway()
         mock.queue_response(_make_text_response("Hello from gateway"))
-        llm = CredSealCrewAILLM(gateway=mock)
+        llm = IdentArkCrewAILLM(gateway=mock)
 
         out = llm.call("Hi")
 
@@ -59,12 +59,12 @@ class TestCredSealCrewAIIntegration:
         assert sent[0].content == "Hi"
 
     def test_message_delta_only_sends_tail(self) -> None:
-        from credseal.integrations.crewai import CredSealCrewAILLM
+        from identark.integrations.crewai import IdentArkCrewAILLM
 
         mock = MockGateway()
         mock.queue_response(_make_text_response("First"))
         mock.queue_response(_make_text_response("Second"))
-        llm = CredSealCrewAILLM(gateway=mock)
+        llm = IdentArkCrewAILLM(gateway=mock)
 
         m1 = [{"role": "user", "content": "Turn 1"}]
         m2 = [{"role": "user", "content": "Turn 1"}, {"role": "user", "content": "Turn 2"}]
@@ -82,7 +82,7 @@ class TestCredSealCrewAIIntegration:
 
     @pytest.mark.asyncio
     async def test_tool_calls_execute_available_functions(self) -> None:
-        from credseal.integrations.crewai import CredSealCrewAILLM
+        from identark.integrations.crewai import IdentArkCrewAILLM
 
         def add(a: int, b: int) -> int:
             return a + b
@@ -90,7 +90,7 @@ class TestCredSealCrewAIIntegration:
         mock = MockGateway()
         mock.queue_response(_make_tool_response())
         mock.queue_response(_make_text_response("Result is 5"))
-        llm = CredSealCrewAILLM(gateway=mock)
+        llm = IdentArkCrewAILLM(gateway=mock)
 
         # Use call() (sync) even in async test; it will run in a thread.
         out = llm.call(

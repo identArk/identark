@@ -1,16 +1,16 @@
 # n8n Integration
 
-CredSeal provides a community node for [n8n](https://n8n.io), the workflow automation platform.
+IdentArk provides a community node for [n8n](https://n8n.io), the workflow automation platform.
 
 ## Installation
 
 ```bash
 # Via n8n Community Nodes UI
-Settings > Community Nodes > Install > n8n-nodes-credseal
+Settings > Community Nodes > Install > n8n-nodes-identark
 
 # Or manually
 cd ~/.n8n/custom
-npm install n8n-nodes-credseal
+npm install n8n-nodes-identark
 ```
 
 ## Quick Start
@@ -18,7 +18,7 @@ npm install n8n-nodes-credseal
 ### 1. Get API Credentials
 
 ```bash
-curl -X POST https://credseal-cloud.fly.dev/v1/orgs/signup \
+curl -X POST https://identark-cloud.fly.dev/v1/orgs/signup \
   -H "Content-Type: application/json" \
   -d '{"name": "My Org", "email": "me@example.com"}'
 ```
@@ -28,7 +28,7 @@ Save the returned `api_key` — you'll need it for n8n credentials.
 ### 2. Register LLM Credentials
 
 ```bash
-curl -X POST https://credseal-cloud.fly.dev/v1/credentials \
+curl -X POST https://identark-cloud.fly.dev/v1/credentials \
   -H "Authorization: Bearer csk_your_api_key" \
   -H "Content-Type: application/json" \
   -d '{"provider": "openai", "credential": "sk-your-openai-key"}'
@@ -40,7 +40,7 @@ Save the `credential_ref` for session creation.
 
 1. Open n8n
 2. Go to **Credentials > Add Credential**
-3. Search for **CredSeal API**
+3. Search for **IdentArk API**
 4. Enter your API key and control plane URL
 
 ### 4. Build a Workflow
@@ -48,20 +48,20 @@ Save the `credential_ref` for session creation.
 **Simple LLM Call:**
 
 ```
-[Trigger] → [CredSeal: Invoke LLM] → [Output]
+[Trigger] → [IdentArk: Invoke LLM] → [Output]
 ```
 
 **With Session Management:**
 
 ```
-[Trigger] → [CredSeal: Create Session] → [CredSeal: Invoke LLM] → [CredSeal: Get Session Cost] → [Output]
+[Trigger] → [IdentArk: Create Session] → [IdentArk: Invoke LLM] → [IdentArk: Get Session Cost] → [Output]
 ```
 
 ## Operations
 
 ### Invoke LLM
 
-Send messages to an LLM via the CredSeal gateway.
+Send messages to an LLM via the IdentArk gateway.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -108,14 +108,14 @@ Retrieve the running cost for a session.
 
 ```
 ┌─────────────┐    ┌──────────────────┐    ┌───────────────┐
-│  Webhook    │───▶│ CredSeal: Invoke │───▶│ Slack: Send   │
+│  Webhook    │───▶│ IdentArk: Invoke │───▶│ Slack: Send   │
 │  (incoming) │    │ LLM              │    │ Message       │
 └─────────────┘    └──────────────────┘    └───────────────┘
 ```
 
 This workflow:
 1. Receives a customer message via webhook
-2. Sends it to an LLM through CredSeal (credentials stay secure)
+2. Sends it to an LLM through IdentArk (credentials stay secure)
 3. Forwards the response to Slack
 
 ## Data Residency

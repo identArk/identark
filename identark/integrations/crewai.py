@@ -1,24 +1,24 @@
 """
-credseal.integrations.crewai
+identark.integrations.crewai
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-CrewAI integration — CredSealCrewAILLM.
+CrewAI integration — IdentArkCrewAILLM.
 
 Wraps any AgentGateway as a CrewAI BaseLLM so you can run CrewAI agents
-through CredSeal gateways (DirectGateway / ControlPlaneGateway / MockGateway).
+through IdentArk gateways (DirectGateway / ControlPlaneGateway / MockGateway).
 
 Install::
 
-    pip install credseal-sdk crewai
+    pip install identark-sdk crewai
 
 Usage::
 
     from crewai import Agent
-    from credseal import DirectGateway
-    from credseal.integrations.crewai import CredSealCrewAILLM
+    from identark import DirectGateway
+    from identark.integrations.crewai import IdentArkCrewAILLM
     from openai import AsyncOpenAI
 
     gateway = DirectGateway(llm_client=AsyncOpenAI(), model="gpt-4o")
-    llm = CredSealCrewAILLM(gateway=gateway)
+    llm = IdentArkCrewAILLM(gateway=gateway)
 
     agent = Agent(
         role="Researcher",
@@ -37,9 +37,9 @@ from collections.abc import Sequence
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, cast
 
-from credseal.models import Message, Role
+from identark.models import Message, Role
 
-logger = logging.getLogger("credseal.integrations.crewai")
+logger = logging.getLogger("identark.integrations.crewai")
 
 try:
     # CrewAI exposes BaseLLM for custom model integrations.
@@ -59,13 +59,13 @@ def _ensure_crewai_available() -> None:
         return
     raise ImportError(
         "CrewAI is not installed. Install it with `pip install crewai` "
-        "or `pip install credseal-sdk[all] crewai`."
+        "or `pip install identark-sdk[all] crewai`."
     )
 
 
-def crewai_to_credseal(messages: CrewAIMessages) -> list[Message]:
+def crewai_to_identark(messages: CrewAIMessages) -> list[Message]:
     """
-    Convert CrewAI-style messages into CredSeal Message objects.
+    Convert CrewAI-style messages into IdentArk Message objects.
 
     CrewAI passes either a prompt string or a list of dict messages with
     at least: {'role': 'user'|'assistant'|'system'|'tool', 'content': ...}
@@ -109,12 +109,12 @@ def _messages_prefix_len(
     return n
 
 
-class CredSealCrewAILLM(BaseLLM):  # type: ignore[misc]
+class IdentArkCrewAILLM(BaseLLM):  # type: ignore[misc]
     """
-    CrewAI BaseLLM backed by a CredSeal AgentGateway.
+    CrewAI BaseLLM backed by a IdentArk AgentGateway.
 
     CrewAI typically provides the *full* message list each call, while
-    CredSeal gateways expect only the *new* messages for this turn. This
+    IdentArk gateways expect only the *new* messages for this turn. This
     adapter tracks the last message list it saw and sends only the delta.
     """
 
@@ -128,7 +128,7 @@ class CredSealCrewAILLM(BaseLLM):  # type: ignore[misc]
         _ensure_crewai_available()
 
         super().__init__(
-            model=model or getattr(gateway, "model", "credseal"),
+            model=model or getattr(gateway, "model", "identark"),
             temperature=temperature,
         )
         self._gateway = gateway
@@ -197,10 +197,10 @@ class CredSealCrewAILLM(BaseLLM):  # type: ignore[misc]
         delta = curr_msgs[shared:]
         self._last_messages = curr_msgs
 
-        new_messages = crewai_to_credseal(delta)
+        new_messages = crewai_to_identark(delta)
 
         logger.debug(
-            "CredSealCrewAILLM call total=%d delta=%d tools=%s",
+            "IdentArkCrewAILLM call total=%d delta=%d tools=%s",
             len(curr_msgs),
             len(new_messages),
             len(tools) if tools else 0,

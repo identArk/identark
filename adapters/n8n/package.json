@@ -1,11 +1,11 @@
 {
-  "name": "n8n-nodes-credseal",
+  "name": "n8n-nodes-identark",
   "version": "1.0.0",
-  "description": "n8n community node for CredSeal — secure AI agent gateway",
+  "description": "n8n community node for IdentArk — secure AI agent gateway",
   "keywords": [
     "n8n-community-node-package",
     "n8n",
-    "credseal",
+    "identark",
     "ai",
     "llm",
     "openai",
@@ -13,14 +13,14 @@
     "gateway"
   ],
   "license": "AGPL-3.0-only",
-  "homepage": "https://github.com/credseal/sdk",
+  "homepage": "https://github.com/identark/sdk",
   "author": {
     "name": "Gold Okpa",
-    "email": "gold@credseal.com"
+    "email": "gold@identark.io"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/credseal/sdk.git"
+    "url": "https://github.com/identark/sdk.git"
   },
   "main": "dist/index.js",
   "scripts": {
@@ -35,10 +35,10 @@
   "n8n": {
     "n8nNodesApiVersion": 1,
     "credentials": [
-      "dist/credentials/CredSealApi.credentials.js"
+      "dist/credentials/IdentArkApi.credentials.js"
     ],
     "nodes": [
-      "dist/nodes/CredSeal/CredSeal.node.js"
+      "dist/nodes/IdentArk/IdentArk.node.js"
     ]
   },
   "devDependencies": {

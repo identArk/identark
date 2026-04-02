@@ -10,7 +10,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from credseal.models import Message, Role
+from identark.models import Message, Role
 
 
 @pytest.fixture
@@ -55,7 +55,7 @@ def mock_genai():
 @pytest.fixture
 def gemini_gateway(mock_genai, tmp_path):
     """Create a GeminiGateway with mocked SDK."""
-    from credseal.integrations.gemini import GeminiGateway
+    from identark.integrations.gemini import GeminiGateway
 
     return GeminiGateway(
         api_key="test-api-key",
@@ -152,7 +152,7 @@ async def test_request_file_url(gemini_gateway):
 
 async def test_invalid_file_path(gemini_gateway):
     """Test rejection of paths outside workspace."""
-    from credseal.exceptions import PathNotAllowedError
+    from identark.exceptions import PathNotAllowedError
 
     with pytest.raises(PathNotAllowedError):
         await gemini_gateway.request_file_url("/etc/passwd", "GET")
@@ -160,7 +160,7 @@ async def test_invalid_file_path(gemini_gateway):
 
 def test_cost_estimation():
     """Test cost estimation for various models."""
-    from credseal.integrations.gemini import _estimate_gemini_cost
+    from identark.integrations.gemini import _estimate_gemini_cost
 
     # Flash model (cheap)
     flash_cost = _estimate_gemini_cost("gemini-1.5-flash", 1000, 1000)
@@ -174,10 +174,10 @@ def test_cost_estimation():
 
 def test_missing_api_key():
     """Test error when API key is missing."""
-    from credseal.exceptions import ConfigurationError
+    from identark.exceptions import ConfigurationError
 
     with patch.dict("sys.modules", {"google.generativeai": MagicMock()}):
-        from credseal.integrations.gemini import GeminiGateway
+        from identark.integrations.gemini import GeminiGateway
 
         with pytest.raises(ConfigurationError):
             GeminiGateway(api_key="", model="gemini-1.5-flash")
@@ -185,10 +185,10 @@ def test_missing_api_key():
 
 def test_missing_model():
     """Test error when model is missing."""
-    from credseal.exceptions import ConfigurationError
+    from identark.exceptions import ConfigurationError
 
     with patch.dict("sys.modules", {"google.generativeai": MagicMock()}):
-        from credseal.integrations.gemini import GeminiGateway
+        from identark.integrations.gemini import GeminiGateway
 
         with pytest.raises(ConfigurationError):
             GeminiGateway(api_key="test-key", model="")
@@ -196,8 +196,8 @@ def test_missing_model():
 
 async def test_cost_cap_enforcement(mock_genai):
     """Test cost cap raises exception."""
-    from credseal.exceptions import CostCapExceededError
-    from credseal.integrations.gemini import GeminiGateway
+    from identark.exceptions import CostCapExceededError
+    from identark.integrations.gemini import GeminiGateway
 
     gateway = GeminiGateway(
         api_key="test-key",
@@ -222,7 +222,7 @@ async def test_cost_cap_enforcement(mock_genai):
 
 def test_tool_conversion():
     """Test OpenAI tool format to Gemini conversion."""
-    from credseal.integrations.gemini import _convert_tools_to_gemini
+    from identark.integrations.gemini import _convert_tools_to_gemini
 
     openai_tools = [
         {

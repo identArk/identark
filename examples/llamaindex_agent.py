@@ -1,8 +1,8 @@
 """
-LlamaIndex agent — CredSealLLM with tool calling.
+LlamaIndex agent — IdentArkLLM with tool calling.
 
 Run:
-    pip install credseal-sdk[llamaindex] openai
+    pip install identark-sdk[llamaindex] openai
     export OPENAI_API_KEY=sk-...
     python examples/llamaindex_agent.py
 """
@@ -12,8 +12,8 @@ import asyncio
 from llama_index.core.llms import ChatMessage, MessageRole
 from openai import AsyncOpenAI
 
-from credseal import DirectGateway
-from credseal.integrations.llamaindex import CredSealLLM
+from identark import DirectGateway
+from identark.integrations.llamaindex import IdentArkLLM
 
 # ── Tool definition (OpenAI function-calling format) ─────────────────────────
 
@@ -47,7 +47,7 @@ async def main() -> None:
         model="gpt-4o-mini",
         system_prompt="You are a helpful assistant. Use tools when appropriate.",
     )
-    llm = CredSealLLM(gateway=gateway)
+    llm = IdentArkLLM(gateway=gateway)
 
     messages = [ChatMessage(role=MessageRole.USER, content="What is the weather in London?")]
 

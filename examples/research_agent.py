@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-CredSeal Research Agent — Deep product research with Gemini
+IdentArk Research Agent — Deep product research with Gemini
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A production-ready AI research agent built with CredSeal SDK.
+A production-ready AI research agent built with IdentArk SDK.
 Demonstrates the full AgentGateway Protocol workflow:
 
 1. Zero-secret agent design (API key isolated in gateway)
@@ -32,8 +32,8 @@ from typing import Any
 # Add parent to path for local development
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from credseal import Message, Role
-from credseal.integrations.gemini import GeminiGateway
+from identark import Message, Role
+from identark.integrations.gemini import GeminiGateway
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger("research_agent")
@@ -150,7 +150,7 @@ def execute_web_search(query: str, num_results: int = 5) -> str:
     elif "ai agent" in query.lower() or "framework" in query.lower():
         results = [
             {"title": "Best AI Agent Frameworks 2024", "snippet": "LangChain, CrewAI, AutoGPT comparison. Which is right for your use case?", "url": "https://aiframework.com/comparison"},
-            {"title": "Building Production AI Agents", "snippet": "Key considerations: security, cost control, observability. CredSeal solves credential isolation.", "url": "https://credseal.ai/docs"},
+            {"title": "Building Production AI Agents", "snippet": "Key considerations: security, cost control, observability. IdentArk solves credential isolation.", "url": "https://identark.ai/docs"},
             {"title": "LangGraph vs CrewAI", "snippet": "Two approaches to multi-agent systems. LangGraph for complex workflows, CrewAI for team collaboration.", "url": "https://langchain.dev/comparison"},
         ]
 
@@ -341,7 +341,7 @@ Format your final report with:
 # ── Main ───────────────────────────────────────────────────────────────────────
 
 async def main() -> None:
-    parser = argparse.ArgumentParser(description="CredSeal Research Agent")
+    parser = argparse.ArgumentParser(description="IdentArk Research Agent")
     parser.add_argument("query", nargs="?", help="Research query")
     parser.add_argument("--demo", action="store_true", help="Run demo research")
     parser.add_argument("--model", default="gemini-1.5-flash", help="Gemini model to use")
@@ -366,7 +366,7 @@ async def main() -> None:
         sys.exit(1)
 
     print("=" * 60)
-    print("🔬 CredSeal Research Agent")
+    print("🔬 IdentArk Research Agent")
     print("=" * 60)
     print(f"Query: {query}")
     print(f"Model: {args.model}")

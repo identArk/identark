@@ -1,6 +1,6 @@
-# CredSeal SDK Benchmarks
+# IdentArk SDK Benchmarks
 
-This directory contains performance benchmarks for the CredSeal SDK.
+This directory contains performance benchmarks for the IdentArk SDK.
 
 ## SDK Overhead Benchmark
 
@@ -21,7 +21,7 @@ The benchmark measures time spent in SDK code, **excluding** actual LLM API late
 ### Running the Benchmark
 
 ```bash
-cd credseal-sdk
+cd identark-sdk
 python benchmarks/benchmark_sdk_overhead.py
 ```
 
@@ -54,7 +54,7 @@ Detailed component breakdown:
 
 ### Interpretation
 
-- **SDK overhead** is the time spent in CredSeal code (serialization, parsing, validation)
+- **SDK overhead** is the time spent in IdentArk code (serialization, parsing, validation)
 - **LLM latency** is the time waiting for the LLM provider (200-2000ms typically)
 - The SDK adds **< 0.1ms** overhead to each call, well under our 1.5ms target
 - Total round-trip time = SDK overhead + network latency + LLM inference time

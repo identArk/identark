@@ -1,25 +1,25 @@
 """
-credseal.integrations.langgraph
+identark.integrations.langgraph
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-LangGraph integration — CredSealNode and CredSealStreamNode.
+LangGraph integration — IdentArkNode and IdentArkStreamNode.
 
-Wrap any AgentGateway as a LangGraph node so you can use CredSeal's
+Wrap any AgentGateway as a LangGraph node so you can use IdentArk's
 credential-isolated gateway inside any LangGraph StateGraph. Conversation
 history is maintained by the gateway, not by LangGraph state.
 
 Install::
 
-    pip install credseal-sdk[langgraph]
+    pip install identark-sdk[langgraph]
 
 Usage::
 
     from langgraph.graph import StateGraph, MessagesState
-    from credseal import DirectGateway
-    from credseal.integrations.langgraph import CredSealNode
+    from identark import DirectGateway
+    from identark.integrations.langgraph import IdentArkNode
     from openai import AsyncOpenAI
 
     gateway = DirectGateway(llm_client=AsyncOpenAI(), model="gpt-4o")
-    node = CredSealNode(gateway=gateway)
+    node = IdentArkNode(gateway=gateway)
 
     graph = StateGraph(MessagesState)
     graph.add_node("agent", node)
@@ -35,9 +35,9 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from credseal.integrations.langchain import credseal_to_ai_message, lc_to_credseal
+from identark.integrations.langchain import identark_to_ai_message, lc_to_identark
 
-logger = logging.getLogger("credseal.integrations.langgraph")
+logger = logging.getLogger("identark.integrations.langgraph")
 
 
 def _normalise_messages(raw: list[Any]) -> list[Any]:
@@ -69,9 +69,9 @@ def _normalise_messages(raw: list[Any]) -> list[Any]:
     return result
 
 
-class CredSealNode:
+class IdentArkNode:
     """
-    A LangGraph node backed by a CredSeal ``AgentGateway``.
+    A LangGraph node backed by a IdentArk ``AgentGateway``.
 
     Reads ``state["messages"]``, sends the *last* message (new turn only)
     to the gateway, and appends the assistant reply to ``state["messages"]``.
@@ -81,14 +81,14 @@ class CredSealNode:
     history. This avoids double-counting history that the gateway already holds.
 
     Args:
-        gateway:    Any :class:`~credseal.gateway.AgentGateway` implementation.
+        gateway:    Any :class:`~identark.gateway.AgentGateway` implementation.
         tools:      Optional list of OpenAI-format tool definitions.
         tool_choice: Tool selection mode. Default ``'auto'``.
         messages_key: The state key that holds the message list. Default ``'messages'``.
 
     Example::
 
-        node = CredSealNode(gateway=gateway)
+        node = IdentArkNode(gateway=gateway)
         graph.add_node("agent", node)
     """
 
@@ -112,15 +112,15 @@ class CredSealNode:
 
         # Send only the last message as the new turn
         last_msg = messages[-1]
-        cs_messages = lc_to_credseal([last_msg])
+        cs_messages = lc_to_identark([last_msg])
 
-        logger.debug("CredSealNode invoke tools=%s", bool(self._tools))
+        logger.debug("IdentArkNode invoke tools=%s", bool(self._tools))
         response = await self._gateway.invoke_llm(
             new_messages=cs_messages,
             tools=self._tools,
             tool_choice=self._tool_choice,
         )
-        ai_message = credseal_to_ai_message(response)
+        ai_message = identark_to_ai_message(response)
         return {self._messages_key: messages + [ai_message]}
 
     def invoke(self, state: dict[str, Any]) -> dict[str, Any]:
@@ -137,17 +137,17 @@ class CredSealNode:
             return asyncio.run(coro)
 
 
-class CredSealStreamNode:
+class IdentArkStreamNode:
     """
     A LangGraph node that streams the assistant response token by token.
 
-    Identical to :class:`CredSealNode` but uses ``invoke_llm_stream``
+    Identical to :class:`IdentArkNode` but uses ``invoke_llm_stream``
     and accumulates chunks into a single ``AIMessage`` before returning
     the updated state. Useful when you want to display partial output
     via LangGraph's streaming callbacks.
 
     Args:
-        gateway:      Any :class:`~credseal.gateway.AgentGateway` implementation.
+        gateway:      Any :class:`~identark.gateway.AgentGateway` implementation.
         tools:        Optional list of OpenAI-format tool definitions.
         messages_key: The state key that holds the message list. Default ``'messages'``.
     """
@@ -170,7 +170,7 @@ class CredSealStreamNode:
             return {self._messages_key: []}
 
         last_msg = messages[-1]
-        cs_messages = lc_to_credseal([last_msg])
+        cs_messages = lc_to_identark([last_msg])
 
         full_content = ""
         finish_reason = "stop"

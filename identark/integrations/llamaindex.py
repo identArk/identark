@@ -1,26 +1,26 @@
 """
-credseal.integrations.llamaindex
+identark.integrations.llamaindex
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-LlamaIndex integration — CredSealLLM.
+LlamaIndex integration — IdentArkLLM.
 
 Wraps any AgentGateway as a LlamaIndex ``CustomLLM`` so you can use
-CredSeal's credential-isolated gateway inside any LlamaIndex query
+IdentArk's credential-isolated gateway inside any LlamaIndex query
 engine, agent, or pipeline. Conversation history is maintained by
 the gateway, not by LlamaIndex's chat store.
 
 Install::
 
-    pip install credseal-sdk[llamaindex]
+    pip install identark-sdk[llamaindex]
 
 Usage::
 
-    from credseal import DirectGateway
-    from credseal.integrations.llamaindex import CredSealLLM
+    from identark import DirectGateway
+    from identark.integrations.llamaindex import IdentArkLLM
     from openai import AsyncOpenAI
     from llama_index.core.llms import ChatMessage, MessageRole
 
     gateway = DirectGateway(llm_client=AsyncOpenAI(), model="gpt-4o")
-    llm = CredSealLLM(gateway=gateway)
+    llm = IdentArkLLM(gateway=gateway)
 
     # Async (recommended)
     response = await llm.achat([ChatMessage(role=MessageRole.USER, content="Hello!")])
@@ -53,9 +53,9 @@ from llama_index.core.llms import (
 )
 from pydantic import ConfigDict, Field
 
-from credseal.models import LLMResponse, Message, Role
+from identark.models import LLMResponse, Message, Role
 
-logger = logging.getLogger("credseal.integrations.llamaindex")
+logger = logging.getLogger("identark.integrations.llamaindex")
 
 # ── Role mapping ──────────────────────────────────────────────────────────────
 
@@ -80,8 +80,8 @@ _FROM_CREDSEAL_ROLE: dict[Role, MessageRole] = {
 # ── Conversion helpers ────────────────────────────────────────────────────────
 
 
-def li_to_credseal(messages: list[ChatMessage]) -> list[Message]:
-    """Convert LlamaIndex ChatMessages to CredSeal Message objects."""
+def li_to_identark(messages: list[ChatMessage]) -> list[Message]:
+    """Convert LlamaIndex ChatMessages to IdentArk Message objects."""
     result: list[Message] = []
     for msg in messages:
         role = _TO_CREDSEAL_ROLE.get(msg.role, Role.USER)
@@ -91,8 +91,8 @@ def li_to_credseal(messages: list[ChatMessage]) -> list[Message]:
     return result
 
 
-def credseal_to_chat_response(response: LLMResponse) -> ChatResponse:
-    """Convert a CredSeal LLMResponse to a LlamaIndex ChatResponse."""
+def identark_to_chat_response(response: LLMResponse) -> ChatResponse:
+    """Convert a IdentArk LLMResponse to a LlamaIndex ChatResponse."""
     additional_kwargs: dict[str, Any] = {}
     if response.tool_calls:
         additional_kwargs["tool_calls"] = [
@@ -126,27 +126,27 @@ def credseal_to_chat_response(response: LLMResponse) -> ChatResponse:
     )
 
 
-# ── CredSealLLM ───────────────────────────────────────────────────────────────
+# ── IdentArkLLM ───────────────────────────────────────────────────────────────
 
 
-class CredSealLLM(CustomLLM):
+class IdentArkLLM(CustomLLM):
     """
-    LlamaIndex ``CustomLLM`` backed by a CredSeal ``AgentGateway``.
+    LlamaIndex ``CustomLLM`` backed by a IdentArk ``AgentGateway``.
 
     Drop-in replacement for any LlamaIndex LLM. Routes all inference
     calls through the gateway so credentials never enter the agent loop.
 
     Args:
-        gateway: Any :class:`~credseal.gateway.AgentGateway` implementation
+        gateway: Any :class:`~identark.gateway.AgentGateway` implementation
                  (``DirectGateway``, ``ControlPlaneGateway``, ``MockGateway``, …).
 
     Example::
 
-        from credseal import DirectGateway
-        from credseal.integrations.llamaindex import CredSealLLM
+        from identark import DirectGateway
+        from identark.integrations.llamaindex import IdentArkLLM
         from openai import AsyncOpenAI
 
-        llm = CredSealLLM(
+        llm = IdentArkLLM(
             gateway=DirectGateway(llm_client=AsyncOpenAI(), model="gpt-4o")
         )
         engine = index.as_query_engine(llm=llm)
@@ -161,7 +161,7 @@ class CredSealLLM(CustomLLM):
     @property
     def metadata(self) -> LLMMetadata:
         return LLMMetadata(
-            model_name=getattr(self.gateway, "model", "credseal"),
+            model_name=getattr(self.gateway, "model", "identark"),
             is_chat_model=True,
             is_function_calling_model=True,
         )
@@ -191,7 +191,7 @@ class CredSealLLM(CustomLLM):
         self, messages: Sequence[ChatMessage], **kwargs: Any
     ) -> ChatResponseGen:
         """Stream a chat response token by token via the gateway."""
-        cs_messages = li_to_credseal(list(messages))
+        cs_messages = li_to_identark(list(messages))
         tools: list[dict[str, Any]] | None = kwargs.get("tools")
         raw_choice = kwargs.get("tool_choice", "auto")
         tool_choice: str | dict[str, Any] = (
@@ -250,14 +250,14 @@ class CredSealLLM(CustomLLM):
         self, messages: Sequence[ChatMessage], **kwargs: Any
     ) -> ChatResponse:
         """Async chat — primary implementation."""
-        cs_messages = li_to_credseal(list(messages))
+        cs_messages = li_to_identark(list(messages))
         tools: list[dict[str, Any]] | None = kwargs.get("tools")
         raw_choice = kwargs.get("tool_choice", "auto")
         tool_choice: str | dict[str, Any] = (
             raw_choice if isinstance(raw_choice, (str, dict)) else "auto"
         )
         logger.debug(
-            "CredSealLLM.achat messages=%d tools=%s",
+            "IdentArkLLM.achat messages=%d tools=%s",
             len(cs_messages),
             len(tools) if tools else 0,
         )
@@ -266,7 +266,7 @@ class CredSealLLM(CustomLLM):
             tools=tools,
             tool_choice=tool_choice,
         )
-        return credseal_to_chat_response(response)
+        return identark_to_chat_response(response)
 
     async def acomplete(
         self, prompt: str, formatted: bool = False, **kwargs: Any

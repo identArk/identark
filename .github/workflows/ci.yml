@@ -29,13 +29,13 @@ jobs:
         run: pip install -e ".[dev]"
 
       - name: Lint with ruff
-        run: ruff check credseal/ tests/
+        run: ruff check identark/ tests/
 
       - name: Type check with mypy
-        run: mypy credseal/
+        run: mypy identark/
 
       - name: Run unit tests
-        run: pytest tests/unit/ -v --cov=credseal --cov-report=xml
+        run: pytest tests/unit/ -v --cov=identark --cov-report=xml
 
       - name: Run SDK benchmarks
         run: |
@@ -58,7 +58,7 @@ jobs:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     environment:
       name: pypi
-      url: https://pypi.org/p/credseal-sdk
+      url: https://pypi.org/p/identark-sdk
     permissions:
       id-token: write   # Required for OIDC trusted publishing
 
@@ -85,4 +85,4 @@ jobs:
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         # No API token needed — uses OIDC trusted publisher
-        # Configure once at pypi.org/manage/project/credseal-sdk/settings/publishing/
+        # Configure once at pypi.org/manage/project/identark-sdk/settings/publishing/

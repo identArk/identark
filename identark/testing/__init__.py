@@ -1,5 +1,5 @@
 """
-credseal.testing
+identark.testing
 ~~~~~~~~~~~~~~~~~~
 Testing utilities for agents built with the SDK.
 
@@ -11,8 +11,8 @@ calls for assertion in tests.
 
 Usage::
 
-    from credseal.testing import MockGateway
-    from credseal.models import LLMResponse, Message, Role
+    from identark.testing import MockGateway
+    from identark.models import LLMResponse, Message, Role
 
     mock = MockGateway()
     mock.queue_response(LLMResponse(
@@ -26,6 +26,6 @@ Usage::
     assert mock.invoke_llm_call_count == 1
 """
 
-from credseal.testing.mock_gateway import MockGateway
+from identark.testing.mock_gateway import MockGateway
 
 __all__ = ["MockGateway"]

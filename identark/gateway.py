@@ -1,5 +1,5 @@
 """
-credseal.gateway
+identark.gateway
 ~~~~~~~~~~~~~~~~~~
 The AgentGateway Protocol — the core interface of the SDK.
 
@@ -9,7 +9,7 @@ whether it comes from this SDK or not. Python's structural subtyping
 
 Usage::
 
-    from credseal import AgentGateway
+    from identark import AgentGateway
 
     def run_agent(gateway: AgentGateway) -> None:
         # Works with DirectGateway, ControlPlaneGateway, MockGateway,
@@ -22,7 +22,7 @@ from __future__ import annotations
 from collections.abc import AsyncGenerator
 from typing import Any, Protocol, runtime_checkable
 
-from credseal.models import LLMResponse, Message, PresignedURL, StreamChunk
+from identark.models import LLMResponse, Message, PresignedURL, StreamChunk
 
 
 @runtime_checkable
@@ -62,7 +62,7 @@ class AgentGateway(Protocol):
                           tool dict ``{"type": "function", "function": {"name": "…"}}``.
 
         Returns:
-            An :class:`~credseal.models.LLMResponse` containing the
+            An :class:`~identark.models.LLMResponse` containing the
             assistant message, cost, finish reason, and token usage.
 
         Raises:
@@ -107,7 +107,7 @@ class AgentGateway(Protocol):
             method:    ``'PUT'`` for upload, ``'GET'`` for download.
 
         Returns:
-            A :class:`~credseal.models.PresignedURL` with the URL,
+            A :class:`~identark.models.PresignedURL` with the URL,
             expiry timestamp, method, and resolved file path.
 
         Raises:
@@ -121,7 +121,7 @@ class AgentGateway(Protocol):
         Return the total cost in USD consumed by this session so far.
 
         Reflects all :meth:`invoke_llm` calls made through this gateway
-        instance. With :class:`~credseal.gateways.ControlPlaneGateway`,
+        instance. With :class:`~identark.gateways.ControlPlaneGateway`,
         this queries the control plane for the authoritative total.
 
         Returns:
@@ -138,7 +138,7 @@ class AgentGateway(Protocol):
         """
         Stream a response from the LLM token by token.
 
-        Yields :class:`~credseal.models.StreamChunk` objects as they arrive.
+        Yields :class:`~identark.models.StreamChunk` objects as they arrive.
         The final chunk has ``finish_reason`` set and ``input_tokens`` /
         ``output_tokens`` populated. All prior chunks have ``finish_reason=None``.
 
@@ -148,7 +148,7 @@ class AgentGateway(Protocol):
             tool_choice:  Tool selection mode.
 
         Yields:
-            :class:`~credseal.models.StreamChunk` — one per token delta.
+            :class:`~identark.models.StreamChunk` — one per token delta.
 
         Raises:
             CostCapExceededError: If the session cost cap has been reached.
