@@ -1,20 +1,33 @@
 """Unit tests for LangChain and LlamaIndex integrations."""
 
+import sys
+from typing import TYPE_CHECKING
 
 import pytest
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
-from llama_index.core.llms import ChatMessage, ChatResponse, MessageRole
 
-from identark.integrations.langchain import (
-    IdentArkChatModel,
-    identark_to_ai_message,
-    lc_to_identark,
-)
-from identark.integrations.llamaindex import (
-    IdentArkLLM,
-    identark_to_chat_response,
-    li_to_identark,
-)
+# Skip all tests in this module if Python < 3.10 (required for | union syntax)
+pytestmark = pytest.mark.skipif(sys.version_info < (3, 10), reason="Requires Python 3.10+")
+
+if sys.version_info >= (3, 10):
+    from identark.integrations.langchain import (
+        IdentArkChatModel,
+        identark_to_ai_message,
+        lc_to_identark,
+    )
+    from identark.integrations.llamaindex import (
+        IdentArkLLM,
+        identark_to_chat_response,
+        li_to_identark,
+    )
+else:
+    # Dummy objects for when Python < 3.10
+    IdentArkChatModel = None  # type: ignore
+    identark_to_ai_message = None  # type: ignore
+    lc_to_identark = None  # type: ignore
+    IdentArkLLM = None  # type: ignore
+    identark_to_chat_response = None  # type: ignore
+    li_to_identark = None  # type: ignore
+
 from identark.models import Function, LLMResponse, Message, Role, TokenUsage, ToolCall
 from identark.testing import MockGateway
 
@@ -58,21 +71,29 @@ def _make_llm(mock: MockGateway) -> IdentArkChatModel:
 # ── lc_to_identark ────────────────────────────────────────────────────────────
 
 
-class TestLcToCredseal:
+class TestLcToIdentark:
     def test_human_message(self) -> None:
+        from langchain_core.messages import HumanMessage
+
         msgs = lc_to_identark([HumanMessage(content="Hi")])
         assert msgs[0].role == Role.USER
         assert msgs[0].content == "Hi"
 
     def test_ai_message(self) -> None:
+        from langchain_core.messages import AIMessage
+
         msgs = lc_to_identark([AIMessage(content="Hello")])
         assert msgs[0].role == Role.ASSISTANT
 
     def test_system_message(self) -> None:
+        from langchain_core.messages import SystemMessage
+
         msgs = lc_to_identark([SystemMessage(content="You are helpful.")])
         assert msgs[0].role == Role.SYSTEM
 
     def test_tool_message_preserves_call_id(self) -> None:
+        from langchain_core.messages import ToolMessage
+
         msg = ToolMessage(content='{"result": 42}', tool_call_id="call_xyz")
         msgs = lc_to_identark([msg])
         assert msgs[0].role == Role.TOOL
@@ -80,6 +101,8 @@ class TestLcToCredseal:
         assert msgs[0].content == '{"result": 42}'
 
     def test_mixed_conversation(self) -> None:
+        from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+
         lc_msgs = [
             SystemMessage(content="Be concise."),
             HumanMessage(content="What is 2+2?"),
@@ -92,6 +115,8 @@ class TestLcToCredseal:
         ]
 
     def test_multimodal_list_content(self) -> None:
+        from langchain_core.messages import HumanMessage
+
         msg = HumanMessage(content=[{"type": "text", "text": "Describe this image"}])
         msgs = lc_to_identark([msg])
         assert isinstance(msgs[0].content, list)
@@ -103,6 +128,8 @@ class TestLcToCredseal:
 
 class TestIdentArkToAiMessage:
     def test_basic_text_response(self) -> None:
+        from langchain_core.messages import AIMessage
+
         ai_msg = identark_to_ai_message(_make_response("The answer is 42."))
         assert isinstance(ai_msg, AIMessage)
         assert ai_msg.content == "The answer is 42."
@@ -147,6 +174,8 @@ class TestIdentArkToAiMessage:
 class TestIdentArkChatModel:
     @pytest.mark.asyncio
     async def test_ainvoke_returns_ai_message(self) -> None:
+        from langchain_core.messages import AIMessage, HumanMessage
+
         mock = MockGateway()
         mock.queue_response(_make_response("Hi there!"))
         llm = _make_llm(mock)
@@ -158,6 +187,8 @@ class TestIdentArkChatModel:
 
     @pytest.mark.asyncio
     async def test_gateway_receives_correct_messages(self) -> None:
+        from langchain_core.messages import HumanMessage, SystemMessage
+
         mock = MockGateway()
         mock.queue_response(_make_response())
         llm = _make_llm(mock)
@@ -175,6 +206,8 @@ class TestIdentArkChatModel:
 
     @pytest.mark.asyncio
     async def test_tools_passed_through_to_gateway(self) -> None:
+        from langchain_core.messages import HumanMessage
+
         mock = MockGateway()
         mock.queue_response(_make_tool_response())
         llm = _make_llm(mock)
@@ -200,6 +233,8 @@ class TestIdentArkChatModel:
 
     @pytest.mark.asyncio
     async def test_tool_call_in_response(self) -> None:
+        from langchain_core.messages import HumanMessage
+
         mock = MockGateway()
         mock.queue_response(_make_tool_response())
         llm = _make_llm(mock)
@@ -212,6 +247,8 @@ class TestIdentArkChatModel:
 
     @pytest.mark.asyncio
     async def test_cost_in_response_metadata(self) -> None:
+        from langchain_core.messages import HumanMessage
+
         mock = MockGateway()
         mock.queue_response(_make_response(cost=0.0042))
         llm = _make_llm(mock)
@@ -222,6 +259,8 @@ class TestIdentArkChatModel:
 
     @pytest.mark.asyncio
     async def test_multiple_turns_accumulate_in_gateway(self) -> None:
+        from langchain_core.messages import HumanMessage
+
         mock = MockGateway()
         mock.queue_response(_make_response("First"))
         mock.queue_response(_make_response("Second"))
@@ -257,21 +296,29 @@ class TestIdentArkChatModel:
 # ── LlamaIndex: li_to_identark ────────────────────────────────────────────────
 
 
-class TestLiToCredseal:
+class TestLiToIdentark:
     def test_user_message(self) -> None:
+        from llama_index.core.llms import ChatMessage, MessageRole
+
         msgs = li_to_identark([ChatMessage(role=MessageRole.USER, content="Hi")])
         assert msgs[0].role == Role.USER
         assert msgs[0].content == "Hi"
 
     def test_assistant_message(self) -> None:
+        from llama_index.core.llms import ChatMessage, MessageRole
+
         msgs = li_to_identark([ChatMessage(role=MessageRole.ASSISTANT, content="Hello")])
         assert msgs[0].role == Role.ASSISTANT
 
     def test_system_message(self) -> None:
+        from llama_index.core.llms import ChatMessage, MessageRole
+
         msgs = li_to_identark([ChatMessage(role=MessageRole.SYSTEM, content="Be helpful.")])
         assert msgs[0].role == Role.SYSTEM
 
     def test_tool_message(self) -> None:
+        from llama_index.core.llms import ChatMessage, MessageRole
+
         msg = ChatMessage(
             role=MessageRole.TOOL,
             content='{"result": 42}',
@@ -282,14 +329,20 @@ class TestLiToCredseal:
         assert msgs[0].tool_call_id == "call_abc"
 
     def test_chatbot_maps_to_assistant(self) -> None:
+        from llama_index.core.llms import ChatMessage, MessageRole
+
         msgs = li_to_identark([ChatMessage(role=MessageRole.CHATBOT, content="Hey")])
         assert msgs[0].role == Role.ASSISTANT
 
     def test_developer_maps_to_system(self) -> None:
+        from llama_index.core.llms import ChatMessage, MessageRole
+
         msgs = li_to_identark([ChatMessage(role=MessageRole.DEVELOPER, content="Rules")])
         assert msgs[0].role == Role.SYSTEM
 
     def test_mixed_conversation(self) -> None:
+        from llama_index.core.llms import ChatMessage, MessageRole
+
         li_msgs = [
             ChatMessage(role=MessageRole.SYSTEM, content="Be concise."),
             ChatMessage(role=MessageRole.USER, content="What is 2+2?"),
@@ -304,12 +357,16 @@ class TestLiToCredseal:
 
 class TestIdentArkToChatResponse:
     def test_basic_text_response(self) -> None:
+        from llama_index.core.llms import ChatResponse, MessageRole
+
         resp = identark_to_chat_response(_make_response("Hello!"))
         assert isinstance(resp, ChatResponse)
         assert resp.message.role == MessageRole.ASSISTANT
         assert resp.message.content == "Hello!"
 
     def test_raw_metadata_populated(self) -> None:
+        from llama_index.core.llms import ChatResponse
+
         resp = identark_to_chat_response(_make_response(cost=0.007))
         assert resp.raw["cost_usd"] == pytest.approx(0.007)
         assert resp.raw["model"] == "mock-gpt-4o"
@@ -317,6 +374,8 @@ class TestIdentArkToChatResponse:
         assert resp.raw["output_tokens"] == 5
 
     def test_tool_calls_in_additional_kwargs(self) -> None:
+        from llama_index.core.llms import ChatResponse
+
         resp = identark_to_chat_response(_make_tool_response())
         tcs = resp.message.additional_kwargs["tool_calls"]
         assert len(tcs) == 1
@@ -324,6 +383,8 @@ class TestIdentArkToChatResponse:
         assert tcs[0]["id"] == "call_abc123"
 
     def test_no_tool_calls_when_absent(self) -> None:
+        from llama_index.core.llms import ChatResponse
+
         resp = identark_to_chat_response(_make_response())
         assert "tool_calls" not in resp.message.additional_kwargs
 
@@ -334,6 +395,8 @@ class TestIdentArkToChatResponse:
 class TestIdentArkLLM:
     @pytest.mark.asyncio
     async def test_achat_returns_chat_response(self) -> None:
+        from llama_index.core.llms import ChatMessage, ChatResponse, MessageRole
+
         mock = MockGateway()
         mock.queue_response(_make_response("Hi there!"))
         llm = IdentArkLLM(gateway=mock)
@@ -345,6 +408,8 @@ class TestIdentArkLLM:
 
     @pytest.mark.asyncio
     async def test_gateway_receives_correct_messages(self) -> None:
+        from llama_index.core.llms import ChatMessage, MessageRole
+
         mock = MockGateway()
         mock.queue_response(_make_response())
         llm = IdentArkLLM(gateway=mock)
@@ -374,6 +439,8 @@ class TestIdentArkLLM:
 
     @pytest.mark.asyncio
     async def test_tool_calls_in_response(self) -> None:
+        from llama_index.core.llms import ChatMessage, MessageRole
+
         mock = MockGateway()
         mock.queue_response(_make_tool_response())
         llm = IdentArkLLM(gateway=mock)
@@ -385,6 +452,8 @@ class TestIdentArkLLM:
 
     @pytest.mark.asyncio
     async def test_tools_passed_to_gateway(self) -> None:
+        from llama_index.core.llms import ChatMessage, MessageRole
+
         mock = MockGateway()
         mock.queue_response(_make_tool_response())
         llm = IdentArkLLM(gateway=mock)
@@ -410,6 +479,8 @@ class TestIdentArkLLM:
         assert llm.metadata.is_chat_model is True
 
     def test_sync_chat(self) -> None:
+        from llama_index.core.llms import ChatMessage, MessageRole
+
         mock = MockGateway()
         mock.queue_response(_make_response("Sync OK"))
         llm = IdentArkLLM(gateway=mock)
