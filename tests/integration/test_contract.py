@@ -7,8 +7,7 @@ parses responses according to the control plane API specification.
 
 from __future__ import annotations
 
-import json
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from httpx import Response
@@ -29,7 +28,6 @@ class TestRequestPayloadFormat:
         mock_control_plane: MockControlPlane,
     ) -> None:
         """Verify invoke_llm sends correctly formatted request."""
-        from unittest.mock import patch, AsyncMock, MagicMock
 
         gateway = ControlPlaneGateway(
             api_key="test-key",
@@ -74,7 +72,6 @@ class TestRequestPayloadFormat:
         mock_control_plane: MockControlPlane,
     ) -> None:
         """Verify tools are included in request payload."""
-        from unittest.mock import patch, AsyncMock, MagicMock
 
         gateway = ControlPlaneGateway(
             api_key="test-key",
@@ -125,7 +122,6 @@ class TestRequestPayloadFormat:
         mock_control_plane: MockControlPlane,
     ) -> None:
         """Verify Authorization header is correctly formatted."""
-        from unittest.mock import patch, AsyncMock, MagicMock
 
         gateway = ControlPlaneGateway(
             api_key="sk-test-12345",
@@ -367,19 +363,26 @@ class TestStreamingSSEFormat:
         mock_control_plane: MockControlPlane,
     ) -> None:
         """Verify SSE chunks are correctly parsed."""
-        from unittest.mock import patch, AsyncMock, MagicMock
 
         gateway = ControlPlaneGateway(
             api_key="test",
             url="https://api.identark.io/v1",
         )
 
-        async def mock_stream_request(self_: any, method: str, path: str, **kwargs: any) -> MagicMock:
+        async def mock_stream_request(
+            self_: any,
+            method: str,
+            path: str,
+            **kwargs: any,
+        ) -> MagicMock:
             sse_events = "\n".join([
                 'data: {"content": "Hello", "finish_reason": null, "model": "gpt-4o"}',
                 'data: {"content": " ", "finish_reason": null, "model": "gpt-4o"}',
                 'data: {"content": "world", "finish_reason": null, "model": "gpt-4o"}',
-                'data: {"content": "", "finish_reason": "stop", "model": "gpt-4o", "input_tokens": 10, "output_tokens": 15}',
+                (
+                    'data: {"content": "", "finish_reason": "stop", "model": "gpt-4o", '
+                    '"input_tokens": 10, "output_tokens": 15}'
+                ),
                 "data: [DONE]",
             ])
 

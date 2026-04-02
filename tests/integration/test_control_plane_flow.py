@@ -11,8 +11,10 @@ import pytest
 
 from identark.exceptions import (
     AuthenticationError,
+    ControlPlaneError,
     CostCapExceededError,
     NetworkError,
+    PathNotAllowedError,
     SessionNotFoundError,
 )
 from identark.gateways.control_plane import ControlPlaneGateway
@@ -237,7 +239,7 @@ class TestFileOperations:
         control_plane_gateway: ControlPlaneGateway,
     ) -> None:
         """Test that paths outside /workspace/ are rejected locally."""
-        with pytest.raises(Exception):  # PathNotAllowedError
+        with pytest.raises(PathNotAllowedError):
             await control_plane_gateway.request_file_url(
                 file_path="/etc/passwd",  # Outside workspace
             )
@@ -376,7 +378,7 @@ class TestErrorHandling:
 
         with mock_control_plane.mocked():
             # Should raise a ControlPlaneError (not retried)
-            with pytest.raises(Exception):
+            with pytest.raises(ControlPlaneError):
                 await gateway.invoke_llm(sample_messages)
 
 

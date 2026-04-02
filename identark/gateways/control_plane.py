@@ -39,6 +39,7 @@ from identark.models import (
     TokenUsage,
     ToolCall,
 )
+from identark.validation import validate_tool_definitions
 
 logger = logging.getLogger("identark.control_plane")
 
@@ -59,10 +60,10 @@ class ControlPlaneGateway:
 
     Args:
         api_key:     IdentArk API key. Auto-detected from
-                     ``CREDSEAL_API_KEY`` or ``CREDSEAL_SESSION_TOKEN`` env vars.
+                     ``IDENTARK_API_KEY`` or ``IDENTARK_SESSION_TOKEN`` env vars.
         url:         Control plane base URL. Auto-detected from
-                     ``CREDSEAL_CONTROL_PLANE_URL``.
-        session_id:  Session identifier. Auto-detected from ``CREDSEAL_SESSION_ID``.
+                     ``IDENTARK_CONTROL_PLANE_URL``.
+        session_id:  Session identifier. Auto-detected from ``IDENTARK_SESSION_ID``.
         timeout:     Per-request timeout in seconds. Default: 30.
         max_retries: Retry attempts on transient failures. Default: 3.
 
@@ -73,8 +74,8 @@ class ControlPlaneGateway:
 
         # Outside a sandbox — explicit config
         gateway = ControlPlaneGateway(
-            api_key=os.environ["CREDSEAL_API_KEY"],
-            url=os.environ["CREDSEAL_CONTROL_PLANE_URL"],
+            api_key=os.environ["IDENTARK_API_KEY"],
+            url=os.environ["IDENTARK_CONTROL_PLANE_URL"],
         )
 
         # As an async context manager
@@ -93,24 +94,24 @@ class ControlPlaneGateway:
         # Resolve credentials — constructor args take precedence over env vars
         self._api_key = (
             api_key
-            or os.environ.get("CREDSEAL_SESSION_TOKEN")
-            or os.environ.get("CREDSEAL_API_KEY")
+            or os.environ.get("IDENTARK_SESSION_TOKEN")
+            or os.environ.get("IDENTARK_API_KEY")
         )
         self._url = (
             url
-            or os.environ.get("CREDSEAL_CONTROL_PLANE_URL")
+            or os.environ.get("IDENTARK_CONTROL_PLANE_URL")
         )
-        self._session_id = session_id or os.environ.get("CREDSEAL_SESSION_ID")
+        self._session_id = session_id or os.environ.get("IDENTARK_SESSION_ID")
 
         if not self._api_key:
             raise ConfigurationError(
-                "No API key found. Provide api_key= or set CREDSEAL_API_KEY "
-                "(outside sandbox) / CREDSEAL_SESSION_TOKEN (inside sandbox)."
+                "No API key found. Provide api_key= or set IDENTARK_API_KEY "
+                "(outside sandbox) / IDENTARK_SESSION_TOKEN (inside sandbox)."
             )
         if not self._url:
             raise ConfigurationError(
                 "No control plane URL found. Provide url= or set "
-                "CREDSEAL_CONTROL_PLANE_URL."
+                "IDENTARK_CONTROL_PLANE_URL."
             )
 
         self._timeout = timeout
@@ -158,6 +159,7 @@ class ControlPlaneGateway:
         tool_choice: str | dict[str, Any] = "auto",
     ) -> LLMResponse:
         """Send new messages to the LLM via the control plane."""
+        validate_tool_definitions(tools)
         payload: dict[str, Any] = {
             "new_messages": [m.to_openai_dict() for m in new_messages],
         }
@@ -214,7 +216,12 @@ class ControlPlaneGateway:
         tools: list[dict[str, Any]] | None = None,
         tool_choice: str | dict[str, Any] = "auto",
     ) -> AsyncGenerator[StreamChunk, None]:
-        """Stream the LLM response via SSE from the control plane."""
+        """Stream the LLM response via SSE from the control plane.
+
+        Handles standard SSE format with `data:` prefix and `[DONE]` sentinel.
+        Also supports `event:` and `id:` fields (ignored).
+        """
+        validate_tool_definitions(tools)
         payload: dict[str, Any] = {
             "new_messages": [m.to_openai_dict() for m in new_messages],
         }
@@ -230,14 +237,33 @@ class ControlPlaneGateway:
                 self._raise_4xx(response)
 
             async for line in response.aiter_lines():
+                # Skip empty lines, comments, and non-data fields
+                line = line.strip()
+                if (
+                    not line
+                    or line.startswith(":")
+                    or line.startswith("event:")
+                    or line.startswith("id:")
+                ):
+                    continue
                 if not line.startswith("data:"):
                     continue
+
                 data = line.removeprefix("data:").strip()
                 if data == "[DONE]":
                     break
+                if not data:
+                    continue
+
                 try:
                     event = json.loads(data)
-                except json.JSONDecodeError:
+                except json.JSONDecodeError as exc:
+                    logger.warning("Invalid JSON in SSE stream: %s", exc)
+                    continue
+
+                # Validate expected structure
+                if not isinstance(event, dict):
+                    logger.warning("SSE event is not a dict: %s", type(event))
                     continue
 
                 yield StreamChunk(

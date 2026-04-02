@@ -37,50 +37,10 @@ from identark.models import (
     TokenUsage,
     ToolCall,
 )
+from identark.pricing import estimate_cost as _estimate_cost
+from identark.validation import validate_tool_definitions
 
 logger = logging.getLogger("identark.direct")
-
-# Cost per 1M tokens (USD) — approximate, update as providers change pricing
-_OPENAI_PRICING: dict[str, dict[str, float]] = {
-    "gpt-4o":            {"input": 2.50,  "output": 10.00},
-    "gpt-4o-mini":       {"input": 0.15,  "output": 0.60},
-    "gpt-4-turbo":       {"input": 10.00, "output": 30.00},
-    "gpt-3.5-turbo":     {"input": 0.50,  "output": 1.50},
-}
-
-_ANTHROPIC_PRICING: dict[str, dict[str, float]] = {
-    "claude-3-5-sonnet-20241022": {"input": 3.00,  "output": 15.00},
-    "claude-3-5-haiku-20241022":  {"input": 0.80,  "output": 4.00},
-    "claude-3-opus-20240229":     {"input": 15.00, "output": 75.00},
-}
-
-# Mistral AI — EU/French provider (mistral.ai). Prices in USD per 1M tokens.
-_MISTRAL_PRICING: dict[str, dict[str, float]] = {
-    "mistral-large-latest":  {"input": 2.00, "output": 6.00},
-    "mistral-small-latest":  {"input": 0.20, "output": 0.60},
-    "open-mistral-nemo":     {"input": 0.15, "output": 0.15},
-    "codestral-latest":      {"input": 0.20, "output": 0.60},
-}
-
-
-def _estimate_cost(
-    model: str,
-    input_tokens: int,
-    output_tokens: int,
-    provider: str = "openai",
-) -> float:
-    """Estimate cost in USD for a given model and token counts.
-
-    Returns 0.0 for local providers (Ollama, self-hosted models).
-    """
-    if provider == "local":
-        return 0.0
-    pricing = {**_OPENAI_PRICING, **_ANTHROPIC_PRICING, **_MISTRAL_PRICING}
-    if model not in pricing:
-        # Unknown model — use a conservative estimate
-        return (input_tokens + output_tokens) * 0.000_010
-    rates = pricing[model]
-    return (input_tokens * rates["input"] + output_tokens * rates["output"]) / 1_000_000
 
 
 class DirectGateway:
@@ -209,6 +169,7 @@ class DirectGateway:
     ) -> LLMResponse:
         """Send new messages to the LLM and receive a response."""
         self._check_cost_cap()
+        validate_tool_definitions(tools)
 
         # Build full message list: system + history + new
         messages = self._build_messages(new_messages)
@@ -416,10 +377,7 @@ class DirectGateway:
         try:
             response = await self._client.messages.create(**kwargs)
         except Exception as exc:
-            exc_str = str(exc).lower()
-            if "content filtering policy" in exc_str or "output blocked" in exc_str:
-                raise ContentPolicyError(str(exc)) from exc
-            raise ProviderError(f"Anthropic API error: {exc}") from exc
+            self._classify_anthropic_error(exc)
 
         # Extract text content
         content = ""
@@ -462,19 +420,82 @@ class DirectGateway:
         )
 
     def _classify_openai_error(self, exc: Exception) -> NoReturn:
-        """Re-raise an OpenAI-compatible SDK exception as a IdentArk exception."""
-        exc_type = type(exc).__name__
-        exc_str = str(exc).lower()
-        if "RateLimitError" in exc_type:
+        """Re-raise an OpenAI-compatible SDK exception as a IdentArk exception.
+
+        Detection priority:
+        1. Exception class hierarchy (most reliable)
+        2. HTTP status code attribute (if present)
+        3. Error code attribute (if present)
+        4. String matching (fallback)
+        """
+        # Check exception class hierarchy first (most reliable)
+        exc_class_name = type(exc).__name__
+        exc_mro = [c.__name__ for c in type(exc).__mro__]
+
+        # Rate limit: class name or 429 status
+        if "RateLimitError" in exc_mro:
+            retry_after = getattr(exc, "retry_after", None)
+            raise RateLimitError(
+                str(exc), provider=self._provider, retry_after_seconds=retry_after
+            ) from exc
+
+        status_code = getattr(exc, "status_code", None)
+        if status_code == 429:
             raise RateLimitError(str(exc), provider=self._provider) from exc
-        if (
-            "ContentFilter" in exc_type
-            or "content_filter" in exc_str
-            or "content filtering policy" in exc_str
-            or "output blocked" in exc_str
+
+        # Content policy: class name, error code, or status 400 with specific message
+        if "ContentFilterFinishReasonError" in exc_mro or "ContentFilter" in exc_class_name:
+            raise ContentPolicyError(str(exc)) from exc
+
+        error_code = getattr(exc, "code", None) or getattr(exc, "error_code", None)
+        if error_code in ("content_filter", "content_policy_violation", "output_blocked"):
+            raise ContentPolicyError(str(exc)) from exc
+
+        # String fallback for edge cases (provider SDK variations)
+        exc_str = str(exc).lower()
+        if any(
+            kw in exc_str
+            for kw in ("content_filter", "content filtering policy", "output blocked")
         ):
             raise ContentPolicyError(str(exc)) from exc
+
+        # Authentication errors
+        if "AuthenticationError" in exc_mro or status_code == 401:
+            raise ProviderError(f"Authentication failed: {exc}") from exc
+
+        # Default: generic provider error
         raise ProviderError(f"{self._provider.capitalize()} API error: {exc}") from exc
+
+    def _classify_anthropic_error(self, exc: Exception) -> NoReturn:
+        """Re-raise an Anthropic SDK exception as a IdentArk exception."""
+        exc_mro = [c.__name__ for c in type(exc).__mro__]
+
+        # Rate limit
+        if "RateLimitError" in exc_mro:
+            raise RateLimitError(str(exc), provider="anthropic") from exc
+
+        status_code = getattr(exc, "status_code", None)
+        if status_code == 429:
+            raise RateLimitError(str(exc), provider="anthropic") from exc
+
+        # Content policy (Anthropic uses "content_policy_violation" error type)
+        error_type = getattr(exc, "type", None) or getattr(exc, "error_type", None)
+        if error_type in ("content_policy_violation", "content_filter"):
+            raise ContentPolicyError(str(exc)) from exc
+
+        # String fallback
+        exc_str = str(exc).lower()
+        if any(
+            kw in exc_str
+            for kw in ("content filtering policy", "output blocked", "content policy")
+        ):
+            raise ContentPolicyError(str(exc)) from exc
+
+        # Authentication
+        if "AuthenticationError" in exc_mro or status_code == 401:
+            raise ProviderError(f"Anthropic authentication failed: {exc}") from exc
+
+        raise ProviderError(f"Anthropic API error: {exc}") from exc
 
     # ── Streaming ─────────────────────────────────────────────────────────────
 
@@ -489,6 +510,7 @@ class DirectGateway:
         Yields :class:`~identark.models.StreamChunk` objects as they arrive.
         The final chunk has ``finish_reason`` set and token counts populated.
         """
+        validate_tool_definitions(tools)
         if self._cost_cap is not None and self._total_cost >= self._cost_cap:
             raise CostCapExceededError(
                 f"Cost cap of ${self._cost_cap:.4f} reached.",
@@ -610,7 +632,4 @@ class DirectGateway:
                     output_tokens=output_tokens,
                 )
         except Exception as exc:
-            exc_str = str(exc).lower()
-            if "content filtering policy" in exc_str or "output blocked" in exc_str:
-                raise ContentPolicyError(str(exc)) from exc
-            raise ProviderError(f"Anthropic streaming error: {exc}") from exc
+            self._classify_anthropic_error(exc)
