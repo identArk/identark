@@ -2,7 +2,7 @@
 LlamaIndex agent — IdentArkLLM with tool calling.
 
 Run:
-    pip install identark-sdk[llamaindex] openai
+    pip install identark[llamaindex] openai
     export OPENAI_API_KEY=sk-...
     python examples/llamaindex_agent.py
 """

@@ -5,10 +5,10 @@ Framework adapters for LangChain, LlamaIndex, Gemini, and others.
 
 These are optional — install the relevant extras to use them:
 
-    pip install identark-sdk[langchain]
-    pip install identark-sdk[llamaindex]
-    pip install identark-sdk[gemini]
-    pip install identark-sdk crewai
+    pip install identark[langchain]
+    pip install identark[llamaindex]
+    pip install identark[gemini]
+    pip install identark crewai
 """
 
 # Lazy imports to avoid requiring all dependencies

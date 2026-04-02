@@ -10,7 +10,7 @@ not by LangChain memory objects.
 
 Install::
 
-    pip install identark-sdk[langchain]
+    pip install identark[langchain]
 
 Usage::
 

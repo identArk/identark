@@ -1,10 +1,10 @@
-# identark-sdk
+# identark
 
 **The AgentGateway Protocol — secure, scalable AI agent execution infrastructure.**
 
-[![CI](https://github.com/identark/sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/identark/sdk/actions)
-[![PyPI](https://img.shields.io/pypi/v/identark-sdk)](https://pypi.org/project/identark-sdk/)
-[![Python](https://img.shields.io/pypi/pyversions/identark-sdk)](https://pypi.org/project/identark-sdk/)
+[![CI](https://github.com/identark/identark/actions/workflows/ci.yml/badge.svg)](https://github.com/identark/identark/actions)
+[![PyPI](https://img.shields.io/pypi/v/identark)](https://pypi.org/project/identark/)
+[![Python](https://img.shields.io/pypi/pyversions/identark)](https://pypi.org/project/identark/)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 
 ---
@@ -18,7 +18,7 @@ The naive solution — run your agent on the same backend as your REST API — c
 1. **Security**: The agent can access every secret on the machine.
 2. **Reliability**: A memory-hungry agent degrades your API. Redeploying your API kills all running agents.
 
-`identark-sdk` solves both.
+`identark` solves both.
 
 ---
 
@@ -38,7 +38,7 @@ Your agent code is **identical** in both environments. The switch is two lines.
 ## Quick start
 
 ```bash
-pip install identark-sdk[openai]
+pip install identark[openai]
 ```
 
 ```python
@@ -82,22 +82,22 @@ gateway = ControlPlaneGateway()  # auto-detects env vars inside a IdentArk sandb
 
 ```bash
 # Core SDK only
-pip install identark-sdk
+pip install identark
 
 # With OpenAI support
-pip install identark-sdk[openai]
+pip install identark[openai]
 
 # With Anthropic support
-pip install identark-sdk[anthropic]
+pip install identark[anthropic]
 
 # With Google Gemini support
-pip install identark-sdk[gemini]
+pip install identark[gemini]
 
 # With Mistral AI support (EU provider)
-pip install identark-sdk[mistral]
+pip install identark[mistral]
 
 # All cloud providers
-pip install identark-sdk[all]
+pip install identark[all]
 ```
 
 **Requirements:** Python 3.10+
@@ -269,8 +269,8 @@ Full exception hierarchy: `IdentArkError > GatewayError > ControlPlaneError > Au
 
 ## Community
 
-- **Discussions**: [GitHub Discussions](https://github.com/identark/sdk/discussions) — ask questions, share ideas
-- **Issues**: [GitHub Issues](https://github.com/identark/sdk/issues) — bug reports and feature requests
+- **Discussions**: [GitHub Discussions](https://github.com/identark/identark/discussions) — ask questions, share ideas
+- **Issues**: [GitHub Issues](https://github.com/identark/identark/issues) — bug reports and feature requests
 - **Live Demo**: [identark.vercel.app/demo](https://identark.vercel.app/demo) — try IdentArk in your browser
 
 ---
@@ -280,8 +280,8 @@ Full exception hierarchy: `IdentArkError > GatewayError > ControlPlaneError > Au
 Contributions are welcome. Please open an issue before submitting significant changes.
 
 ```bash
-git clone https://github.com/identark/sdk.git
-cd identark-sdk
+git clone https://github.com/identark/identark.git
+cd identark
 pip install -e ".[dev]"
 pre-commit install
 pytest tests/unit/
@@ -314,4 +314,4 @@ If you're building a closed-source product and cannot comply with AGPL, contact 
 
 ---
 
-*Built on the control plane pattern described in [How We Built Secure, Scalable Agent Sandbox Infrastructure](https://github.com/identark/sdk).*
+*Built on the control plane pattern described in [How We Built Secure, Scalable Agent Sandbox Infrastructure](https://github.com/identark/identark).*

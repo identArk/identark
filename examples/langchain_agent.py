@@ -2,7 +2,7 @@
 LangChain agent — IdentArkChatModel with tool calling.
 
 Run:
-    pip install identark-sdk[langchain] openai
+    pip install identark[langchain] openai
     export OPENAI_API_KEY=sk-...
     python examples/langchain_agent.py
 """

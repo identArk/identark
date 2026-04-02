@@ -5,7 +5,7 @@ Native Google Gemini integration for IdentArk using the `google-generativeai` SD
 ## Installation
 
 ```bash
-pip install identark-sdk[gemini]
+pip install identark[gemini]
 ```
 
 ## Quick Start

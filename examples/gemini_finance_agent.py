@@ -14,7 +14,7 @@ This demonstrates:
 
 Setup:
     export GEMINI_API_KEY=your-key
-    pip install identark-sdk[gemini]
+    pip install identark[gemini]
     python examples/gemini_finance_agent.py
 """
 

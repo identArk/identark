@@ -1,4 +1,4 @@
-# Contributing to identark-sdk
+# Contributing to identark
 
 Thank you for considering a contribution. This document explains how to get involved.
 
@@ -13,8 +13,8 @@ For anything beyond a small bug fix, **please open an issue first**. Describe wh
 ## Development setup
 
 ```bash
-git clone https://github.com/identark/sdk.git
-cd identark-sdk
+git clone https://github.com/identark/identark.git
+cd identark
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"

@@ -5,7 +5,7 @@ IdentArk provides `IdentArkNode` and `IdentArkStreamNode` for use in LangGraph s
 ## Installation
 
 ```bash
-pip install identark-sdk[langgraph]
+pip install identark[langgraph]
 ```
 
 ## Quick Start

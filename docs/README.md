@@ -12,6 +12,6 @@ Integration guides for popular AI/ML frameworks:
 
 ## Quick Links
 
-- [GitHub Repository](https://github.com/identark/sdk)
-- [PyPI Package](https://pypi.org/project/identark-sdk/)
+- [GitHub Repository](https://github.com/identark/identark)
+- [PyPI Package](https://pypi.org/project/identark/)
 - [Main README](../README.md)

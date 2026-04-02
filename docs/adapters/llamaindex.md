@@ -5,7 +5,7 @@ IdentArk provides `IdentArkLLM`, a custom LLM class for LlamaIndex.
 ## Installation
 
 ```bash
-pip install identark-sdk[llamaindex]
+pip install identark[llamaindex]
 ```
 
 ## Quick Start

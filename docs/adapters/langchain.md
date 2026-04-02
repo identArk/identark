@@ -5,7 +5,7 @@ IdentArk provides `IdentArkChatModel`, a drop-in replacement for LangChain chat 
 ## Installation
 
 ```bash
-pip install identark-sdk[langchain]
+pip install identark[langchain]
 ```
 
 ## Quick Start

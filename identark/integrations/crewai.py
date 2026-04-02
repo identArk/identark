@@ -8,7 +8,7 @@ through IdentArk gateways (DirectGateway / ControlPlaneGateway / MockGateway).
 
 Install::
 
-    pip install identark-sdk crewai
+    pip install identark crewai
 
 Usage::
 
@@ -59,7 +59,7 @@ def _ensure_crewai_available() -> None:
         return
     raise ImportError(
         "CrewAI is not installed. Install it with `pip install crewai` "
-        "or `pip install identark-sdk[all] crewai`."
+        "or `pip install identark[all] crewai`."
     )
 
 

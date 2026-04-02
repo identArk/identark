@@ -21,7 +21,7 @@ The benchmark measures time spent in SDK code, **excluding** actual LLM API late
 ### Running the Benchmark
 
 ```bash
-cd identark-sdk
+cd identark
 python benchmarks/benchmark_sdk_overhead.py
 ```
 

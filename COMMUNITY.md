@@ -4,7 +4,7 @@
 
 ### GitHub Discussions
 
-Join the conversation on [GitHub Discussions](https://github.com/identark/sdk/discussions):
+Join the conversation on [GitHub Discussions](https://github.com/identark/identark/discussions):
 
 - **Q&A**: Ask questions and get help from the community
 - **Ideas**: Share feature requests and suggestions
@@ -12,7 +12,7 @@ Join the conversation on [GitHub Discussions](https://github.com/identark/sdk/di
 
 ### GitHub Issues
 
-Found a bug or have a feature request? [Open an issue](https://github.com/identark/sdk/issues).
+Found a bug or have a feature request? [Open an issue](https://github.com/identark/identark/issues).
 
 ## Contributing
 
@@ -20,7 +20,7 @@ We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ### Good First Issues
 
-Looking for a place to start? Check out issues labeled [`good first issue`](https://github.com/identark/sdk/labels/good%20first%20issue).
+Looking for a place to start? Check out issues labeled [`good first issue`](https://github.com/identark/identark/labels/good%20first%20issue).
 
 ## Code of Conduct
 
@@ -28,8 +28,8 @@ This project follows the [Contributor Covenant Code of Conduct](https://www.cont
 
 ## Stay Updated
 
-- **GitHub**: Star and watch the [identark/sdk](https://github.com/identark/sdk) repository
-- **PyPI**: Subscribe to [identark-sdk](https://pypi.org/project/identark-sdk/) release notifications
+- **GitHub**: Star and watch the [identark/identark](https://github.com/identark/identark) repository
+- **PyPI**: Subscribe to [identark](https://pypi.org/project/identark/) release notifications
 
 ## Enterprise Support
 
@@ -39,7 +39,7 @@ For enterprise support, SLAs, and custom integrations, contact: enterprise@ident
 
 ## Enabling GitHub Discussions (for maintainers)
 
-1. Go to https://github.com/identark/sdk/settings
+1. Go to https://github.com/identark/identark/settings
 2. Scroll down to "Features"
 3. Check "Discussions"
 4. Click "Set up discussions"

@@ -1,10 +1,10 @@
-# identark-sdk — Claude Code Instructions
+# identark — Claude Code Instructions
 
 See @README.md for project overview and @pyproject.toml for dependencies and build config.
 
 ## What This Project Is
 
-identark-sdk implements the **AgentGateway Protocol (AGP)** — a credential isolation layer for
+identark implements the **AgentGateway Protocol (AGP)** — a credential isolation layer for
 production AI agents. Agents never hold raw credentials. Every tool call routes through a gateway
 that fetches credentials, executes, logs, and returns results. The agent only ever sees an agent ID.
 

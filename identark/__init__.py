@@ -1,5 +1,5 @@
 """
-identark-sdk
+identark
 ~~~~~~~~~~~~~~
 The AgentGateway Protocol — secure, scalable agent execution infrastructure.
 
@@ -21,8 +21,8 @@ Quick start::
     from identark import ControlPlaneGateway
     gateway = ControlPlaneGateway()  # auto-detects env vars in sandbox
 
-Full documentation: https://github.com/identark/sdk#readme
-GitHub: https://github.com/identark/sdk
+Full documentation: https://github.com/identark/identark#readme
+GitHub: https://github.com/identark/identark
 """
 
 from identark.gateway import AgentGateway

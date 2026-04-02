@@ -1,6 +1,6 @@
 # n8n-nodes-identark
 
-This is an n8n community node for [IdentArk](https://github.com/identark/sdk) — the secure AI agent gateway.
+This is an n8n community node for [IdentArk](https://github.com/identark/identark) — the secure AI agent gateway.
 
 **IdentArk lets your n8n workflows invoke LLMs without exposing API keys.** Your credentials stay in a secure vault; n8n only holds a session reference.
 
@@ -75,5 +75,5 @@ AGPL-3.0 — see [LICENSE](../../LICENSE)
 
 ## Links
 
-- [IdentArk SDK](https://github.com/identark/sdk)
+- [IdentArk SDK](https://github.com/identark/identark)
 - [n8n Community Nodes](https://docs.n8n.io/integrations/community-nodes/)

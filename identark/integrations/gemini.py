@@ -8,7 +8,7 @@ Supports multimodal inputs, function calling, and proper cost tracking.
 
 Install::
 
-    pip install identark-sdk[gemini]
+    pip install identark[gemini]
 
 Usage::
 
@@ -207,7 +207,7 @@ class GeminiGateway:
         except ImportError as exc:
             raise ConfigurationError(
                 "google-generativeai package not installed. "
-                "Run: pip install identark-sdk[gemini]"
+                "Run: pip install identark[gemini]"
             ) from exc
 
         self._api_key = api_key

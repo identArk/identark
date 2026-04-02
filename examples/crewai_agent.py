@@ -2,7 +2,7 @@
 CrewAI agent — IdentArkCrewAILLM (routes calls through IdentArk gateway).
 
 Run:
-    pip install identark-sdk crewai openai
+    pip install identark crewai openai
     export OPENAI_API_KEY=sk-...
     python examples/crewai_agent.py
 """

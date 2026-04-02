@@ -1,5 +1,5 @@
 """
-Shared pytest fixtures for identark-sdk tests.
+Shared pytest fixtures for identark tests.
 """
 
 from __future__ import annotations

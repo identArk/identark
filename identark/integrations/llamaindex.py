@@ -10,7 +10,7 @@ the gateway, not by LlamaIndex's chat store.
 
 Install::
 
-    pip install identark-sdk[llamaindex]
+    pip install identark[llamaindex]
 
 Usage::
 

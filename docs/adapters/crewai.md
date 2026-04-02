@@ -5,7 +5,7 @@ IdentArk provides `IdentArkCrewAILLM` for use with CrewAI agents and crews.
 ## Installation
 
 ```bash
-pip install identark-sdk[all]
+pip install identark[all]
 pip install crewai
 ```
 

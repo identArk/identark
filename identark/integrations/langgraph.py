@@ -9,7 +9,7 @@ history is maintained by the gateway, not by LangGraph state.
 
 Install::
 
-    pip install identark-sdk[langgraph]
+    pip install identark[langgraph]
 
 Usage::
 

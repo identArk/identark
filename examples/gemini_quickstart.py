@@ -8,7 +8,7 @@ Demonstrates using IdentArk with Google's Gemini models.
 Setup:
     1. Get an API key from https://aistudio.google.com/apikey
     2. Set the environment variable: export GEMINI_API_KEY=your-key
-    3. Install: pip install identark-sdk[gemini]
+    3. Install: pip install identark[gemini]
     4. Run: python examples/gemini_quickstart.py
 """
 

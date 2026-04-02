@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to `identark-sdk` will be documented here.
+All notable changes to `identark` will be documented here.
 
 This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
@@ -24,4 +24,4 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
-[1.0.0]: https://github.com/identark/sdk/releases/tag/v1.0.0
+[1.0.0]: https://github.com/identark/identark/releases/tag/v1.0.0

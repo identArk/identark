@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "identark-sdk"
+name = "identark"
 version = "1.2.0"
 description = "The AgentGateway Protocol — secure, scalable AI agent execution infrastructure"
 readme = "README.md"
@@ -47,7 +47,7 @@ langgraph = [
     "langchain-core>=0.2.0",
 ]
 dev = [
-    "identark-sdk[all]",
+    "identark[all]",
     "langchain-core>=0.2.0",
     "llama-index-core>=0.10.0",
     "pytest>=8.0",
@@ -60,11 +60,11 @@ dev = [
 ]
 
 [project.urls]
-Homepage      = "https://github.com/identark/sdk"
-Documentation = "https://github.com/identark/sdk#readme"
-Repository    = "https://github.com/identark/sdk"
-Issues        = "https://github.com/identark/sdk/issues"
-Changelog     = "https://github.com/identark/sdk/blob/main/CHANGELOG.md"
+Homepage      = "https://github.com/identark/identark"
+Documentation = "https://github.com/identark/identark#readme"
+Repository    = "https://github.com/identark/identark"
+Issues        = "https://github.com/identark/identark/issues"
+Changelog     = "https://github.com/identark/identark/blob/main/CHANGELOG.md"
 
 [tool.hatch.build.targets.wheel]
 packages = ["identark"]
