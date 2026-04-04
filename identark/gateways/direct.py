@@ -434,9 +434,9 @@ class DirectGateway:
 
         # Rate limit: class name or 429 status
         if "RateLimitError" in exc_mro:
-            retry_after = getattr(exc, "retry_after", None)
+            retry_after: int | None = getattr(exc, "retry_after", None)
             raise RateLimitError(
-                str(exc), provider=self._provider, retry_after_seconds=retry_after
+                str(exc), provider=self._provider, retry_after_seconds=retry_after or 60
             ) from exc
 
         status_code = getattr(exc, "status_code", None)

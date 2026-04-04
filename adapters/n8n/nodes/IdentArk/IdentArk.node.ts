@@ -6,23 +6,23 @@ import {
 	NodeOperationError,
 } from 'n8n-workflow';
 
-export class CredSeal implements INodeType {
+export class IdentArk implements INodeType {
 	description: INodeTypeDescription = {
-		displayName: 'CredSeal',
-		name: 'credSeal',
-		icon: 'file:credseal.svg',
+		displayName: 'IdentArk',
+		name: 'identark',
+		icon: 'file:identark.svg',
 		group: ['transform'],
 		version: 1,
 		subtitle: '={{$parameter["operation"]}}',
 		description: 'Secure AI agent gateway — invoke LLMs without exposing credentials',
 		defaults: {
-			name: 'CredSeal',
+			name: 'IdentArk',
 		},
 		inputs: ['main'],
 		outputs: ['main'],
 		credentials: [
 			{
-				name: 'credSealApi',
+				name: 'identarkApi',
 				required: true,
 			},
 		],
@@ -187,7 +187,7 @@ export class CredSeal implements INodeType {
 		const items = this.getInputData();
 		const returnData: INodeExecutionData[] = [];
 		const operation = this.getNodeParameter('operation', 0) as string;
-		const credentials = await this.getCredentials('credSealApi');
+		const credentials = await this.getCredentials('identarkApi');
 		const baseUrl = credentials.baseUrl as string;
 
 		for (let i = 0; i < items.length; i++) {
@@ -208,7 +208,7 @@ export class CredSeal implements INodeType {
 
 					responseData = await this.helpers.httpRequestWithAuthentication.call(
 						this,
-						'credSealApi',
+						'identarkApi',
 						{
 							method: 'POST',
 							url: `${baseUrl}/v1/llm/invoke`,
@@ -225,7 +225,7 @@ export class CredSeal implements INodeType {
 
 					responseData = await this.helpers.httpRequestWithAuthentication.call(
 						this,
-						'credSealApi',
+						'identarkApi',
 						{
 							method: 'POST',
 							url: `${baseUrl}/v1/sessions`,
@@ -251,7 +251,7 @@ export class CredSeal implements INodeType {
 
 					responseData = await this.helpers.httpRequestWithAuthentication.call(
 						this,
-						'credSealApi',
+						'identarkApi',
 						{
 							method: 'GET',
 							url: `${baseUrl}/v1/sessions/cost`,

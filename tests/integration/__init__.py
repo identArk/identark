@@ -14,5 +14,5 @@ To run with verbose mocking output:
     pytest tests/integration/ -v -s
 
 Environment Variables:
-    CREDSEAL_INTEGRATION=1  — Enable integration tests (auto-enabled by fixtures)
+    IDENTARK_INTEGRATION=1  — Enable integration tests (auto-enabled by fixtures)
 """

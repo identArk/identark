@@ -8,12 +8,11 @@ streaming, and shared state.
 from __future__ import annotations
 
 import asyncio
-from unittest.mock import AsyncMock
 
 import pytest
 
 from identark.gateways.direct import DirectGateway
-from identark.models import Message, Role, StreamChunk
+from identark.models import Message, Role
 from tests.integration.mock_server import MockControlPlane
 
 

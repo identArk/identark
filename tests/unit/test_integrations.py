@@ -283,6 +283,8 @@ class TestIdentArkChatModel:
         assert params["gateway_type"] == "MockGateway"
 
     def test_sync_invoke(self) -> None:
+        from langchain_core.messages import AIMessage, HumanMessage
+
         mock = MockGateway()
         mock.queue_response(_make_response("Sync works!"))
         llm = _make_llm(mock)
@@ -509,6 +511,8 @@ class TestIdentArkLLM:
         assert chunks[-1].text == "Hello world"
 
     def test_stream_chat_yields_chunks(self) -> None:
+        from llama_index.core.llms import ChatMessage, MessageRole
+
         mock = MockGateway()
         mock.queue_response(_make_response("Hi there"))
         llm = IdentArkLLM(gateway=mock)

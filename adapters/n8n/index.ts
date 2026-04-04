@@ -1,2 +1,2 @@
-export * from './credentials/CredSealApi.credentials';
-export * from './nodes/CredSeal/CredSeal.node';
+export * from './credentials/IdentArkApi.credentials';
+export * from './nodes/IdentArk/IdentArk.node';

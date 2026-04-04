@@ -38,6 +38,7 @@ from identark.models import (
     TokenUsage,
     ToolCall,
 )
+from identark.pricing import estimate_cost, get_pricing, set_pricing_table
 
 __version__ = "1.2.0"
 __author__ = "Gold Okpa"
@@ -58,6 +59,10 @@ __all__ = [
     "TokenUsage",
     "ToolCall",
     "Function",
+    # Utilities
+    "estimate_cost",
+    "get_pricing",
+    "set_pricing_table",
     # Meta
     "__version__",
 ]

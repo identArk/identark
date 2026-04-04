@@ -1,5 +1,5 @@
 # =============================================================================
-# credseal-sdk .gitignore
+# identark-sdk .gitignore
 # =============================================================================
 
 # =============================================================================
@@ -14,8 +14,8 @@
 .env.production
 .env.staging
 
-# CredSeal-specific secrets
-credseal.key
+# IdentArk-specific secrets
+identark.key
 *.pem
 *.p12
 *.pfx
@@ -102,7 +102,7 @@ dmypy.json
 pyrightconfig.json        # local overrides only — project config belongs in pyproject.toml
 
 # =============================================================================
-# CREDSEAL CLOUD — LOCAL DEV ARTEFACTS
+# IDENTARK CLOUD — LOCAL DEV ARTEFACTS
 # These are generated during local cloud development and must never be committed
 # =============================================================================
 

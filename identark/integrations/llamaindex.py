@@ -59,7 +59,7 @@ logger = logging.getLogger("identark.integrations.llamaindex")
 
 # ── Role mapping ──────────────────────────────────────────────────────────────
 
-_TO_CREDSEAL_ROLE: dict[MessageRole, Role] = {
+_TO_IDENTARK_ROLE: dict[MessageRole, Role] = {
     MessageRole.USER: Role.USER,
     MessageRole.ASSISTANT: Role.ASSISTANT,
     MessageRole.CHATBOT: Role.ASSISTANT,
@@ -70,7 +70,7 @@ _TO_CREDSEAL_ROLE: dict[MessageRole, Role] = {
     MessageRole.FUNCTION: Role.TOOL,
 }
 
-_FROM_CREDSEAL_ROLE: dict[Role, MessageRole] = {
+_FROM_IDENTARK_ROLE: dict[Role, MessageRole] = {
     Role.USER: MessageRole.USER,
     Role.ASSISTANT: MessageRole.ASSISTANT,
     Role.SYSTEM: MessageRole.SYSTEM,
@@ -84,7 +84,7 @@ def li_to_identark(messages: list[ChatMessage]) -> list[Message]:
     """Convert LlamaIndex ChatMessages to IdentArk Message objects."""
     result: list[Message] = []
     for msg in messages:
-        role = _TO_CREDSEAL_ROLE.get(msg.role, Role.USER)
+        role = _TO_IDENTARK_ROLE.get(msg.role, Role.USER)
         content: str = msg.content or ""
         tool_call_id: str | None = msg.additional_kwargs.get("tool_call_id")
         result.append(Message(role=role, content=content, tool_call_id=tool_call_id))

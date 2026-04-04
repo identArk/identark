@@ -59,35 +59,35 @@ class TestControlPlaneGatewayInit:
         assert gw._url == "https://example.com"
 
     def test_raises_without_api_key(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.delenv("CREDSEAL_API_KEY", raising=False)
-        monkeypatch.delenv("CREDSEAL_SESSION_TOKEN", raising=False)
+        monkeypatch.delenv("IDENTARK_API_KEY", raising=False)
+        monkeypatch.delenv("IDENTARK_SESSION_TOKEN", raising=False)
         with pytest.raises(ConfigurationError, match="No API key"):
             ControlPlaneGateway(url="https://example.com")
 
     def test_raises_without_url(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.delenv("CREDSEAL_CONTROL_PLANE_URL", raising=False)
+        monkeypatch.delenv("IDENTARK_CONTROL_PLANE_URL", raising=False)
         with pytest.raises(ConfigurationError, match="No control plane URL"):
             ControlPlaneGateway(api_key="k")
 
     def test_api_key_from_env_identark(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("CREDSEAL_API_KEY", "env-key")
-        monkeypatch.setenv("CREDSEAL_CONTROL_PLANE_URL", "https://example.com")
+        monkeypatch.setenv("IDENTARK_API_KEY", "env-key")
+        monkeypatch.setenv("IDENTARK_CONTROL_PLANE_URL", "https://example.com")
         gw = ControlPlaneGateway()
         assert gw._api_key == "env-key"
 
     def test_session_token_takes_priority_over_api_key(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("CREDSEAL_SESSION_TOKEN", "session-tok")
-        monkeypatch.setenv("CREDSEAL_API_KEY", "api-key")
-        monkeypatch.setenv("CREDSEAL_CONTROL_PLANE_URL", "https://example.com")
+        monkeypatch.setenv("IDENTARK_SESSION_TOKEN", "session-tok")
+        monkeypatch.setenv("IDENTARK_API_KEY", "api-key")
+        monkeypatch.setenv("IDENTARK_CONTROL_PLANE_URL", "https://example.com")
         gw = ControlPlaneGateway()
         assert gw._api_key == "session-tok"
 
     def test_session_id_from_env(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("CREDSEAL_SESSION_ID", "sess-abc")
-        monkeypatch.setenv("CREDSEAL_API_KEY", "k")
-        monkeypatch.setenv("CREDSEAL_CONTROL_PLANE_URL", "https://example.com")
+        monkeypatch.setenv("IDENTARK_SESSION_ID", "sess-abc")
+        monkeypatch.setenv("IDENTARK_API_KEY", "k")
+        monkeypatch.setenv("IDENTARK_CONTROL_PLANE_URL", "https://example.com")
         gw = ControlPlaneGateway()
         assert gw._session_id == "sess-abc"
 

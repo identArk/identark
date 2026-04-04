@@ -203,8 +203,6 @@ class MockControlPlane:
     @contextmanager
     def mocked(self) -> Any:
         """Context manager that mocks httpx client requests."""
-        original_request = None
-
         async def mock_request(self_: Any, method: str, path: str, **kwargs: Any) -> Any:
             # Route to appropriate handler based on method and path
             if method == "POST" and path == "/llm/invoke":
