@@ -1,35 +1,24 @@
 """Unit tests for LangChain and LlamaIndex integrations."""
 
 import sys
-from typing import TYPE_CHECKING
 
 import pytest
 
-# Skip all tests in this module if Python < 3.10 (required for | union syntax)
-pytestmark = pytest.mark.skipif(sys.version_info < (3, 10), reason="Requires Python 3.10+")
-
-if sys.version_info >= (3, 10):
-    from identark.integrations.langchain import (
-        IdentArkChatModel,
-        identark_to_ai_message,
-        lc_to_identark,
-    )
-    from identark.integrations.llamaindex import (
-        IdentArkLLM,
-        identark_to_chat_response,
-        li_to_identark,
-    )
-else:
-    # Dummy objects for when Python < 3.10
-    IdentArkChatModel = None  # type: ignore
-    identark_to_ai_message = None  # type: ignore
-    lc_to_identark = None  # type: ignore
-    IdentArkLLM = None  # type: ignore
-    identark_to_chat_response = None  # type: ignore
-    li_to_identark = None  # type: ignore
-
+from identark.integrations.langchain import (
+    IdentArkChatModel,
+    identark_to_ai_message,
+    lc_to_identark,
+)
+from identark.integrations.llamaindex import (
+    IdentArkLLM,
+    identark_to_chat_response,
+    li_to_identark,
+)
 from identark.models import Function, LLMResponse, Message, Role, TokenUsage, ToolCall
 from identark.testing import MockGateway
+
+# Skip all tests in this module if Python < 3.10 (required for | union syntax)
+pytestmark = pytest.mark.skipif(sys.version_info < (3, 10), reason="Requires Python 3.10+")
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -110,9 +99,7 @@ class TestLcToIdentark:
             HumanMessage(content="Thanks"),
         ]
         cs = lc_to_identark(lc_msgs)
-        assert [m.role for m in cs] == [
-            Role.SYSTEM, Role.USER, Role.ASSISTANT, Role.USER
-        ]
+        assert [m.role for m in cs] == [Role.SYSTEM, Role.USER, Role.ASSISTANT, Role.USER]
 
     def test_multimodal_list_content(self) -> None:
         from langchain_core.messages import HumanMessage
@@ -159,9 +146,7 @@ class TestIdentArkToAiMessage:
             cost_usd=0.001,
             model="mock",
             finish_reason="tool_calls",
-            tool_calls=[
-                ToolCall(id="c1", function=Function(name="fn", arguments="not-json"))
-            ],
+            tool_calls=[ToolCall(id="c1", function=Function(name="fn", arguments="not-json"))],
             usage=TokenUsage(input_tokens=0, output_tokens=0, total_tokens=0),
         )
         ai_msg = identark_to_ai_message(response)
@@ -193,10 +178,12 @@ class TestIdentArkChatModel:
         mock.queue_response(_make_response())
         llm = _make_llm(mock)
 
-        await llm.ainvoke([
-            SystemMessage(content="Be brief."),
-            HumanMessage(content="What is AI?"),
-        ])
+        await llm.ainvoke(
+            [
+                SystemMessage(content="Be brief."),
+                HumanMessage(content="What is AI?"),
+            ]
+        )
 
         assert mock.invoke_llm_call_count == 1
         sent = mock.last_request["new_messages"]
@@ -367,8 +354,6 @@ class TestIdentArkToChatResponse:
         assert resp.message.content == "Hello!"
 
     def test_raw_metadata_populated(self) -> None:
-        from llama_index.core.llms import ChatResponse
-
         resp = identark_to_chat_response(_make_response(cost=0.007))
         assert resp.raw["cost_usd"] == pytest.approx(0.007)
         assert resp.raw["model"] == "mock-gpt-4o"
@@ -376,8 +361,6 @@ class TestIdentArkToChatResponse:
         assert resp.raw["output_tokens"] == 5
 
     def test_tool_calls_in_additional_kwargs(self) -> None:
-        from llama_index.core.llms import ChatResponse
-
         resp = identark_to_chat_response(_make_tool_response())
         tcs = resp.message.additional_kwargs["tool_calls"]
         assert len(tcs) == 1
@@ -385,8 +368,6 @@ class TestIdentArkToChatResponse:
         assert tcs[0]["id"] == "call_abc123"
 
     def test_no_tool_calls_when_absent(self) -> None:
-        from llama_index.core.llms import ChatResponse
-
         resp = identark_to_chat_response(_make_response())
         assert "tool_calls" not in resp.message.additional_kwargs
 
@@ -416,10 +397,12 @@ class TestIdentArkLLM:
         mock.queue_response(_make_response())
         llm = IdentArkLLM(gateway=mock)
 
-        await llm.achat([
-            ChatMessage(role=MessageRole.SYSTEM, content="Be brief."),
-            ChatMessage(role=MessageRole.USER, content="What is AI?"),
-        ])
+        await llm.achat(
+            [
+                ChatMessage(role=MessageRole.SYSTEM, content="Be brief."),
+                ChatMessage(role=MessageRole.USER, content="What is AI?"),
+            ]
+        )
 
         sent = mock.last_request["new_messages"]
         assert sent[0].role == Role.SYSTEM
@@ -472,6 +455,7 @@ class TestIdentArkLLM:
 
     def test_metadata_uses_gateway_model_attr(self) -> None:
         from identark import DirectGateway
+
         gw = DirectGateway(llm_client=object(), model="gpt-4o")
         llm = IdentArkLLM(gateway=gw)
         assert llm.metadata.model_name == "gpt-4o"
