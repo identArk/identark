@@ -50,7 +50,7 @@ class MockGateway:
         self,
         responses: list[LLMResponse] | None = None,
         default_response: LLMResponse | None = None,
-        workspace_dir: str = "/tmp/identark-mock-workspace",
+        workspace_dir: str = "/tmp/identark-mock-workspace",  # nosec B108
     ) -> None:
         self._queue: deque[LLMResponse] = deque(responses or [])
         self._default = default_response
@@ -92,11 +92,13 @@ class MockGateway:
         tool_choice: str | dict[str, Any] = "auto",
     ) -> LLMResponse:
         """Return the next queued response."""
-        self._invoke_calls.append({
-            "new_messages": new_messages,
-            "tools": tools,
-            "tool_choice": tool_choice,
-        })
+        self._invoke_calls.append(
+            {
+                "new_messages": new_messages,
+                "tools": tools,
+                "tool_choice": tool_choice,
+            }
+        )
         response = self._next_response()
         self._total_cost += response.cost_usd
         return response
@@ -169,11 +171,13 @@ class MockGateway:
         tool_choice: str | dict[str, Any] = "auto",
     ) -> AsyncGenerator[StreamChunk, None]:
         """Stream the next queued response word by word, then yield a final chunk."""
-        self._invoke_calls.append({
-            "new_messages": new_messages,
-            "tools": tools,
-            "tool_choice": tool_choice,
-        })
+        self._invoke_calls.append(
+            {
+                "new_messages": new_messages,
+                "tools": tools,
+                "tool_choice": tool_choice,
+            }
+        )
         response = self._next_response()
         self._total_cost += response.cost_usd
 

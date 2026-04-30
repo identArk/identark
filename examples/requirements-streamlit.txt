@@ -1,0 +1,11 @@
+# Requirements for Streamlit Cloud deployment
+# Deploy: streamlit.io/cloud -> Connect GitHub -> Set entry point to examples/security_crew_app.py
+
+streamlit>=1.32.0
+crewai>=0.80.0
+openai>=1.0.0
+httpx>=0.26.0
+
+# IdentArk SDK - install from the repo root
+# In Streamlit Cloud, add this to packages.txt or use:
+#   pip install git+https://github.com/identark/identark.git

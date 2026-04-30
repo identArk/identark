@@ -7,7 +7,7 @@ name = "identark"
 version = "1.2.0"
 description = "The AgentGateway Protocol — secure, scalable AI agent execution infrastructure"
 readme = "README.md"
-license = { text = "MIT" }
+license = { text = "AGPL-3.0-only" }
 authors = [{ name = "Gold Okpa", email = "gold@identark.io" }]
 keywords = [
     "ai", "agents", "llm", "sandbox", "infrastructure",
@@ -80,6 +80,9 @@ ignore = ["ANN401"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["ANN", "S"]
+"examples/*" = ["ANN"]
+"identark/integrations/*" = ["ANN101"]
+"identark/testing/*" = ["ANN101"]
 
 # ── Mypy ─────────────────────────────────────────────────────────────────────
 [tool.mypy]
