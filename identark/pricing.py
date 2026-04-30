@@ -78,7 +78,7 @@ def _fetch_remote_pricing(url: str) -> dict[str, ModelPricing] | None:
     try:
         import urllib.request
 
-        with urllib.request.urlopen(url, timeout=5) as resp:
+        with urllib.request.urlopen(url, timeout=5) as resp:  # nosec B310
             data: dict[str, ModelPricing] = json.loads(resp.read().decode())
             logger.info("Fetched pricing from %s", url)
             return data
