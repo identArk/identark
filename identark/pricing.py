@@ -17,43 +17,40 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING, TypedDict, cast
-
-if TYPE_CHECKING:
-    from typing import Any
+from typing import TypedDict
 
 logger = logging.getLogger("identark.pricing")
 
 
 class ModelPricing(TypedDict):
-    input: float   # USD per 1M tokens
+    input: float  # USD per 1M tokens
     output: float  # USD per 1M tokens
 
 
 # Bundled defaults — updated periodically with SDK releases
 _BUNDLED_PRICING: dict[str, ModelPricing] = {
     # OpenAI
-    "gpt-4o":            {"input": 2.50,  "output": 10.00},
-    "gpt-4o-mini":       {"input": 0.15,  "output": 0.60},
-    "gpt-4-turbo":       {"input": 10.00, "output": 30.00},
-    "gpt-3.5-turbo":     {"input": 0.50,  "output": 1.50},
-    "o1":                {"input": 15.00, "output": 60.00},
-    "o1-mini":           {"input": 3.00,  "output": 12.00},
+    "gpt-4o": {"input": 2.50, "output": 10.00},
+    "gpt-4o-mini": {"input": 0.15, "output": 0.60},
+    "gpt-4-turbo": {"input": 10.00, "output": 30.00},
+    "gpt-3.5-turbo": {"input": 0.50, "output": 1.50},
+    "o1": {"input": 15.00, "output": 60.00},
+    "o1-mini": {"input": 3.00, "output": 12.00},
     # Anthropic
-    "claude-3-5-sonnet-20241022": {"input": 3.00,  "output": 15.00},
-    "claude-3-5-haiku-20241022":  {"input": 0.80,  "output": 4.00},
-    "claude-3-opus-20240229":     {"input": 15.00, "output": 75.00},
-    "claude-sonnet-4-20250514":   {"input": 3.00,  "output": 15.00},
-    "claude-opus-4-20250514":     {"input": 15.00, "output": 75.00},
+    "claude-3-5-sonnet-20241022": {"input": 3.00, "output": 15.00},
+    "claude-3-5-haiku-20241022": {"input": 0.80, "output": 4.00},
+    "claude-3-opus-20240229": {"input": 15.00, "output": 75.00},
+    "claude-sonnet-4-20250514": {"input": 3.00, "output": 15.00},
+    "claude-opus-4-20250514": {"input": 15.00, "output": 75.00},
     # Mistral (EU)
-    "mistral-large-latest":  {"input": 2.00, "output": 6.00},
-    "mistral-small-latest":  {"input": 0.20, "output": 0.60},
-    "open-mistral-nemo":     {"input": 0.15, "output": 0.15},
-    "codestral-latest":      {"input": 0.20, "output": 0.60},
+    "mistral-large-latest": {"input": 2.00, "output": 6.00},
+    "mistral-small-latest": {"input": 0.20, "output": 0.60},
+    "open-mistral-nemo": {"input": 0.15, "output": 0.15},
+    "codestral-latest": {"input": 0.20, "output": 0.60},
     # Google Gemini
-    "gemini-1.5-pro":        {"input": 1.25, "output": 5.00},
-    "gemini-1.5-flash":      {"input": 0.075, "output": 0.30},
-    "gemini-2.0-flash-exp":  {"input": 0.10, "output": 0.40},
+    "gemini-1.5-pro": {"input": 1.25, "output": 5.00},
+    "gemini-1.5-flash": {"input": 0.075, "output": 0.30},
+    "gemini-2.0-flash-exp": {"input": 0.10, "output": 0.40},
 }
 
 # Active pricing table — starts as bundled, can be overridden
@@ -80,6 +77,7 @@ def _fetch_remote_pricing(url: str) -> dict[str, ModelPricing] | None:
     """Fetch pricing from a remote URL (sync, best-effort)."""
     try:
         import urllib.request
+
         with urllib.request.urlopen(url, timeout=5) as resp:
             data: dict[str, ModelPricing] = json.loads(resp.read().decode())
             logger.info("Fetched pricing from %s", url)
@@ -139,9 +137,7 @@ def estimate_cost(
         logger.debug("Unknown model %s, using fallback pricing", model)
         return (input_tokens + output_tokens) * 0.000_010
 
-    return (
-        input_tokens * pricing["input"] + output_tokens * pricing["output"]
-    ) / 1_000_000
+    return (input_tokens * pricing["input"] + output_tokens * pricing["output"]) / 1_000_000
 
 
 def list_known_models() -> list[str]:
