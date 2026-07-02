@@ -6,6 +6,35 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.2.0] — 2026-04-02
+
+### Changed
+- **Rebrand: CredSeal → IdentArk.** Package renamed `credseal-sdk` → `identark`; all classes, docs, and URLs updated (`CredSealChatModel` → `IdentArkChatModel`, etc.)
+- Modernized type syntax to Python 3.10+ (`X | Y` unions)
+
+### Added
+- `validation` module for input validation
+- CI/CD enhancements, Sentry error monitoring, `key_prefix` migration
+- n8n adapter (later moved to dedicated repo `identark/n8n-nodes-identark`)
+- Benchmarks and community docs (`COMMUNITY.md`, `CONTRIBUTING.md`)
+
+### Fixed
+- mypy and ruff errors across tests and integrations
+- Gemini workspace tests now use `tmp_path` in CI
+
+---
+
+## [1.1.0] — 2026-03-18
+
+### Added
+- **LangChain integration** — `ChatModel` adapter
+- **LlamaIndex integration** — LLM adapter
+- **CrewAI integration** — adapter
+- Mistral EU + Ollama local support (UK Sovereign AI alignment)
+- PyPI trusted publishing workflow
+
+---
+
 ## [1.0.0] — 2026-02-28
 
 ### Added
@@ -24,4 +53,6 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+[1.2.0]: https://github.com/identark/identark/releases/tag/v1.2.0
+[1.1.0]: https://github.com/identark/identark/releases/tag/v1.1.0
 [1.0.0]: https://github.com/identark/identark/releases/tag/v1.0.0
