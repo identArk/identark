@@ -42,7 +42,7 @@ from identark.pricing import estimate_cost, get_pricing, set_pricing_table
 
 __version__ = "1.2.0"
 __author__ = "Gold Okpa"
-__license__ = "AGPL-3.0-only"
+__license__ = "MIT"
 
 __all__ = [
     # Protocol
