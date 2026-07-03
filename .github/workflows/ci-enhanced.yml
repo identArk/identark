@@ -135,19 +135,7 @@ jobs:
         run: python benchmarks/benchmark_sdk_overhead.py
         continue-on-error: true
 
-  publish:
-    name: Publish to PyPI
-    needs: [lint, typecheck, test, build-verify]
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-latest
-    environment: pypi
-    permissions:
-      id-token: write
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - run: pip install build
-      - run: python -m build
-      - uses: pypa/gh-action-pypi-publish@release/v1
+  # NOTE: PyPI publishing lives in a SINGLE workflow (ci.yml → publish job).
+  # Having multiple publish jobs fire on the same v* tag caused racing uploads
+  # where the first won and the rest failed with "file already exists",
+  # turning every release red. Do not re-add a publish job here.
