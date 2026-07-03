@@ -7,7 +7,7 @@ name = "identark"
 version = "1.2.1"
 description = "The AgentGateway Protocol — secure, scalable AI agent execution infrastructure"
 readme = "README.md"
-license = { text = "AGPL-3.0-only" }
+license = { text = "MIT" }
 authors = [{ name = "Gold Okpa", email = "gold@identark.io" }]
 keywords = [
     "ai", "agents", "llm", "sandbox", "infrastructure",
