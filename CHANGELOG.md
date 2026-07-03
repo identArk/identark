@@ -6,6 +6,46 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.2.1] — 2026-07-02
+
+### Fixed
+- **License metadata corrected to MIT.** The published 1.2.0 wheel carried a
+  contradictory AGPL classifier; the SDK is MIT everywhere now (badge,
+  classifier, `__license__`, README).
+- CI: single PyPI publisher — removed duplicate publish jobs that raced on the
+  same tag and could turn releases red.
+
+---
+
+## [1.2.0] — 2026-04-02
+
+### Changed
+- **Rebrand: CredSeal → IdentArk.** Package renamed `credseal-sdk` → `identark`; all classes, docs, and URLs updated (`CredSealChatModel` → `IdentArkChatModel`, etc.)
+- Modernized type syntax to Python 3.10+ (`X | Y` unions)
+
+### Added
+- `validation` module for input validation
+- CI/CD enhancements, Sentry error monitoring, `key_prefix` migration
+- n8n adapter (later moved to dedicated repo `identark/n8n-nodes-identark`)
+- Benchmarks and community docs (`COMMUNITY.md`, `CONTRIBUTING.md`)
+
+### Fixed
+- mypy and ruff errors across tests and integrations
+- Gemini workspace tests now use `tmp_path` in CI
+
+---
+
+## [1.1.0] — 2026-03-18
+
+### Added
+- **LangChain integration** — `ChatModel` adapter
+- **LlamaIndex integration** — LLM adapter
+- **CrewAI integration** — adapter
+- Mistral EU + Ollama local support (UK Sovereign AI alignment)
+- PyPI trusted publishing workflow
+
+---
+
 ## [1.0.0] — 2026-02-28
 
 ### Added
@@ -24,4 +64,6 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+[1.2.0]: https://github.com/identark/identark/releases/tag/v1.2.0
+[1.1.0]: https://github.com/identark/identark/releases/tag/v1.1.0
 [1.0.0]: https://github.com/identark/identark/releases/tag/v1.0.0

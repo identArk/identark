@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "identark"
-version = "1.2.0"
+version = "1.2.1"
 description = "The AgentGateway Protocol — secure, scalable AI agent execution infrastructure"
 readme = "README.md"
 license = { text = "AGPL-3.0-only" }
@@ -16,7 +16,7 @@ keywords = [
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: GNU Affero General Public License v3",
+    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",

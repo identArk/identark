@@ -1,0 +1,495 @@
+{
+  "name": "IdentArk Enterprise Support Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "support-ticket",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Support Ticket Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "webhookId": "support-ticket"
+    },
+    {
+      "parameters": {
+        "operation": "createSession",
+        "agentId": "support-agent-{{ $runIndex }}",
+        "model": "gpt-4o",
+        "provider": "openai",
+        "credentialRef": "vault://prod/support/openai",
+        "costCapUsd": 2.5
+      },
+      "id": "identark-create-session",
+      "name": "IdentArk: Create Session",
+      "type": "n8n-nodes-identark.IdentArk",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "credentials": {
+        "identarkApi": {
+          "id": "identark-api-cred",
+          "name": "IdentArk API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "invokeLlm",
+        "message": "=Classify this support ticket. Return ONLY a JSON object with keys: sentiment (positive/neutral/negative), urgency (low/medium/high/critical), category (billing/technical/account/other). Ticket: {{ $json.body.message }}",
+        "role": "user",
+        "sessionId": "={{ $('IdentArk: Create Session').item.json.id }}"
+      },
+      "id": "identark-classify",
+      "name": "IdentArk: Classify Ticket",
+      "type": "n8n-nodes-identark.IdentArk",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const content = $json.message.content;\nlet classification;\ntry {\n  classification = JSON.parse(content);\n} catch (e) {\n  classification = { sentiment: 'neutral', urgency: 'medium', category: 'other' };\n}\nreturn [{\n  json: {\n    ...$json,\n    classification,\n    isHighRisk: classification.urgency === 'critical' || classification.sentiment === 'negative'\n  }\n}];"
+      },
+      "id": "parse-classification",
+      "name": "Parse Classification",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "rules": [
+            {
+              "value": "={{ $json.classification.urgency }}",
+              "conditions": [
+                {
+                  "value": "critical",
+                  "operator": {
+                    "type": "string",
+                    "operation": "equals"
+                  }
+                }
+              ]
+            },
+            {
+              "value": "={{ $json.classification.sentiment }}",
+              "conditions": [
+                {
+                  "value": "negative",
+                  "operator": {
+                    "type": "string",
+                    "operation": "equals"
+                  }
+                }
+              ]
+            }
+          ],
+          "combinator": "or"
+        }
+      },
+      "id": "risk-router",
+      "name": "High-Risk Router",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "operation": "invokeLlm",
+        "message": "=Draft an empathetic, professional response to this upset customer. Acknowledge their frustration, apologise sincerely, and offer a clear next step. Ticket: {{ $json.body.message }}",
+        "role": "user",
+        "sessionId": "={{ $('IdentArk: Create Session').item.json.id }}"
+      },
+      "id": "identark-draft-escalation",
+      "name": "IdentArk: Draft Escalation",
+      "type": "n8n-nodes-identark.IdentArk",
+      "typeVersion": 1,
+      "position": [1250, 200]
+    },
+    {
+      "parameters": {
+        "operation": "invokeLlm",
+        "message": "=Draft a helpful response to this support ticket. Be concise and professional. Ticket: {{ $json.body.message }}",
+        "role": "user",
+        "sessionId": "={{ $('IdentArk: Create Session').item.json.id }}"
+      },
+      "id": "identark-draft-response",
+      "name": "IdentArk: Draft Response",
+      "type": "n8n-nodes-identark.IdentArk",
+      "typeVersion": 1,
+      "position": [1250, 400]
+    },
+    {
+      "parameters": {
+        "channel": "#support-escalations",
+        "text": "=🚨 *High-Risk Support Ticket*\n*Customer:* {{ $json.body.customer_email }}\n*Urgency:* {{ $json.classification.urgency }}\n*Sentiment:* {{ $json.classification.sentiment }}\n*Category:* {{ $json.classification.category }}\n*Draft Response:* {{ $('IdentArk: Draft Escalation').item.json.message.content }}",
+        "options": {}
+      },
+      "id": "slack-alert",
+      "name": "Slack: Alert Team",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [1450, 100],
+      "credentials": {
+        "slackApi": {
+          "id": "slack-api-cred",
+          "name": "Slack API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resume": "webhook",
+        "options": {}
+      },
+      "id": "wait-approval",
+      "name": "Wait for Approval",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [1650, 100],
+      "webhookId": "support-approval"
+    },
+    {
+      "parameters": {
+        "jsCode": "const approval = $json.body || $json;\nreturn [{\n  json: {\n    approved: approval.approved === true || approval.decision === 'approved',\n    approver: approval.approver || 'unknown',\n    comment: approval.comment || ''\n  }\n}];"
+      },
+      "id": "parse-approval",
+      "name": "Parse Approval",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1850, 100]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "={{ $json.approved }}",
+            "type": "boolean"
+          },
+          "conditions": [
+            {
+              "id": "cond-1",
+              "leftValue": "={{ $json.approved }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "if-approved",
+      "name": "Approved?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2050, 100]
+    },
+    {
+      "parameters": {
+        "to": "={{ $json.body.customer_email }}",
+        "subject": "=Re: Your Support Ticket [Escalated — Under Review]",
+        "text": "=Hi,\n\nYour ticket has been escalated to our senior support team for human review.\n\nWe will get back to you within 2 hours.\n\nBest regards,\nSupport Team",
+        "options": {}
+      },
+      "id": "send-human-queue",
+      "name": "Send Human Queue",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [2250, 50],
+      "credentials": {
+        "smtp": {
+          "id": "smtp-cred",
+          "name": "SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "to": "={{ $json.body.customer_email }}",
+        "subject": "=Re: Your Support Ticket [{{ $json.classification.category }}]",
+        "text": "=Hi there,\n\n{{ $('IdentArk: Draft Response').item.json.message.content }}\n\nBest regards,\nSupport Team",
+        "options": {}
+      },
+      "id": "send-email",
+      "name": "Send Auto-Response",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [1450, 400],
+      "credentials": {
+        "smtp": {
+          "id": "smtp-cred",
+          "name": "SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getSessionCost",
+        "sessionId": "={{ $('IdentArk: Create Session').item.json.id }}"
+      },
+      "id": "identark-cost",
+      "name": "IdentArk: Get Cost",
+      "type": "n8n-nodes-identark.IdentArk",
+      "typeVersion": 1,
+      "position": [2450, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    ticket_id: $runIndex,\n    customer_email: $json.body.customer_email,\n    classification: $json.classification,\n    session_id: $('IdentArk: Create Session').item.json.id,\n    cost_usd: $('IdentArk: Get Cost').item.json.cost_usd,\n    processed_at: new Date().toISOString(),\n    agent_type: $json.isHighRisk ? 'escalation' : 'auto-response'\n  }\n}];"
+      },
+      "id": "build-audit-log",
+      "name": "Build Audit Log",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2650, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://your-audit-system.example.com/logs",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={{ $json }}",
+        "options": {}
+      },
+      "id": "audit-http",
+      "name": "POST Audit Log",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2850, 300]
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseCode": 200,
+          "responseData": "{ \"status\": \"ok\", \"ticket_id\": \"{{ $runIndex }}\", \"classification\": {{ JSON.stringify($json.classification) }}, \"cost_usd\": {{ $('IdentArk: Get Cost').item.json.cost_usd }}, \"agent_type\": \"{{ $json.agent_type }}\" }"
+        }
+      },
+      "id": "respond-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [3050, 300]
+    }
+  ],
+  "connections": {
+    "Support Ticket Webhook": {
+      "main": [
+        [
+          {
+            "node": "IdentArk: Create Session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IdentArk: Create Session": {
+      "main": [
+        [
+          {
+            "node": "IdentArk: Classify Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IdentArk: Classify Ticket": {
+      "main": [
+        [
+          {
+            "node": "Parse Classification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Classification": {
+      "main": [
+        [
+          {
+            "node": "High-Risk Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "High-Risk Router": {
+      "main": [
+        [
+          {
+            "node": "IdentArk: Draft Escalation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IdentArk: Draft Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IdentArk: Draft Escalation": {
+      "main": [
+        [
+          {
+            "node": "Slack: Alert Team",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IdentArk: Draft Response": {
+      "main": [
+        [
+          {
+            "node": "Send Auto-Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack: Alert Team": {
+      "main": [
+        [
+          {
+            "node": "Wait for Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Approval": {
+      "main": [
+        [
+          {
+            "node": "Parse Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Approval": {
+      "main": [
+        [
+          {
+            "node": "Approved?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Approved?": {
+      "main": [
+        [
+          {
+            "node": "Send Auto-Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Human Queue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Human Queue": {
+      "main": [
+        [
+          {
+            "node": "IdentArk: Get Cost",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Auto-Response": {
+      "main": [
+        [
+          {
+            "node": "IdentArk: Get Cost",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IdentArk: Get Cost": {
+      "main": [
+        [
+          {
+            "node": "Build Audit Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Audit Log": {
+      "main": [
+        [
+          {
+            "node": "POST Audit Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST Audit Log": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "id": "tag-enterprise",
+      "name": "enterprise",
+      "createdAt": "2026-04-30T00:00:00.000Z",
+      "updatedAt": "2026-04-30T00:00:00.000Z"
+    },
+    {
+      "id": "tag-ai-agent",
+      "name": "ai-agent",
+      "createdAt": "2026-04-30T00:00:00.000Z",
+      "updatedAt": "2026-04-30T00:00:00.000Z"
+    }
+  ]
+}

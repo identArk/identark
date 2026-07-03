@@ -233,3 +233,7 @@ scratch/
 TODO.local.md      # personal notes — use GitHub Issues instead
 .claude/
 .vercel
+
+# Local-only demos (not for public repo)
+examples/marketing_demo.py
+examples/unboarding_demo.py
