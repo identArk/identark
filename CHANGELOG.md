@@ -6,6 +6,17 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.2.1] — 2026-07-02
+
+### Fixed
+- **License metadata corrected to MIT.** The published 1.2.0 wheel carried a
+  contradictory AGPL classifier; the SDK is MIT everywhere now (badge,
+  classifier, `__license__`, README).
+- CI: single PyPI publisher — removed duplicate publish jobs that raced on the
+  same tag and could turn releases red.
+
+---
+
 ## [1.2.0] — 2026-04-02
 
 ### Changed
