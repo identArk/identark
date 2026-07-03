@@ -5,7 +5,7 @@
 [![CI](https://github.com/identark/identark/actions/workflows/ci.yml/badge.svg)](https://github.com/identark/identark/actions)
 [![PyPI](https://img.shields.io/pypi/v/identark)](https://pypi.org/project/identark/)
 [![Python](https://img.shields.io/pypi/pyversions/identark)](https://pypi.org/project/identark/)
-[![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ---
 
@@ -305,12 +305,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for full guidelines.
 
 ## License
 
-IdentArk SDK is dual-licensed:
+The IdentArk SDK is licensed under the **MIT License** — free for any use, including commercial and closed-source projects. See [LICENSE](LICENSE).
 
-- **AGPL-3.0** — Free for open source projects. See [LICENSE](LICENSE).
-- **Commercial License** — For proprietary/enterprise use. See [LICENSE-COMMERCIAL.md](LICENSE-COMMERCIAL.md).
-
-If you're building a closed-source product and cannot comply with AGPL, contact us at enterprise@identark.io for a commercial license.
+The IdentArk **control plane** (hosted service) is proprietary. The SDK works with any `AgentGateway` backend, including fully self-hosted ones.
 
 ---
 
