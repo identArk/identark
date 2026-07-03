@@ -1,0 +1,45 @@
+name: Publish to PyPI
+
+# This is the SINGLE PyPI publisher for this repo. PyPI's trusted publisher
+# for the `identark` project is registered against THIS workflow filename
+# (publish.yml) + environment `pypi`. Publishing from any other workflow file
+# fails OIDC with "invalid-publisher: no corresponding publisher".
+#
+# ci.yml and ci-enhanced.yml run tests only and must NOT publish.
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  publish:
+    name: Publish to PyPI
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/identark
+    permissions:
+      id-token: write # Required for OIDC trusted publishing
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install build tools
+        run: pip install build twine
+
+      - name: Build distribution
+        run: python -m build
+
+      - name: Verify distribution contents
+        run: twine check dist/*
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        # No API token — uses the OIDC trusted publisher configured at
+        # pypi.org/manage/project/identark/settings/publishing/
