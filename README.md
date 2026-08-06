@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/identArk/identark/main/assets/logo.jpg" alt="IdentArk" width="360">
+</p>
+
 # identark
 
 **The AgentGateway Protocol — secure, scalable AI agent execution infrastructure.**
@@ -170,7 +174,7 @@ Write your agent against the protocol. The implementation — local or productio
 ## Features
 
 - **Zero-secret agents** — `ControlPlaneGateway` holds no API keys, database credentials, or cloud tokens
-- **Stateless by design** — conversation history owned by the gateway, not the agent; kill and restart without data loss  
+- **Stateless by design** — conversation history owned by the gateway, not the agent; kill and restart without data loss
 - **Framework-agnostic** — works with LangChain, LlamaIndex, raw API calls, or any custom agent framework
 - **Built-in cost tracking** — every `invoke_llm` call returns `cost_usd`; `get_session_cost()` returns the running total
 - **OpenAI + Anthropic** — both providers supported in `DirectGateway` out of the box
