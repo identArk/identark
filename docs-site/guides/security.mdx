@@ -1,0 +1,44 @@
+---
+title: "Security & a clean exit"
+description: "How secrets are protected — and how to take your data out."
+---
+
+## How secrets are handled
+
+<CardGroup cols={2}>
+  <Card title="Secrets never leave the vault" icon="vault">
+    Agents receive a `credential_ref`, never the provider key. Credential access is
+    audited; keys are bcrypt-hashed at rest and shown only once.
+  </Card>
+  <Card title="Every action is provable" icon="clipboard-check">
+    Credential access, LLM cost, and tool decisions write a tamper-evident chain you
+    can verify via `GET /v1/mcp/audit/chain/verify`.
+  </Card>
+  <Card title="Fail closed" icon="shield-halved">
+    HITL approval timeouts default to deny; high-risk ops require a human. An org-wide
+    kill-switch halts everything at once.
+  </Card>
+  <Card title="No lock-in" icon="box-open">
+    Export your full org — credential metadata, agents, sessions, audit — via the
+    portable export endpoint. Your data is yours to take.
+  </Card>
+</CardGroup>
+
+## Data residency
+
+Organisations pin a region. Read the options and set yours:
+
+```bash
+curl https://api.identark.io/v1/orgs/regions \
+  -H "Authorization: Bearer csk_ADMIN"
+
+curl -X POST https://api.identark.io/v1/orgs/set-region \
+  -H "Authorization: Bearer csk_ADMIN" \
+  -d '{"region":"eu"}'
+```
+
+## Reporting a vulnerability
+
+Found a security issue? Email **security@identark.io** — please don't file a public
+issue for anything exploitable. The SDK repositories carry a `SECURITY.md` with the
+current disclosure policy.

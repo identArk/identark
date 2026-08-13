@@ -1,0 +1,60 @@
+---
+title: "ACS Guardian"
+description: "Ask before you act — an in-band allow / deny / modify decision endpoint."
+---
+
+The Guardian endpoint `POST /v1/acs` lets an agent consult IdentArk about a proposed
+action *before* taking it. It takes a JSON-RPC request describing the action plus
+context (agent, user) and returns **allow**, **deny**, or **modify**.
+
+## Scope
+
+Calling the Guardian requires `acs:evaluate`. This scope grants **only** the right to
+be judged — it gives an agent key no read access to org data. It's included in the
+`invoke` preset, so the key your agent already carries can call it.
+
+## Request
+
+`POST /v1/acs` speaks JSON-RPC 2.0. The endpoint always responds `200`; errors travel
+in the JSON-RPC `error` channel rather than the HTTP status.
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "evaluate",
+  "params": {
+    "action": { "tool": "db.query", "args": { "sql": "…" } },
+    "context": {
+      "agent": { "id": "agent_…" },
+      "user":  { "id": "user_…" }
+    }
+  }
+}
+```
+
+## Response
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "decision": "allow",
+    "reason": "within policy",
+    "risk_score": 12
+  }
+}
+```
+
+| Decision | Meaning |
+|---|---|
+| `allow` | Proceed as requested. |
+| `deny` | Do not proceed. |
+| `modify` | Proceed only with the adjustments the response describes. |
+
+<Tip>
+  Use the Guardian for actions your own code takes directly (a DB write, a shell
+  command) — anything outside the LLM and MCP paths that already flow through the
+  plane. It's the same risk engine, exposed as a callable decision.
+</Tip>

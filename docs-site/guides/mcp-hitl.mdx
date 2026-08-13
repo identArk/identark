@@ -1,0 +1,62 @@
+---
+title: "MCP gateway & human-in-the-loop"
+description: "Put IdentArk in front of any MCP tool server; high-risk calls pause for approval."
+---
+
+Register an MCP tool server once, then route every tool call through
+`POST /v1/mcp/execute`. IdentArk applies policy, pauses high-risk calls for human
+approval (HITL), and writes an audit entry for each decision.
+
+## Risk is computed, not hardcoded
+
+Risk scores are derived from the properties of each call — operation class, data
+sensitivity, scope breadth, environment, and taint — **not** fixed per tool. The same
+tool scores higher when its scope widens: an erase with an unbounded `where` clause
+scores far above a targeted one, which is how an injected instruction gets caught and
+refused.
+
+<Info>
+  This is what makes the gateway resistant to prompt injection: widening blast radius
+  raises the score past the approval threshold, regardless of how the request was
+  phrased.
+</Info>
+
+## Endpoints
+
+| Method | Path | Scope | Purpose |
+|---|---|---|---|
+| `POST` | `/v1/mcp/servers` | `org:admin` | Register a tool server. |
+| `POST` | `/v1/mcp/servers/{id}/discover` | `org:admin` | Enumerate its tools. |
+| `POST` | `/v1/mcp/execute` | key-scoped | Run a tool call under policy + audit. |
+| `POST` | `/v1/mcp/policies` | `policies:write` | Define HITL / approval thresholds. |
+| `GET`  | `/v1/mcp/approvals/pending` | `policies:read` | Approvals awaiting a human. |
+| `POST` | `/v1/mcp/approvals/{id}/decision` | `policies:write` | Approve / deny a paused call. |
+| `POST` | `/v1/mcp/kill-switch` | `org:admin` | Halt all execution instantly. |
+| `GET`  | `/v1/mcp/audit/chain/verify` | `audit:read` | Verify audit-chain integrity. |
+
+## The fail-safe is deny
+
+<Warning>
+  If an approval times out, the default decision is **deny**. High-risk operations
+  never proceed on silence — the system errs toward stopping the agent, not trusting
+  it. There is also an org-wide **kill-switch** (`POST /v1/mcp/kill-switch`) that halts
+  execution immediately.
+</Warning>
+
+## Approval lifecycle
+
+<Steps>
+  <Step title="Execute">
+    The agent calls `POST /v1/mcp/execute`. Low-risk calls run inline.
+  </Step>
+  <Step title="Pause">
+    A call above the policy threshold is queued and returns an approval id.
+  </Step>
+  <Step title="Decide">
+    A human resolves it via `POST /v1/mcp/approvals/{id}/decision`. No decision before
+    the timeout → **deny**.
+  </Step>
+  <Step title="Audit">
+    The decision and its cryptographic proof are appended to the audit chain.
+  </Step>
+</Steps>

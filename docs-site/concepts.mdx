@@ -1,0 +1,46 @@
+---
+title: "Core concepts"
+description: "Six nouns. Learn these and the API reads itself."
+---
+
+| Concept | What it is |
+|---|---|
+| **Organisation** | Your workspace and billing boundary. Every key, credential, agent, and session belongs to exactly one org. Created on signup. |
+| **API key (`csk_`)** | A scoped bearer token for SDK / CLI / agent access. Scopes decide what it can do; it expires. Shown once at creation. |
+| **Credential** | A provider secret (OpenAI, Anthropic, Mistral…) stored in the vault. You get back a `credential_ref` — a pointer, never the secret. |
+| **Agent** | A registered identity for one of your agents. Sessions attach to it; the Agent Bill of Materials (AGBOM) inventories it. |
+| **Session** | A bounded run: an agent + model + `credential_ref` + a `cost_cap_usd`. Holds conversation history and running cost. This is what the zero-secret agent carries. |
+| **Gateway** | The SDK interface your agent codes against. `DirectGateway` for local dev, `ControlPlaneGateway` for production — identical agent code, two-line switch. |
+
+## How they fit together
+
+<Steps>
+  <Step title="Store a credential once">
+    An admin registers a provider secret. The vault returns a `credential_ref` like
+    `secret/orgs/{org}/providers/openai`. The raw secret never comes back out.
+  </Step>
+  <Step title="Register an agent, open a session">
+    A session binds an agent to a model, a `credential_ref`, and a `cost_cap_usd`.
+    It returns a `session_id`.
+  </Step>
+  <Step title="Run the agent with only the session">
+    The agent process gets an `invoke`-scoped `csk_` key and the `session_id` — and
+    nothing else. Every `invoke_llm` call resolves the secret inside the plane,
+    enforces the cost cap, and writes an audit entry.
+  </Step>
+</Steps>
+
+## The gateway protocol
+
+Both SDKs implement one interface. Code against it once; swap the implementation to
+change environment.
+
+| Gateway | When to use | Credentials in the agent | History |
+|---|---|---|---|
+| `DirectGateway` | Local development, CI evals | Your provider key | In-memory |
+| `ControlPlaneGateway` | Production on IdentArk | **None** | Control plane DB |
+
+<Tip>
+  Because the interface is identical, the same agent code you evaluate locally is the
+  code you ship. The only change between environments is which gateway you construct.
+</Tip>
