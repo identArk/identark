@@ -1,0 +1,89 @@
+---
+title: "Going to production"
+description: "Store the secret once. Hand the agent a session. Never hand it the key."
+---
+
+The production pattern has one rule: **the provider key never reaches the agent box.**
+An admin stores it in the vault; the agent runs with only a scoped `csk_` key and a
+session id.
+
+<Steps>
+  <Step title="Register the provider credential">
+    Done once, with an admin key, on your control side.
+
+    ```bash
+    curl -X POST https://api.identark.io/v1/credentials \
+      -H "Authorization: Bearer csk_ADMIN" \
+      -d '{"provider":"openai","credential":"sk-…","label":"default"}'
+    # → { "credential_ref": "secret/orgs/{org}/providers/openai", … }
+    ```
+
+    <Note>Supported `provider` values include `openai`, `anthropic`, `mistral`, `azure_openai`, `bedrock`, and `kimi`. The raw secret never comes back out — you only ever see the `credential_ref`.</Note>
+  </Step>
+
+  <Step title="Register the agent and open a session with a cost cap">
+    ```bash
+    # agent → { "id": "agent_…" }
+    curl -X POST https://api.identark.io/v1/agents \
+      -H "Authorization: Bearer csk_ADMIN" \
+      -d '{"name":"support-bot"}'
+
+    # session binds agent + model + credential_ref + cap
+    curl -X POST https://api.identark.io/v1/sessions \
+      -H "Authorization: Bearer csk_ADMIN" \
+      -d '{"agent_id":"agent_…","model":"gpt-4o","provider":"openai",
+           "credential_ref":"secret/orgs/{org}/providers/openai",
+           "cost_cap_usd":5.0}'
+    # → { "session_id": "sess_…" }
+    ```
+  </Step>
+
+  <Step title="Run the agent with only a session token">
+    These are the **only** secrets on the agent box.
+
+    ```bash
+    export IDENTARK_API_KEY=csk_INVOKE
+    export IDENTARK_CONTROL_PLANE_URL=https://api.identark.io
+    export IDENTARK_SESSION_ID=sess_…
+    ```
+
+    ```python
+    from identark import ControlPlaneGateway, Message, Role
+
+    gateway = ControlPlaneGateway()   # reads the three vars above
+    resp = await gateway.invoke_llm(
+        new_messages=[Message(role=Role.USER, content="…")]
+    )
+    ```
+  </Step>
+</Steps>
+
+## Cost is enforced, not just reported
+
+When a session reaches its `cost_cap_usd`, `POST /v1/llm/invoke` returns `402` with the
+cap and the amount consumed — the agent is stopped **at the plane, before spend**, not
+after a bill.
+
+```json
+{
+  "error_code": "cost_cap_exceeded",
+  "cap_usd": 5.0,
+  "consumed_usd": 5.0021,
+  "session_id": "sess_…",
+  "message": "Session cost cap of $5.0000 reached."
+}
+```
+
+## Read back cost and history
+
+<CardGroup cols={3}>
+  <Card title="Running cost" icon="dollar-sign">
+    `GET /v1/sessions/cost` — authoritative spend.
+  </Card>
+  <Card title="Session detail" icon="clock-rotate-left">
+    `GET /v1/sessions/{id}` — full message history.
+  </Card>
+  <Card title="Usage analytics" icon="chart-line">
+    `GET /v1/stats/analytics` — spend over time.
+  </Card>
+</CardGroup>

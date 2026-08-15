@@ -1,0 +1,98 @@
+---
+title: "Quickstart"
+description: "From zero to a governed LLM call."
+---
+
+You'll create an organisation, mint a least-privilege key, install the SDK, and make
+your first cost-accounted LLM call. Total time: about ten minutes.
+
+<Steps>
+  <Step title="Create an organisation and get your first key">
+    Signup returns an `org:admin` key. Store it in a secret manager — it is shown
+    **only once**.
+
+    ```bash
+    curl -X POST https://api.identark.io/v1/orgs/signup \
+      -H "Content-Type: application/json" \
+      -d '{"name":"acme","email":"you@acme.com"}'
+    # → { "org_id": "…", "org_name": "acme", "api_key": "csk_…" }
+    ```
+  </Step>
+
+  <Step title="Mint a scoped key for your agent">
+    Don't ship the admin key. Create a least-privilege key with the `invoke` preset.
+
+    ```bash
+    curl -X POST https://api.identark.io/v1/keys \
+      -H "Authorization: Bearer csk_ADMIN" \
+      -H "Content-Type: application/json" \
+      -d '{"name":"prod-agent","scopes":["invoke"],"expires_in_days":90}'
+    # → { "api_key": "csk_…", "scopes": [...], "expires_at": "…" }   (shown once)
+    ```
+
+    <Note>`invoke` expands to `llm:invoke` + `acs:evaluate` + all read scopes — see [Authentication](/authentication).</Note>
+  </Step>
+
+  <Step title="Install the SDK">
+    Both SDKs have **zero runtime dependencies**; your provider client is an optional extra.
+
+    <CodeGroup>
+    ```bash Python
+    pip install "identark[openai]"
+    ```
+
+    ```bash TypeScript
+    npm install identark
+    ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Make your first governed call">
+    Local development with `DirectGateway` keeps your provider key out of the agent
+    loop and gives you cost accounting for free.
+
+    <CodeGroup>
+    ```python Python
+    import asyncio
+    from openai import AsyncOpenAI
+    from identark import DirectGateway, Message, Role
+
+    async def main():
+        gateway = DirectGateway(llm_client=AsyncOpenAI(), model="gpt-4o")
+        resp = await gateway.invoke_llm(
+            new_messages=[Message(role=Role.USER, content="Hello, IdentArk!")]
+        )
+        print(resp.message.content)
+        print(f"cost: ${resp.cost_usd:.6f}")
+
+    asyncio.run(main())
+    ```
+
+    ```typescript TypeScript
+    import { DirectGateway } from "identark";
+    import OpenAI from "openai";
+
+    const gateway = new DirectGateway({
+      llmClient: new OpenAI(),
+      model: "gpt-4o",
+    });
+
+    const resp = await gateway.invokeLlm({
+      newMessages: [{ role: "user", content: "Hello, IdentArk!" }],
+    });
+    console.log(resp.message.content, resp.costUsd);
+    ```
+    </CodeGroup>
+  </Step>
+</Steps>
+
+## Next
+
+<CardGroup cols={2}>
+  <Card title="Go to production" icon="rocket" href="/guides/production">
+    Store the secret once, hand the agent a session, never the key.
+  </Card>
+  <Card title="Understand the model" icon="diagram-project" href="/concepts">
+    Orgs, credentials, agents, sessions, gateways.
+  </Card>
+</CardGroup>

@@ -1,0 +1,71 @@
+---
+title: "IdentArk"
+description: "The identity & secrets control plane for autonomous agents — capabilities, not credentials."
+---
+
+When an AI agent can call APIs, run code, or touch files, it runs in a process — and
+that process usually holds every dangerous secret in its environment: LLM keys,
+database credentials, cloud tokens. IdentArk removes the secret from the agent
+entirely and puts a governed control plane in front of every privileged action.
+
+<Info>
+  **The one idea to keep.** In development, your agent holds a provider key
+  (`DirectGateway`). In production, it holds **nothing** — a session id resolves
+  to the secret *inside* the plane (`ControlPlaneGateway`). The agent logic between
+  them does not change.
+</Info>
+
+## What you get
+
+<CardGroup cols={3}>
+  <Card title="Zero-secret agents" icon="key">
+    The agent process holds a short-lived `csk_` key and a session id — never the
+    provider key. The real secret lives in the vault against the session's
+    `credential_ref`.
+  </Card>
+  <Card title="Policy at the choke point" icon="shield-halved">
+    Every LLM call, tool call, and credential access flows through the plane. Risk
+    is **computed** from the call; high-risk actions require human approval and
+    fail closed to **deny**.
+  </Card>
+  <Card title="Provable history" icon="clipboard-check">
+    Credential access, LLM cost, and every tool decision write a tamper-evident
+    audit entry. Verify the chain, and export your whole org, at any time.
+  </Card>
+</CardGroup>
+
+## Start here
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="bolt" href="/quickstart">
+    Zero to a governed LLM call in about ten minutes.
+  </Card>
+  <Card title="Core concepts" icon="diagram-project" href="/concepts">
+    Six nouns. Learn them and the API reads itself.
+  </Card>
+  <Card title="Authentication & scopes" icon="lock" href="/authentication">
+    One bearer header, a capability model underneath.
+  </Card>
+  <Card title="API reference" icon="code" href="/api-reference/introduction">
+    Every `/v1` endpoint, with live request examples.
+  </Card>
+</CardGroup>
+
+## The two-line switch
+
+Your agent codes against one interface — the **AgentGateway Protocol**. Move from
+laptop to production by swapping the implementation; the agent logic is identical.
+
+<CodeGroup>
+```python Development
+from identark import DirectGateway, Message, Role
+
+gateway = DirectGateway(llm_client=AsyncOpenAI(), model="gpt-4o")
+```
+
+```python Production
+from identark import ControlPlaneGateway, Message, Role
+
+gateway = ControlPlaneGateway()   # zero secrets — reads session from env
+```
+</CodeGroup>

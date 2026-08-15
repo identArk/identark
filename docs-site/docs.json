@@ -1,0 +1,90 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "IdentArk",
+  "description": "Identity & secrets control plane for autonomous agents — capabilities, not credentials.",
+  "colors": {
+    "primary": "#0b8a7e",
+    "light": "#2bbfad",
+    "dark": "#0b8a7e"
+  },
+  "favicon": "/favicon.svg",
+  "logo": {
+    "light": "/images/logo-light.svg",
+    "dark": "/images/logo-dark.svg"
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "concepts"
+            ]
+          },
+          {
+            "group": "Build",
+            "pages": [
+              "authentication",
+              "sdks/python",
+              "sdks/typescript",
+              "guides/production"
+            ]
+          },
+          {
+            "group": "Govern",
+            "pages": [
+              "guides/mcp-hitl",
+              "guides/acs",
+              "guides/limits-and-errors"
+            ]
+          },
+          {
+            "group": "Trust",
+            "pages": [
+              "guides/security"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "api-reference/introduction"
+            ]
+          },
+          {
+            "group": "Endpoints",
+            "openapi": "api-reference/openapi.json"
+          }
+        ]
+      }
+    ]
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "SDK on PyPI",
+        "href": "https://pypi.org/project/identark/"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Get an API key",
+      "href": "https://app.identark.io"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/identark/identark",
+      "website": "https://identark.io"
+    }
+  }
+}

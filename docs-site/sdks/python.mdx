@@ -1,0 +1,104 @@
+---
+title: "Python SDK"
+description: "The AgentGateway Protocol for Python — zero runtime dependencies."
+---
+
+<CardGroup cols={2}>
+  <Card title="PyPI" icon="python" href="https://pypi.org/project/identark/">
+    `pip install identark`
+  </Card>
+  <Card title="Source & examples" icon="github" href="https://github.com/identark/identark">
+    Runnable agents in `examples/`.
+  </Card>
+</CardGroup>
+
+## Install
+
+The core package has **no runtime dependencies**. Provider clients are optional extras.
+
+```bash
+pip install "identark[openai]"      # or [anthropic], [mistral], [gemini], …
+```
+
+## The AgentGateway Protocol
+
+Any object implementing these methods is a valid gateway. Code your agent against the
+protocol; swap the implementation to change environment.
+
+| Method | Purpose |
+|---|---|
+| `invoke_llm(new_messages, …)` | One governed completion. Returns message, token usage, and `cost_usd`. |
+| `invoke_llm_stream(…)` | Streaming variant; yields `StreamChunk`s. |
+| `persist_messages(messages)` | Append to durable session history (control plane DB in prod). |
+| `request_file_url(…)` | Get a pre-signed URL for file I/O without holding cloud creds. |
+| `get_session_cost()` | Authoritative running spend for the session. |
+
+## DirectGateway — local development
+
+Your provider key stays out of the agent loop, and you get cost accounting for free.
+
+```python
+import asyncio
+from openai import AsyncOpenAI
+from identark import DirectGateway, Message, Role
+
+async def main():
+    gateway = DirectGateway(llm_client=AsyncOpenAI(), model="gpt-4o")
+    resp = await gateway.invoke_llm(
+        new_messages=[Message(role=Role.USER, content="Summarise ticket #42")]
+    )
+    print(resp.message.content)
+    print(f"cost: ${resp.cost_usd:.6f}")
+
+asyncio.run(main())
+```
+
+## ControlPlaneGateway — production
+
+**Zero secrets in the agent.** The gateway auto-detects its configuration from the
+environment.
+
+```python
+from identark import ControlPlaneGateway, Message, Role
+
+gateway = ControlPlaneGateway()   # reads env, see below
+
+resp = await gateway.invoke_llm(
+    new_messages=[Message(role=Role.USER, content="Summarise ticket #42")]
+)
+print(resp.message.content, resp.cost_usd)
+```
+
+<ParamField path="IDENTARK_API_KEY" type="string" required>
+  Your `csk_` key. Inside a sandbox, `IDENTARK_SESSION_TOKEN` is used instead.
+</ParamField>
+<ParamField path="IDENTARK_CONTROL_PLANE_URL" type="string" required>
+  Control plane base URL, e.g. `https://api.identark.io`.
+</ParamField>
+<ParamField path="IDENTARK_SESSION_ID" type="string">
+  Session to run against. Pass explicitly or let the plane resolve it.
+</ParamField>
+
+You can also pass these to the constructor directly:
+
+```python
+gateway = ControlPlaneGateway(
+    api_key="csk_…",
+    url="https://api.identark.io",
+    session_id="sess_…",
+)
+```
+
+## Framework integrations
+
+Drop-in adapters make the gateway the model / execution layer, so governance is
+transparent to your orchestration code.
+
+<CardGroup cols={3}>
+  <Card title="LangChain" icon="link" />
+  <Card title="LangGraph" icon="diagram-project" />
+  <Card title="CrewAI" icon="users" />
+  <Card title="LlamaIndex" icon="layer-group" />
+  <Card title="Gemini" icon="google" />
+  <Card title="Ollama (local)" icon="server" />
+</CardGroup>

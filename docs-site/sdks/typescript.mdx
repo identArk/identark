@@ -1,0 +1,73 @@
+---
+title: "TypeScript SDK"
+description: "The AgentGateway Protocol for TypeScript — at parity with Python."
+---
+
+<CardGroup cols={2}>
+  <Card title="npm" icon="npm" href="https://www.npmjs.com/package/identark">
+    `npm install identark`
+  </Card>
+  <Card title="Source & examples" icon="github" href="https://github.com/identark/identark">
+    Runnable examples in `examples/`.
+  </Card>
+</CardGroup>
+
+## Install
+
+```bash
+npm install identark
+```
+
+The SDK ships its own types and has no runtime dependencies; your provider client is a
+peer dependency.
+
+## DirectGateway — local development
+
+```typescript
+import { DirectGateway } from "identark";
+import OpenAI from "openai";
+
+const gateway = new DirectGateway({
+  llmClient: new OpenAI(),   // your provider key — not in the agent loop
+  model: "gpt-4o",
+});
+
+const resp = await gateway.invokeLlm({
+  newMessages: [{ role: "user", content: "Hello, IdentArk!" }],
+});
+
+console.log(resp.message.content, resp.costUsd);
+```
+
+## ControlPlaneGateway — production
+
+**Zero secrets in the agent.** Configuration is auto-detected from the environment
+(`IDENTARK_API_KEY`, `IDENTARK_CONTROL_PLANE_URL`, `IDENTARK_SESSION_ID`), or passed in.
+
+```typescript
+import { ControlPlaneGateway } from "identark";
+
+const gateway = new ControlPlaneGateway();   // reads env
+
+const resp = await gateway.invokeLlm({
+  newMessages: [{ role: "user", content: "Summarise ticket #42" }],
+});
+
+console.log(resp.message.content, resp.costUsd);
+```
+
+## Framework integrations
+
+<CardGroup cols={2}>
+  <Card title="LangChain" icon="link">
+    Use the gateway as a LangChain chat model.
+  </Card>
+  <Card title="Vercel AI SDK" icon="triangle">
+    Governance behind `streamText` / `generateText`.
+  </Card>
+</CardGroup>
+
+<Note>
+  The Python and TypeScript SDKs are kept at **parity** — the `AgentGateway` interface
+  is identical. Anything documented for one has an equivalent in the other.
+</Note>

@@ -1,0 +1,73 @@
+---
+title: "API reference"
+description: "Every /v1 endpoint on the IdentArk control plane."
+---
+
+The reference in this section is generated from the control plane's OpenAPI schema —
+each endpoint has a live request builder and real response shapes. This page covers the
+conventions that apply across all of them.
+
+## Base URL
+
+<CodeGroup>
+```text Production
+https://api.identark.io
+```
+
+```text Local
+http://localhost:8000
+```
+</CodeGroup>
+
+All application endpoints are versioned under `/v1`. `GET /health` (unversioned) is a
+liveness probe.
+
+## Authentication
+
+Send a scoped `csk_` key as a bearer token on every request:
+
+```http
+Authorization: Bearer csk_…
+```
+
+The required scope is listed on each endpoint. `org:admin` covers all of them. See
+[Authentication & scopes](/authentication) for the full model. A handful of
+endpoints are public: `POST /v1/orgs/signup`, `POST /v1/auth/signup`,
+`POST /v1/auth/login`, `GET /v1/config/public`, and `GET /health`.
+
+## Conventions
+
+<CardGroup cols={2}>
+  <Card title="Content type" icon="code">
+    Request and response bodies are JSON. Send `Content-Type: application/json`.
+  </Card>
+  <Card title="Timestamps" icon="clock">
+    ISO 8601 strings, UTC (e.g. `2026-08-13T09:00:00Z`).
+  </Card>
+  <Card title="IDs" icon="hashtag">
+    Opaque strings. Don't parse them; store and echo them back.
+  </Card>
+  <Card title="Errors" icon="triangle-exclamation">
+    JSON with a stable `error_code` and human `message`. See
+    <a href="/guides/limits-and-errors">Limits & errors</a>.
+  </Card>
+</CardGroup>
+
+## The endpoints you'll use most
+
+<CardGroup cols={2}>
+  <Card title="POST /v1/keys" icon="key">
+    Mint a scoped API key.
+  </Card>
+  <Card title="POST /v1/credentials" icon="vault">
+    Store a provider secret, get a `credential_ref`.
+  </Card>
+  <Card title="POST /v1/sessions" icon="play">
+    Open a bounded, cost-capped session.
+  </Card>
+  <Card title="POST /v1/llm/invoke" icon="robot">
+    Run a governed completion.
+  </Card>
+</CardGroup>
+
+Browse the full surface in the **Endpoints** group in the sidebar.

@@ -1,0 +1,78 @@
+---
+title: "Authentication & scopes"
+description: "One header. A capability model underneath it."
+---
+
+Every request authenticates with a bearer key:
+
+```http
+Authorization: Bearer csk_…
+```
+
+Real server keys always start with `csk_`. The dashboard authenticates humans with a
+Firebase session instead — you never need that as an API client.
+
+<Warning>
+  A key's full secret is returned **exactly once**, at creation. Store it in a secret
+  manager. If it leaks, [rotate it](/api-reference/introduction) — the old key gets a
+  short grace window, then stops working.
+</Warning>
+
+## Scopes
+
+A scope is a `resource:action` string. A key carries a list; a route declares what it
+requires. `org:admin` is a superscope that implies all others.
+
+| Scope | Grants |
+|---|---|
+| `credentials:read` / `:write` | List credentials / register, rotate, delete them. |
+| `agents:read` / `:write` | Read agent inventory & AGBOM / create & edit agents. |
+| `sessions:read` / `:write` | Read session history & cost / open sessions. |
+| `llm:invoke` | Run LLM calls through the plane. |
+| `acs:evaluate` | Ask the Guardian endpoint for an allow / deny / modify decision. |
+| `audit:read` | Read the immutable action log. |
+| `stats:read` | Read usage analytics. |
+| `policies:read` / `:write` | Read / manage HITL & approval policy. |
+| `org:admin` | Superscope — everything, including key & org management. |
+
+## Presets
+
+Pass a single preset name in `scopes` and it expands at creation time.
+
+<CardGroup cols={3}>
+  <Card title="read" icon="eye">
+    Every read-only scope. Dashboards, reporting, observers.
+  </Card>
+  <Card title="invoke" icon="bolt">
+    `llm:invoke` + `acs:evaluate` + all reads. The agent / CI key.
+  </Card>
+  <Card title="admin" icon="crown">
+    Full access, including org administration. Keep it out of agents.
+  </Card>
+</CardGroup>
+
+```bash Create a scoped key
+curl -X POST https://api.identark.io/v1/keys \
+  -H "Authorization: Bearer csk_ADMIN" \
+  -d '{"name":"prod-agent","scopes":["invoke"],"expires_in_days":90}'
+```
+
+<Note>
+  **Presets expand at mint time.** Granting a new scope to a preset does *not*
+  retro-grant existing keys — rotate a key to pick up new capabilities. Keys to a
+  secrets vault **must** expire (1–365 days).
+</Note>
+
+## When a scope is missing
+
+A request with an under-scoped key returns `403` and names exactly what's missing:
+
+```json
+{
+  "error_code": "insufficient_scope",
+  "message": "This API key lacks the required scope: llm:invoke",
+  "required_scope": "llm:invoke"
+}
+```
+
+Mint or rotate a key that includes the named scope, and retry.

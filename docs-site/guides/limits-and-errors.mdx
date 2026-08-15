@@ -1,0 +1,50 @@
+---
+title: "Limits & errors"
+description: "The operating envelope, and how failures are shaped."
+---
+
+## Guardrails
+
+<CardGroup cols={2}>
+  <Card title="Rate limit" icon="gauge-high">
+    `POST /v1/llm/invoke` is capped at **60 calls/min per key** for burst protection.
+    Exceeding it returns `429`.
+  </Card>
+  <Card title="Session cost cap" icon="dollar-sign">
+    Every session carries `cost_cap_usd` (default `5.0`). Hitting it returns `402`,
+    before further spend.
+  </Card>
+  <Card title="Execution limit" icon="chart-simple">
+    Orgs have a monthly execution allowance by plan; over-limit calls are refused at
+    the plane.
+  </Card>
+  <Card title="Key expiry" icon="hourglass-half">
+    Keys expire (1–365 days). Rotate before expiry — the old key gets a grace window.
+  </Card>
+</CardGroup>
+
+## Error shape
+
+Errors return a JSON body with a stable `error_code` and a human `message`. Scope
+errors also name the `required_scope`.
+
+```json
+{
+  "error_code": "insufficient_scope",
+  "message": "This API key lacks the required scope: llm:invoke",
+  "required_scope": "llm:invoke"
+}
+```
+
+| Status | `error_code` | Meaning |
+|---|---|---|
+| `401` | `unauthorized` | Missing or invalid key. |
+| `403` | `insufficient_scope` | Key lacks the named scope. Mint or rotate with it. |
+| `402` | `cost_cap_exceeded` | Session cap reached — includes cap vs. consumed. |
+| `404` | `session_not_found` | Session id unknown or not in your org. |
+| `429` | `rate_limited` | Slow down; retry after the window. |
+
+<Note>
+  The `402` body also carries `cap_usd`, `consumed_usd`, and `session_id`, so a client
+  can surface exactly how much of the budget was used.
+</Note>
