@@ -106,6 +106,10 @@ pip install identark[all]
 
 **Requirements:** Python 3.10+
 
+Using TypeScript? The parity SDK ships as the zero-runtime-dependency
+[`identark` npm package](https://www.npmjs.com/package/identark), with the same
+`AgentGateway` contract and structured credential sessions.
+
 ---
 
 ## Data Sovereignty
@@ -210,14 +214,18 @@ async def test_my_agent():
 
 | Provider | Data residency | DirectGateway | GeminiGateway | ControlPlaneGateway |
 |---|---|---|---|---|
-| OpenAI (gpt-4o, gpt-4o-mini, …) | US | ✓ | — | ✓ (via control plane) |
-| Anthropic (claude-3-5-sonnet, …) | US | ✓ | — | ✓ (via control plane) |
-| Google Gemini (gemini-1.5-pro, gemini-1.5-flash, …) | US | ✓* | ✓ | Roadmap |
-| Mistral AI (mistral-large, mistral-small, …) | EU 🇪🇺 | ✓ | — | Roadmap |
-| Ollama (llama3.2, mistral, codellama, …) | Local 🏠 | ✓ | — | N/A |
-| Any OpenAI-compatible endpoint | Varies | ✓ | — | Roadmap |
+| OpenAI (gpt-4o, gpt-4o-mini, …) | US | ✓ | — | ✓ |
+| Anthropic (Claude models) | US | ✓ | — | ✓ |
+| Google Gemini | Varies | ✓* | ✓ | Roadmap |
+| Mistral AI | Varies | ✓ | — | ✓ |
+| Kimi / Moonshot | Varies | ✓* | — | ✓ |
+| Azure OpenAI | Configured Azure region | ✓* | — | ✓ |
+| AWS Bedrock | Configured AWS region | — | — | ✓ |
+| OpenRouter | Provider-dependent | ✓* | — | ✓ |
+| Ollama | Local 🏠 | ✓ | — | Not a hosted route |
+| Any OpenAI-compatible endpoint | Varies | ✓ | — | ✓ (custom endpoint) |
 
-*Gemini via OpenAI-compatible endpoint. Use `GeminiGateway` for native SDK features.
+*Via an OpenAI-compatible client/base URL. Use `GeminiGateway` for native Gemini SDK features.
 
 ---
 
@@ -275,7 +283,7 @@ Full exception hierarchy: `IdentArkError > GatewayError > ControlPlaneError > Au
 
 - **Discussions**: [GitHub Discussions](https://github.com/identark/identark/discussions) — ask questions, share ideas
 - **Issues**: [GitHub Issues](https://github.com/identark/identark/issues) — bug reports and feature requests
-- **Live Demo**: [identark.vercel.app/demo](https://identark.vercel.app/demo) — try IdentArk in your browser
+- **Live Demo**: [identark.io/demo](https://identark.io/demo) — try IdentArk in your browser
 
 ---
 
