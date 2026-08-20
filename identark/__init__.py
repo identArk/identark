@@ -28,6 +28,7 @@ GitHub: https://github.com/identark/identark
 from identark.gateway import AgentGateway
 from identark.gateways.control_plane import ControlPlaneGateway
 from identark.gateways.direct import DirectGateway
+from identark.managed_tools import ManagedExecution, ManagedToolsClient, ManagedToolsError
 from identark.models import (
     CredentialSession,
     Function,
@@ -51,6 +52,8 @@ __all__ = [
     # Implementations
     "DirectGateway",
     "ControlPlaneGateway",
+    "ManagedToolsClient",
+    "ManagedToolsError",
     # Models
     "Message",
     "Role",
@@ -61,6 +64,7 @@ __all__ = [
     "ToolCall",
     "Function",
     "CredentialSession",
+    "ManagedExecution",
     # Utilities
     "estimate_cost",
     "get_pricing",
