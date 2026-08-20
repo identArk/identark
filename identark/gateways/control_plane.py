@@ -30,6 +30,7 @@ from identark.exceptions import (
     SessionNotFoundError,
 )
 from identark.models import (
+    CredentialSession,
     Function,
     LLMResponse,
     Message,
@@ -45,8 +46,8 @@ logger = logging.getLogger("identark.control_plane")
 
 _ERROR_CODE_MAP: dict[str, type[ControlPlaneError]] = {
     "authentication_failed": AuthenticationError,
-    "cost_cap_exceeded":     CostCapExceededError,
-    "session_not_found":     SessionNotFoundError,
+    "cost_cap_exceeded": CostCapExceededError,
+    "session_not_found": SessionNotFoundError,
 }
 
 
@@ -97,10 +98,7 @@ class ControlPlaneGateway:
             or os.environ.get("IDENTARK_SESSION_TOKEN")
             or os.environ.get("IDENTARK_API_KEY")
         )
-        self._url = (
-            url
-            or os.environ.get("IDENTARK_CONTROL_PLANE_URL")
-        )
+        self._url = url or os.environ.get("IDENTARK_CONTROL_PLANE_URL")
         self._session_id = session_id or os.environ.get("IDENTARK_SESSION_ID")
 
         if not self._api_key:
@@ -110,8 +108,7 @@ class ControlPlaneGateway:
             )
         if not self._url:
             raise ConfigurationError(
-                "No control plane URL found. Provide url= or set "
-                "IDENTARK_CONTROL_PLANE_URL."
+                "No control plane URL found. Provide url= or set " "IDENTARK_CONTROL_PLANE_URL."
             )
 
         self._timeout = timeout
@@ -283,6 +280,34 @@ class ControlPlaneGateway:
         data = await self._get("/sessions/cost", params)
         return float(data.get("cost_usd", 0.0))
 
+    async def resolve_credential(self, path: str) -> CredentialSession:
+        """Resolve a credential through the control plane for this SDK session.
+
+        Structured credentials retain their complete field map in
+        :attr:`CredentialSession.fields`; single-value credentials continue to
+        use :attr:`CredentialSession.value`.  This is the SDK counterpart to
+        ``GET /v1/credentials/resolve`` and avoids application code parsing a
+        raw REST response.
+
+        Treat the returned object as sensitive: do not log it or retain it
+        beyond the operation that needs it.
+        """
+        if not path.strip():
+            raise ValueError("path must not be empty")
+        data = await self._get("/credentials/resolve", {"path": path})
+        raw_fields = data.get("fields")
+        fields = raw_fields if isinstance(raw_fields, dict) else None
+        return CredentialSession(
+            name=str(data.get("name", "")),
+            path=str(data.get("path", path)),
+            value=str(data.get("value", "")),
+            type=str(data.get("type", "")),
+            rotated_at=str(data["rotated_at"]) if data.get("rotated_at") is not None else None,
+            kind=str(data.get("kind", "api_key")),
+            category=str(data.get("category", "llm")),
+            fields=fields,
+        )
+
     # ── HTTP internals ────────────────────────────────────────────────────────
 
     async def _post(self, path: str, payload: dict[str, Any]) -> dict[str, Any]:
@@ -302,10 +327,14 @@ class ControlPlaneGateway:
                 last_exc = exc
                 logger.warning(
                     "Network error attempt=%d/%d path=%s error=%s",
-                    attempt, self._max_retries, path, exc,
+                    attempt,
+                    self._max_retries,
+                    path,
+                    exc,
                 )
                 if attempt < self._max_retries:
                     import asyncio
+
                     await asyncio.sleep(2 ** (attempt - 1))  # Exponential backoff
                 continue
 
@@ -324,10 +353,14 @@ class ControlPlaneGateway:
             )
             logger.warning(
                 "Server error attempt=%d/%d path=%s status=%d",
-                attempt, self._max_retries, path, response.status_code,
+                attempt,
+                self._max_retries,
+                path,
+                response.status_code,
             )
             if attempt < self._max_retries:
                 import asyncio
+
                 await asyncio.sleep(2 ** (attempt - 1))
 
         raise NetworkError(

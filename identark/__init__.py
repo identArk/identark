@@ -29,6 +29,7 @@ from identark.gateway import AgentGateway
 from identark.gateways.control_plane import ControlPlaneGateway
 from identark.gateways.direct import DirectGateway
 from identark.models import (
+    CredentialSession,
     Function,
     LLMResponse,
     Message,
@@ -59,6 +60,7 @@ __all__ = [
     "TokenUsage",
     "ToolCall",
     "Function",
+    "CredentialSession",
     # Utilities
     "estimate_cost",
     "get_pricing",

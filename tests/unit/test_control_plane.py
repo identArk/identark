@@ -26,6 +26,7 @@ from identark.models import Message, Role
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
+
 def _make_gateway(**kwargs: Any) -> ControlPlaneGateway:
     defaults = {"api_key": "test-key", "url": "https://api.identark.io/v1"}
     return ControlPlaneGateway(**{**defaults, **kwargs})
@@ -51,6 +52,7 @@ def _llm_response_body() -> dict[str, Any]:
 
 
 # ── Initialisation ────────────────────────────────────────────────────────────
+
 
 class TestControlPlaneGatewayInit:
     def test_explicit_args(self) -> None:
@@ -99,6 +101,7 @@ class TestControlPlaneGatewayInit:
 
 # ── Context manager ───────────────────────────────────────────────────────────
 
+
 class TestContextManager:
     async def test_aenter_returns_self(self) -> None:
         gw = _make_gateway()
@@ -116,15 +119,14 @@ class TestContextManager:
 
 # ── invoke_llm ────────────────────────────────────────────────────────────────
 
+
 class TestInvokeLLM:
     async def test_returns_llm_response(self) -> None:
         gw = _make_gateway(session_id="sess-1")
         mock_resp = _mock_response(200, _llm_response_body())
         gw._client.request = AsyncMock(return_value=mock_resp)
 
-        result = await gw.invoke_llm(
-            new_messages=[Message(role=Role.USER, content="Hello")]
-        )
+        result = await gw.invoke_llm(new_messages=[Message(role=Role.USER, content="Hello")])
 
         assert result.message.content == "Hello!"
         assert result.cost_usd == pytest.approx(0.0012)
@@ -173,6 +175,7 @@ class TestInvokeLLM:
 
 # ── persist_messages ──────────────────────────────────────────────────────────
 
+
 class TestPersistMessages:
     async def test_posts_correct_payload(self) -> None:
         gw = _make_gateway(session_id="sess-1")
@@ -194,15 +197,21 @@ class TestPersistMessages:
 
 # ── request_file_url ──────────────────────────────────────────────────────────
 
+
 class TestRequestFileUrl:
     async def test_returns_presigned_url(self) -> None:
         gw = _make_gateway()
-        gw._client.request = AsyncMock(return_value=_mock_response(200, {
-            "url": "https://r2.example.com/file",
-            "expires_at": "2026-01-01T00:00:00Z",
-            "method": "PUT",
-            "file_path": "/workspace/out.txt",
-        }))
+        gw._client.request = AsyncMock(
+            return_value=_mock_response(
+                200,
+                {
+                    "url": "https://r2.example.com/file",
+                    "expires_at": "2026-01-01T00:00:00Z",
+                    "method": "PUT",
+                    "file_path": "/workspace/out.txt",
+                },
+            )
+        )
 
         result = await gw.request_file_url("/workspace/out.txt")
 
@@ -217,6 +226,7 @@ class TestRequestFileUrl:
 
 # ── get_session_cost ──────────────────────────────────────────────────────────
 
+
 class TestGetSessionCost:
     async def test_returns_cost(self) -> None:
         gw = _make_gateway(session_id="sess-1")
@@ -228,40 +238,89 @@ class TestGetSessionCost:
         assert cost == pytest.approx(0.0456)
 
 
+class TestResolveCredential:
+    async def test_structured_credential_exposes_fields(self) -> None:
+        gw = _make_gateway()
+        gw._client.request = AsyncMock(
+            return_value=_mock_response(
+                200,
+                {
+                    "name": "postgres",
+                    "path": "prod/postgres",
+                    "value": '{"password":"not-logged"}',
+                    "type": "postgres",
+                    "kind": "database",
+                    "category": "database",
+                    "fields": {
+                        "host": "db.internal",
+                        "username": "agent",
+                        "password": "not-logged",
+                        "database": "prod",
+                    },
+                },
+            )
+        )
+
+        session = await gw.resolve_credential("prod/postgres")
+
+        assert session.kind == "database"
+        assert session.fields == {
+            "host": "db.internal",
+            "username": "agent",
+            "password": "not-logged",
+            "database": "prod",
+        }
+
+
 # ── Error handling ────────────────────────────────────────────────────────────
+
 
 class TestErrorHandling:
     async def test_401_raises_authentication_error(self) -> None:
         gw = _make_gateway()
-        gw._client.request = AsyncMock(return_value=_mock_response(
-            401, {"error_code": "authentication_failed", "message": "Bad token"}
-        ))
+        gw._client.request = AsyncMock(
+            return_value=_mock_response(
+                401, {"error_code": "authentication_failed", "message": "Bad token"}
+            )
+        )
         with pytest.raises(AuthenticationError):
             await gw.invoke_llm(new_messages=[Message(role=Role.USER, content="Hi")])
 
     async def test_402_raises_cost_cap_exceeded(self) -> None:
         gw = _make_gateway()
-        gw._client.request = AsyncMock(return_value=_mock_response(
-            402, {"error_code": "cost_cap_exceeded", "message": "Cap hit",
-                  "cap_usd": 5.0, "consumed_usd": 5.01, "session_id": "s"}
-        ))
+        gw._client.request = AsyncMock(
+            return_value=_mock_response(
+                402,
+                {
+                    "error_code": "cost_cap_exceeded",
+                    "message": "Cap hit",
+                    "cap_usd": 5.0,
+                    "consumed_usd": 5.01,
+                    "session_id": "s",
+                },
+            )
+        )
         with pytest.raises(CostCapExceededError) as exc_info:
             await gw.invoke_llm(new_messages=[Message(role=Role.USER, content="Hi")])
         assert exc_info.value.cap_usd == pytest.approx(5.0)
 
     async def test_404_raises_session_not_found(self) -> None:
         gw = _make_gateway()
-        gw._client.request = AsyncMock(return_value=_mock_response(
-            404, {"error_code": "session_not_found", "session_id": "missing"}
-        ))
+        gw._client.request = AsyncMock(
+            return_value=_mock_response(
+                404, {"error_code": "session_not_found", "session_id": "missing"}
+            )
+        )
         with pytest.raises(SessionNotFoundError):
             await gw.invoke_llm(new_messages=[Message(role=Role.USER, content="Hi")])
 
     async def test_400_content_policy_raises_content_policy_error(self) -> None:
         gw = _make_gateway()
-        gw._client.request = AsyncMock(return_value=_mock_response(
-            400, {"error_code": "content_policy", "message": "Output blocked."}
-        ))
+        gw._client.request = AsyncMock(
+            return_value=_mock_response(
+                400, {"error_code": "content_policy", "message": "Output blocked."}
+            )
+        )
         with pytest.raises(ContentPolicyError):
             await gw.invoke_llm(new_messages=[Message(role=Role.USER, content="Hi")])
 

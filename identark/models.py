@@ -108,9 +108,7 @@ class LLMResponse:
     finish_reason: str
     tool_calls: list[ToolCall] | None = None
     usage: TokenUsage = field(
-        default_factory=lambda: TokenUsage(
-            input_tokens=0, output_tokens=0, total_tokens=0
-        )
+        default_factory=lambda: TokenUsage(input_tokens=0, output_tokens=0, total_tokens=0)
     )
 
 
@@ -151,3 +149,25 @@ class PresignedURL:
     expires_at: str
     method: str
     file_path: str
+
+
+@dataclass
+class CredentialSession:
+    """A credential resolved for the current scoped SDK session.
+
+    ``fields`` is populated for structured credential kinds such as
+    ``database`` and ``basic_auth``.  It is ``None`` for single-value kinds,
+    where ``value`` remains the backwards-compatible opaque credential string.
+    The control plane only returns this object to an identity with
+    ``credentials:read``; callers should avoid logging either ``value`` or
+    ``fields``.
+    """
+
+    name: str
+    path: str
+    value: str
+    type: str
+    rotated_at: str | None = None
+    kind: str = "api_key"
+    category: str = "llm"
+    fields: dict[str, Any] | None = None
