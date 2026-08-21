@@ -7,6 +7,13 @@ The production pattern has one rule: **the provider key never reaches the agent 
 An admin stores it in the vault; the agent runs with only a scoped `csk_` key and a
 session id.
 
+<Note>
+Use the [IdentArk CLI](/guides/cli) for operator and CI workflows such as agent
+registration, capability references, and approval review. Do not use
+`credential inject` to run a production agent: it intentionally exposes a scalar
+secret to its local child process.
+</Note>
+
 <Steps>
   <Step title="Register the provider credential">
     Done once, with an admin key, on your control side.

@@ -1,0 +1,116 @@
+---
+title: "IdentArk CLI"
+description: "Register agents, manage capability references, and approve high-risk work from your terminal."
+---
+
+# Govern agents from your terminal
+
+The IdentArk CLI is the operational companion to the control plane. Use it to
+register agents, keep credential references out of your repository, and review
+human-in-the-loop approvals without giving a production agent raw credentials.
+
+## Install
+
+```bash
+pip install identark-cli
+identark --version
+```
+
+The CLI requires Python 3.11 or later. Pin the version in CI or a deployment
+image when you need a repeatable release.
+
+## Sign in
+
+<Steps>
+  <Step title="Authenticate with a browser">
+    ```bash
+    identark auth login
+    identark auth status
+    ```
+
+    The CLI starts a device-authorisation flow, then stores the resulting
+    session in your operating system keychain. It never prints the raw token.
+  </Step>
+
+  <Step title="Use a headless machine or CI">
+    ```bash
+    identark auth login --no-browser
+    ```
+
+    For automation, provide a narrowly scoped key at runtime instead of
+    persisting one on disk:
+
+    ```bash
+    export IDENTARK_API_KEY='csk_…'
+    identark agent list
+    ```
+  </Step>
+</Steps>
+
+## Set up an agent project
+
+```bash
+identark init
+identark credential add OPENAI_API_KEY --ref vault://prod/openai
+identark credential scan --strict
+```
+
+`identark init` creates `.identark/config.toml`. That file holds project
+configuration and references such as `vault://prod/openai` or `env://OPENAI_API_KEY`—never
+the credential value itself. Commit the configuration if it is useful to your
+team; do not commit a `.env` file containing real secrets.
+
+Register an agent with the control plane when it is ready to be governed:
+
+```bash
+identark agent register \
+  --name support-agent \
+  --provider anthropic \
+  --model claude-sonnet-4-5 \
+  --credential-ref vault://prod/anthropic
+
+identark agent list
+```
+
+## Production boundary
+
+<Warning>
+`identark credential inject`, `identark agent run`, and `identark agent dev`
+are local-development helpers. They resolve a scalar secret into a child
+process environment, so that process can read it. They are not a production
+secret-isolation boundary.
+</Warning>
+
+For a production agent, use the SDK's `ControlPlaneGateway` or an IdentArk
+managed connector. The agent receives a scoped capability and the control plane
+enforces policy, records activity, and applies any required approval. See
+[Going to production](/guides/production) for the runtime pattern.
+
+```text
+CI or operator terminal  →  IdentArk CLI
+Production agent         →  ControlPlaneGateway / managed MCP tools
+Sensitive operations     →  capability checks + human approval when required
+```
+
+## Review high-risk work
+
+```bash
+identark approvals list
+identark approvals inspect <approval-id>
+identark approvals approve <approval-id>
+identark approvals reject <approval-id> --reason "Unexpected production change"
+```
+
+Approvals require an explicit command. A pending approval expires to **deny**;
+the CLI has no auto-approve mode.
+
+## Next
+
+<CardGroup cols={2}>
+  <Card title="Production runtime" icon="rocket" href="/guides/production">
+    Run agents with a scoped session, not provider credentials.
+  </Card>
+  <Card title="MCP and HITL" icon="user-shield" href="/guides/mcp-hitl">
+    Put policy and human review in front of high-risk tools.
+  </Card>
+</CardGroup>
