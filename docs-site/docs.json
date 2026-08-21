@@ -23,6 +23,7 @@
             "pages": [
               "introduction",
               "quickstart",
+              "guides/cli",
               "concepts"
             ]
           },
@@ -73,6 +74,10 @@
       {
         "label": "SDK on PyPI",
         "href": "https://pypi.org/project/identark/"
+      },
+      {
+        "label": "CLI on PyPI",
+        "href": "https://pypi.org/project/identark-cli/"
       }
     ],
     "primary": {
