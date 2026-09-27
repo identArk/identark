@@ -6,6 +6,24 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [Unreleased]
+
+### Added
+- **Zero-retention history mode.** `ControlPlaneGateway(history="client")` (or
+  `IDENTARK_HISTORY_MODE=client`) keeps the conversation in the gateway and
+  sends it in full each call with `store_history: false`, so the control plane
+  never stores prompts or responses. Assistant tool calls are kept so tool
+  loops replay correctly. New `history_mode`, `history` and `clear_history()`.
+  Requires a control plane that supports `store_history` (backend PR "session
+  history retention").
+
+### Fixed
+- `invoke_llm_stream` read `content` from SSE events, but the control plane
+  streams `delta`, so streamed text came back empty. Both are now accepted, and
+  an `{"error": ...}` event raises `ControlPlaneError` instead of ending silently.
+
+---
+
 ## [1.2.1] — 2026-07-02
 
 ### Fixed

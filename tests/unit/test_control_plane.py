@@ -345,3 +345,122 @@ class TestErrorHandling:
                 await gw.invoke_llm(new_messages=[Message(role=Role.USER, content="Hi")])
 
         assert gw._client.request.call_count == 2
+
+
+# ── History modes (server vs zero-retention client) ───────────────────────────
+
+
+def _sent_payload(gw: ControlPlaneGateway, call: int = -1) -> dict[str, Any]:
+    call_kwargs = gw._client.request.call_args_list[call]  # type: ignore[attr-defined]
+    payload: dict[str, Any] = call_kwargs.kwargs.get("json") or call_kwargs.args[2]
+    return payload
+
+
+class TestHistoryModes:
+    async def test_server_mode_sends_only_the_new_turn(self) -> None:
+        gw = _make_gateway(session_id="sess-1")
+        gw._client.request = AsyncMock(return_value=_mock_response(200, _llm_response_body()))
+
+        await gw.invoke_llm([Message(role=Role.USER, content="Hi")])
+
+        payload = _sent_payload(gw)
+        assert payload["new_messages"] == [{"role": Role.USER, "content": "Hi"}]
+        assert "store_history" not in payload
+        assert gw.history_mode == "server"
+        assert gw.history == []
+
+    async def test_client_mode_holds_and_replays_the_conversation(self) -> None:
+        gw = _make_gateway(session_id="sess-1", history="client")
+        gw._client.request = AsyncMock(return_value=_mock_response(200, _llm_response_body()))
+
+        await gw.invoke_llm([Message(role=Role.USER, content="Hi")])
+        await gw.invoke_llm([Message(role=Role.USER, content="And then?")])
+
+        first, second = _sent_payload(gw, 0), _sent_payload(gw, 1)
+        assert first["store_history"] is False and second["store_history"] is False
+        assert [m["content"] for m in first["new_messages"]] == ["Hi"]
+        assert [m["content"] for m in second["new_messages"]] == ["Hi", "Hello!", "And then?"]
+        assert [m["content"] for m in gw.history] == ["Hi", "Hello!", "And then?", "Hello!"]
+
+    async def test_client_mode_keeps_assistant_tool_calls(self) -> None:
+        gw = _make_gateway(history="client")
+        body = {
+            **_llm_response_body(),
+            "message": {"role": "assistant", "content": ""},
+            "tool_calls": [{"id": "call_1", "function": {"name": "search", "arguments": "{}"}}],
+        }
+        gw._client.request = AsyncMock(return_value=_mock_response(200, body))
+
+        await gw.invoke_llm([Message(role=Role.USER, content="Find it")])
+
+        assert gw.history[-1]["tool_calls"] == [
+            {"id": "call_1", "type": "function", "function": {"name": "search", "arguments": "{}"}}
+        ]
+
+    async def test_client_mode_persist_is_local(self) -> None:
+        gw = _make_gateway(history="client")
+        gw._client.request = AsyncMock(return_value=_mock_response(200, _llm_response_body()))
+
+        await gw.persist_messages([Message(role=Role.SYSTEM, content="Be brief.")])
+        assert gw._client.request.await_count == 0
+        await gw.invoke_llm([Message(role=Role.USER, content="Hi")])
+
+        assert [m["content"] for m in _sent_payload(gw)["new_messages"]] == ["Be brief.", "Hi"]
+        gw.clear_history()
+        assert gw.history == []
+
+    def test_history_mode_from_env(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("IDENTARK_HISTORY_MODE", "client")
+        assert _make_gateway().history_mode == "client"
+
+    def test_invalid_history_mode_is_rejected(self) -> None:
+        with pytest.raises(ConfigurationError):
+            _make_gateway(history="browser")  # type: ignore[arg-type]
+
+    async def test_client_mode_stream_records_the_streamed_reply(self) -> None:
+        import httpx
+
+        seen: list[dict[str, Any]] = []
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            seen.append(json.loads(request.content))
+            body = (
+                'data: {"delta": "Hello "}\n\n'
+                'data: {"delta": "world"}\n\n'
+                'data: {"delta": "", "finish_reason": "stop"}\n\n'
+            )
+            return httpx.Response(200, text=body, headers={"content-type": "text/event-stream"})
+
+        gw = _make_gateway(history="client")
+        gw._client = httpx.AsyncClient(
+            transport=httpx.MockTransport(handler), base_url="https://api.identark.io/v1"
+        )
+
+        chunks = [
+            c.content async for c in gw.invoke_llm_stream([Message(role=Role.USER, content="Hi")])
+        ]
+
+        assert "".join(chunks) == "Hello world"
+        assert seen[0]["store_history"] is False
+        assert gw.history == [
+            {"role": Role.USER, "content": "Hi"},
+            {"role": "assistant", "content": "Hello world"},
+        ]
+
+    async def test_stream_error_event_raises(self) -> None:
+        import httpx
+
+        from identark.exceptions import ControlPlaneError
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            return httpx.Response(200, text='data: {"error": "provider down"}\n\n')
+
+        gw = _make_gateway(history="client")
+        gw._client = httpx.AsyncClient(
+            transport=httpx.MockTransport(handler), base_url="https://api.identark.io/v1"
+        )
+
+        with pytest.raises(ControlPlaneError):
+            async for _ in gw.invoke_llm_stream([Message(role=Role.USER, content="Hi")]):
+                pass
+        assert gw.history == []

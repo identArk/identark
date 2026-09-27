@@ -15,7 +15,7 @@ import logging
 import os
 from collections.abc import AsyncGenerator
 from types import TracebackType
-from typing import Any, NoReturn
+from typing import Any, Literal, NoReturn
 
 import httpx
 
@@ -67,6 +67,13 @@ class ControlPlaneGateway:
         session_id:  Session identifier. Auto-detected from ``IDENTARK_SESSION_ID``.
         timeout:     Per-request timeout in seconds. Default: 30.
         max_retries: Retry attempts on transient failures. Default: 3.
+        history:     Where conversation history lives. ``"server"`` (default):
+                     the control plane keeps it, encrypted and deleted after
+                     the organisation's retention period, and you send only
+                     the new turn. ``"client"``: zero retention — this gateway
+                     keeps the history in memory, sends the full conversation
+                     each call, and the control plane stores none of it.
+                     Auto-detected from ``IDENTARK_HISTORY_MODE``.
 
     Examples::
 
@@ -82,6 +89,9 @@ class ControlPlaneGateway:
         # As an async context manager
         async with ControlPlaneGateway() as gateway:
             response = await gateway.invoke_llm(...)
+
+        # Zero retention: prompts and responses are never stored server-side
+        gateway = ControlPlaneGateway(history="client")
     """
 
     def __init__(
@@ -91,6 +101,7 @@ class ControlPlaneGateway:
         session_id: str | None = None,
         timeout: float = 30.0,
         max_retries: int = 3,
+        history: Literal["server", "client"] | None = None,
     ) -> None:
         # Resolve credentials — constructor args take precedence over env vars
         self._api_key = (
@@ -108,8 +119,16 @@ class ControlPlaneGateway:
             )
         if not self._url:
             raise ConfigurationError(
-                "No control plane URL found. Provide url= or set " "IDENTARK_CONTROL_PLANE_URL."
+                "No control plane URL found. Provide url= or set IDENTARK_CONTROL_PLANE_URL."
             )
+
+        mode = history or os.environ.get("IDENTARK_HISTORY_MODE") or "server"
+        if mode not in ("server", "client"):
+            raise ConfigurationError(f"history must be 'server' or 'client', got {mode!r}.")
+        self._history_mode: Literal["server", "client"] = mode  # type: ignore[assignment]
+        # Client-held conversation (OpenAI-shaped dicts, so assistant tool
+        # calls survive replay). Used only when history="client".
+        self._client_history: list[dict[str, Any]] = []
 
         self._timeout = timeout
         self._max_retries = max_retries
@@ -157,26 +176,40 @@ class ControlPlaneGateway:
     ) -> LLMResponse:
         """Send new messages to the LLM via the control plane."""
         validate_tool_definitions(tools)
-        payload: dict[str, Any] = {
-            "new_messages": [m.to_openai_dict() for m in new_messages],
-        }
-        if self._session_id:
-            payload["session_id"] = self._session_id
-        if tools:
-            payload["tools"] = tools
-            payload["tool_choice"] = tool_choice
+        new_dicts = [m.to_openai_dict() for m in new_messages]
+        payload = self._llm_payload(new_dicts, tools, tool_choice)
 
         logger.debug(
-            "invoke_llm new_messages=%d tools=%s",
+            "invoke_llm new_messages=%d tools=%s history=%s",
             len(new_messages),
             bool(tools),
+            self._history_mode,
         )
 
         data = await self._post("/llm/invoke", payload)
-        return self._parse_llm_response(data)
+        response = self._parse_llm_response(data)
+        if self._history_mode == "client":
+            assistant: dict[str, Any] = {"role": "assistant", "content": response.message.content}
+            if response.tool_calls:
+                assistant["tool_calls"] = [
+                    {
+                        "id": tc.id,
+                        "type": "function",
+                        "function": {"name": tc.function.name, "arguments": tc.function.arguments},
+                    }
+                    for tc in response.tool_calls
+                ]
+            self._client_history.extend([*new_dicts, assistant])
+        return response
 
     async def persist_messages(self, messages: list[Message]) -> None:
-        """Persist messages to conversation history via the control plane."""
+        """Persist messages to conversation history.
+
+        With ``history="client"`` they are kept in this gateway only.
+        """
+        if self._history_mode == "client":
+            self._client_history.extend(m.to_openai_dict() for m in messages)
+            return
         payload: dict[str, Any] = {
             "messages": [m.to_openai_dict() for m in messages],
         }
@@ -219,14 +252,9 @@ class ControlPlaneGateway:
         Also supports `event:` and `id:` fields (ignored).
         """
         validate_tool_definitions(tools)
-        payload: dict[str, Any] = {
-            "new_messages": [m.to_openai_dict() for m in new_messages],
-        }
-        if self._session_id:
-            payload["session_id"] = self._session_id
-        if tools:
-            payload["tools"] = tools
-            payload["tool_choice"] = tool_choice
+        new_dicts = [m.to_openai_dict() for m in new_messages]
+        payload = self._llm_payload(new_dicts, tools, tool_choice)
+        streamed: list[str] = []
 
         async with self._client.stream("POST", "/llm/stream", json=payload) as response:
             if response.status_code >= 400:
@@ -263,13 +291,58 @@ class ControlPlaneGateway:
                     logger.warning("SSE event is not a dict: %s", type(event))
                     continue
 
+                if "error" in event and len(event) == 1:
+                    raise ControlPlaneError(str(event["error"]))
+                # The control plane streams ``delta``; ``content`` is accepted
+                # for older servers.
+                content = event.get("content", event.get("delta", "")) or ""
+                streamed.append(content)
                 yield StreamChunk(
-                    content=event.get("content", ""),
+                    content=content,
                     finish_reason=event.get("finish_reason"),
                     model=event.get("model", "unknown"),
                     input_tokens=event.get("input_tokens", 0),
                     output_tokens=event.get("output_tokens", 0),
                 )
+
+        if self._history_mode == "client":
+            self._client_history.extend(
+                [*new_dicts, {"role": "assistant", "content": "".join(streamed)}]
+            )
+
+    @property
+    def history_mode(self) -> Literal["server", "client"]:
+        """``"server"`` or ``"client"`` (zero retention)."""
+        return self._history_mode
+
+    @property
+    def history(self) -> list[dict[str, Any]]:
+        """The client-held conversation (``history="client"`` only)."""
+        return list(self._client_history)
+
+    def clear_history(self) -> None:
+        """Forget the client-held conversation (``history="client"`` only)."""
+        self._client_history.clear()
+
+    def _llm_payload(
+        self,
+        new_dicts: list[dict[str, Any]],
+        tools: list[dict[str, Any]] | None,
+        tool_choice: str | dict[str, Any],
+    ) -> dict[str, Any]:
+        if self._history_mode == "client":
+            payload: dict[str, Any] = {
+                "new_messages": [*self._client_history, *new_dicts],
+                "store_history": False,
+            }
+        else:
+            payload = {"new_messages": new_dicts}
+        if self._session_id:
+            payload["session_id"] = self._session_id
+        if tools:
+            payload["tools"] = tools
+            payload["tool_choice"] = tool_choice
+        return payload
 
     async def get_session_cost(self) -> float:
         """Return the authoritative total session cost from the control plane."""
