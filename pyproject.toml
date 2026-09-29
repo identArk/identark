@@ -104,6 +104,13 @@ module = ["numpy", "numpy.*"]
 follow_imports = "skip"
 follow_imports_for_stubs = true
 
+# Same for `deprecated` (a transitive dependency): recent releases use PEP 695
+# `type` statements in classic.py, which break mypy's 3.10 parse in CI.
+[[tool.mypy.overrides]]
+module = ["deprecated", "deprecated.*"]
+follow_imports = "skip"
+follow_imports_for_stubs = true
+
 # ── Pytest ────────────────────────────────────────────────────────────────────
 [tool.pytest.ini_options]
 asyncio_mode    = "auto"
