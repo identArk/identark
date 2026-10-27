@@ -42,7 +42,7 @@ from identark.models import (
 )
 from identark.pricing import estimate_cost, get_pricing, set_pricing_table
 
-__version__ = "1.2.1"
+__version__ = "1.3.0"
 __author__ = "Gold Okpa"
 __license__ = "MIT"
 
