@@ -26,7 +26,7 @@ GitHub: https://github.com/identark/identark
 """
 
 from identark.gateway import AgentGateway
-from identark.gateways.control_plane import ControlPlaneGateway
+from identark.gateways.control_plane import CapabilityProvider, ControlPlaneGateway
 from identark.gateways.direct import DirectGateway
 from identark.managed_tools import ManagedExecution, ManagedToolsClient, ManagedToolsError
 from identark.models import (
@@ -51,6 +51,7 @@ __all__ = [
     "AgentGateway",
     # Implementations
     "DirectGateway",
+    "CapabilityProvider",
     "ControlPlaneGateway",
     "ManagedToolsClient",
     "ManagedToolsError",

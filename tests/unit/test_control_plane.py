@@ -464,3 +464,66 @@ class TestHistoryModes:
             async for _ in gw.invoke_llm_stream([Message(role=Role.USER, content="Hi")]):
                 pass
         assert gw.history == []
+
+
+class TestGovernedActions:
+    async def test_requests_a_paystack_payment_link_without_any_provider_credential(self) -> None:
+        import httpx
+
+        seen: list[httpx.Request] = []
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            seen.append(request)
+            return httpx.Response(
+                200,
+                json={
+                    "request_id": "exec-1",
+                    "status": "succeeded",
+                    "result": {"payment_url": "https://checkout.paystack.com/abc"},
+                },
+            )
+
+        gw = _make_gateway()
+        gw._client = httpx.AsyncClient(
+            transport=httpx.MockTransport(handler), base_url="https://api.identark.io/v1"
+        )
+        payload = {
+            "amount_minor": 1_500_000,
+            "currency": "NGN",
+            "customer_email": "buyer@example.com",
+            "reference": "order-1001",
+        }
+
+        response = await gw.request_capability(
+            "payments.payment_link.create", "paystack", payload, "order-1001-link"
+        )
+
+        assert seen[0].method == "POST"
+        assert seen[0].url.path == "/v1/gateway/requests"
+        assert json.loads(seen[0].content) == {
+            "capability_id": "payments.payment_link.create",
+            "provider": "paystack",
+            "payload": payload,
+            "idempotency_key": "order-1001-link",
+        }
+        assert response["result"] == {"payment_url": "https://checkout.paystack.com/abc"}
+
+    async def test_reads_an_execution_by_an_encoded_id(self) -> None:
+        import httpx
+
+        seen: list[httpx.Request] = []
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            seen.append(request)
+            return httpx.Response(200, json={"request_id": "a/b", "status": "pending_approval"})
+
+        gw = _make_gateway()
+        gw._client = httpx.AsyncClient(
+            transport=httpx.MockTransport(handler), base_url="https://api.identark.io/v1"
+        )
+
+        execution = await gw.get_capability_execution("a/b")
+
+        assert seen[0].method == "GET"
+        assert seen[0].url.raw_path == b"/v1/gateway/executions/a%2Fb"
+        assert execution["status"] == "pending_approval"
