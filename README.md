@@ -80,6 +80,24 @@ from identark import ControlPlaneGateway
 gateway = ControlPlaneGateway()  # auto-detects env vars inside a IdentArk sandbox
 ```
 
+### Governed actions (payments, payment links, refunds)
+
+The agent asks the control plane to act; the provider key (Stripe, Paystack,
+GitHub or AWS) stays in IdentArk. Grants, budgets and human approval apply
+before anything executes, and a reused idempotency key never acts twice.
+
+```python
+request = await gateway.request_capability(
+    "payments.payment_link.create",
+    "paystack",
+    {"amount_minor": 1_500_000, "currency": "NGN",
+     "customer_email": "buyer@example.com", "reference": "order-1001"},
+    idempotency_key="order-1001-link",
+)
+# "succeeded" returns the checkout link; "pending_approval" waits for a person.
+execution = await gateway.get_capability_execution(request["request_id"])
+```
+
 ---
 
 ## Installation

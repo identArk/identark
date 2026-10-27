@@ -16,6 +16,7 @@ import os
 from collections.abc import AsyncGenerator
 from types import TracebackType
 from typing import Any, Literal, NoReturn
+from urllib.parse import quote
 
 import httpx
 
@@ -43,6 +44,10 @@ from identark.models import (
 from identark.validation import validate_tool_definitions
 
 logger = logging.getLogger("identark.control_plane")
+
+# Providers the control plane can run a governed action on. Paystack is the
+# payment rail for Nigerian merchants; Stripe serves Nigeria only through it.
+CapabilityProvider = Literal["stripe", "paystack", "github", "aws"]
 
 _ERROR_CODE_MAP: dict[str, type[ControlPlaneError]] = {
     "authentication_failed": AuthenticationError,
@@ -380,6 +385,36 @@ class ControlPlaneGateway:
             category=str(data.get("category", "llm")),
             fields=fields,
         )
+
+    async def request_capability(
+        self,
+        capability: str,
+        provider: CapabilityProvider,
+        payload: dict[str, Any],
+        idempotency_key: str,
+    ) -> dict[str, Any]:
+        """Request a governed external action, such as a payment, a payment link
+        or a refund. Credentials never enter agent code.
+
+        The control plane checks the grant, reserves any budget, waits for
+        human approval when the grant requires it, and executes with a
+        credential the agent never sees. Reusing an idempotency key returns the
+        recorded outcome instead of acting twice.
+        """
+        return await self._post(
+            "/gateway/requests",
+            {
+                "capability_id": capability,
+                "provider": provider,
+                "payload": payload,
+                "idempotency_key": idempotency_key,
+            },
+        )
+
+    async def get_capability_execution(self, execution_id: str) -> dict[str, Any]:
+        """Read the durable status of a governed action, and its result where the
+        action returns one (for example a Paystack checkout link)."""
+        return await self._get(f"/gateway/executions/{quote(execution_id, safe='')}")
 
     # ── HTTP internals ────────────────────────────────────────────────────────
 
