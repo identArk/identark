@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "identark"
-version = "1.2.1"
+version = "1.3.0"
 description = "The AgentGateway Protocol — secure, scalable AI agent execution infrastructure"
 readme = "README.md"
 license = { text = "MIT" }

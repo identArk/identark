@@ -8,7 +8,26 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+---
+
+## [1.3.0] — 2026-10-27
+
 ### Added
+- **Governed actions.** `ControlPlaneGateway.request_capability(capability,
+  provider, payload, idempotency_key)` asks the control plane to act, for
+  example a payment, a payment link or a refund, while the provider key stays
+  in IdentArk; `get_capability_execution(execution_id)` reads its status and any
+  result (such as a checkout link). `CapabilityProvider` covers `stripe`,
+  `paystack`, `github` and `aws`. Grants, budgets and human approval apply
+  before anything executes, and a reused idempotency key never acts twice.
+  Matches `requestCapability` in the TypeScript SDK 1.0.4.
+- **Managed tools client.** `ManagedToolsClient` lists managed tools and
+  creates, waits on, resumes and cancels executions without the caller ever
+  receiving the provider credential.
+- **Structured credential sessions.** `ControlPlaneGateway.resolve_credential`
+  returns a `CredentialSession` whose `fields` carry structured kinds (for
+  example `database`), alongside `kind` and `category`; single-value kinds keep
+  `value` as before.
 - **Zero-retention history mode.** `ControlPlaneGateway(history="client")` (or
   `IDENTARK_HISTORY_MODE=client`) keeps the conversation in the gateway and
   sends it in full each call with `store_history: false`, so the control plane
@@ -82,6 +101,8 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+[1.3.0]: https://github.com/identark/identark/releases/tag/v1.3.0
+[1.2.1]: https://github.com/identark/identark/releases/tag/v1.2.1
 [1.2.0]: https://github.com/identark/identark/releases/tag/v1.2.0
 [1.1.0]: https://github.com/identark/identark/releases/tag/v1.1.0
 [1.0.0]: https://github.com/identark/identark/releases/tag/v1.0.0
