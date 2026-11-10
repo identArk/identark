@@ -16,7 +16,7 @@ from identark import Message, Role
 
 gateway = GeminiGateway(
     api_key="your-gemini-api-key",  # From https://aistudio.google.com/apikey
-    model="gemini-1.5-pro",
+    model="gemini-3.1-pro-preview",
     system_prompt="You are a helpful assistant.",
 )
 
@@ -32,17 +32,20 @@ print(f"Cost: ${response.cost_usd:.6f}")
 
 | Model | Best For | Cost (per 1M tokens) |
 |-------|----------|---------------------|
-| `gemini-1.5-pro` | Complex reasoning, long context | $1.25 in / $5.00 out |
-| `gemini-1.5-flash` | Fast responses, general use | $0.075 in / $0.30 out |
-| `gemini-1.5-flash-8b` | Cheapest, simple tasks | $0.0375 in / $0.15 out |
-| `gemini-2.0-flash-exp` | Experimental features | $0.10 in / $0.40 out |
+| `gemini-3.1-pro-preview` | Complex reasoning, long context | $2.00 in / $12.00 out |
+| `gemini-3.8-flash` | Newest Flash, long-horizon agents | $0.75 in / $3.75 out |
+| `gemini-3.6-flash` (default) | Fast responses, general use | $0.75 in / $3.75 out |
+| `gemini-3.5-flash-lite` | Cheaper, simple tasks | $0.30 in / $2.50 out |
+| `gemini-3.1-flash-lite` | Cheapest, simple tasks | $0.25 in / $1.50 out |
+
+Prices checked 2026-11-10 on Google's pricing page (paid tier, standard; the Pro rate is for prompts up to 200k tokens). `gemini-3.8-flash` and `gemini-3.6-flash` double on 2027-01-01. A model not in this table is estimated at the most expensive rate above.
 
 ## Configuration Options
 
 ```python
 gateway = GeminiGateway(
     api_key="your-api-key",
-    model="gemini-1.5-pro",
+    model="gemini-3.1-pro-preview",
 
     # Optional parameters
     system_prompt="You are a financial advisor.",
@@ -153,7 +156,7 @@ print(f"Session cost: ${cost:.6f}")
 # Set a cost cap
 gateway = GeminiGateway(
     api_key="...",
-    model="gemini-1.5-flash",
+    model="gemini-3.6-flash",
     cost_cap_usd=0.50,  # Raises CostCapExceededError if exceeded
 )
 
@@ -218,7 +221,7 @@ You can also use Gemini via the OpenAI-compatible API:
 ```python
 # Native GeminiGateway (recommended)
 from identark.integrations.gemini import GeminiGateway
-gateway = GeminiGateway(api_key="...", model="gemini-1.5-pro")
+gateway = GeminiGateway(api_key="...", model="gemini-3.1-pro-preview")
 
 # OR via OpenAI-compatible endpoint (alternative)
 from openai import AsyncOpenAI
@@ -229,7 +232,7 @@ gateway = DirectGateway(
         base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
         api_key="your-gemini-key",
     ),
-    model="gemini-1.5-pro",
+    model="gemini-3.1-pro-preview",
 )
 ```
 

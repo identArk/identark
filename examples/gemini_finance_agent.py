@@ -173,7 +173,7 @@ async def run_finance_agent():
 
     gateway = GeminiGateway(
         api_key=os.environ["GEMINI_API_KEY"],
-        model="gemini-1.5-pro",
+        model="gemini-3.1-pro-preview",
         system_prompt="""You are a helpful Lloyds banking assistant. You can help customers:
 - Check their account balances
 - View recent transactions
@@ -249,7 +249,7 @@ async def demo_queries():
 
     gateway = GeminiGateway(
         api_key=os.environ["GEMINI_API_KEY"],
-        model="gemini-1.5-flash",  # Use flash for demo
+        model="gemini-3.6-flash",  # Use flash for demo
         system_prompt="You are a Lloyds banking assistant. Be concise.",
     )
 

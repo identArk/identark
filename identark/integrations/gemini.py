@@ -17,7 +17,7 @@ Usage::
 
     gateway = GeminiGateway(
         api_key="your-gemini-api-key",
-        model="gemini-1.5-pro",
+        model="gemini-3.6-flash",
     )
 
     response = await gateway.invoke_llm(
@@ -57,26 +57,26 @@ from identark.models import (
 
 logger = logging.getLogger("identark.integrations.gemini")
 
-# Gemini pricing per 1M tokens (USD) — as of 2024
-# See: https://ai.google.dev/pricing
+# Gemini pricing per 1M tokens (USD), paid tier, standard, text input/output.
+# Checked 2026-11-10 against https://ai.google.dev/gemini-api/docs/pricing
+# gemini-3.8-flash and gemini-3.6-flash double on 2027-01-01 (input 1.50, output 7.50).
+# gemini-3.1-pro-preview is the rate for prompts up to 200k tokens.
+DEFAULT_MODEL = "gemini-3.6-flash"
+
 _GEMINI_PRICING: dict[str, dict[str, float]] = {
-    # Gemini 1.5 Pro
-    "gemini-1.5-pro": {"input": 1.25, "output": 5.00},
-    "gemini-1.5-pro-latest": {"input": 1.25, "output": 5.00},
-    "gemini-1.5-pro-002": {"input": 1.25, "output": 5.00},
-    # Gemini 1.5 Flash
-    "gemini-1.5-flash": {"input": 0.075, "output": 0.30},
-    "gemini-1.5-flash-latest": {"input": 0.075, "output": 0.30},
-    "gemini-1.5-flash-002": {"input": 0.075, "output": 0.30},
-    # Gemini 1.5 Flash-8B (cheapest)
-    "gemini-1.5-flash-8b": {"input": 0.0375, "output": 0.15},
-    "gemini-1.5-flash-8b-latest": {"input": 0.0375, "output": 0.15},
-    # Gemini 2.0 Flash (experimental)
-    "gemini-2.0-flash-exp": {"input": 0.10, "output": 0.40},
-    # Gemini 1.0 Pro (legacy)
-    "gemini-1.0-pro": {"input": 0.50, "output": 1.50},
-    "gemini-pro": {"input": 0.50, "output": 1.50},
+    # Flash
+    "gemini-3.8-flash": {"input": 0.75, "output": 3.75},
+    "gemini-3.6-flash": {"input": 0.75, "output": 3.75},
+    # Flash-Lite
+    "gemini-3.5-flash-lite": {"input": 0.30, "output": 2.50},
+    "gemini-3.1-flash-lite": {"input": 0.25, "output": 1.50},
+    # Pro
+    "gemini-3.1-pro-preview": {"input": 2.00, "output": 12.00},
 }
+
+# Unknown models are estimated at the most expensive known rate, so a budget
+# overestimates instead of letting an unpriced model overspend.
+_FALLBACK_MODEL = max(_GEMINI_PRICING, key=lambda m: sum(_GEMINI_PRICING[m].values()))
 
 
 def _estimate_gemini_cost(
@@ -94,9 +94,9 @@ def _estimate_gemini_cost(
                 model_key = key
                 break
         else:
-            # Unknown model — use flash pricing as conservative estimate
-            logger.warning("Unknown Gemini model %s, using flash pricing", model)
-            model_key = "gemini-1.5-flash"
+            # Unknown model: use the most expensive known rate (conservative)
+            logger.warning("Unknown Gemini model %s, using %s pricing", model, _FALLBACK_MODEL)
+            model_key = _FALLBACK_MODEL
 
     rates = _GEMINI_PRICING[model_key]
     return (input_tokens * rates["input"] + output_tokens * rates["output"]) / 1_000_000
@@ -138,8 +138,8 @@ class GeminiGateway:
 
     Args:
         api_key:        Your Google AI API key (from https://aistudio.google.com).
-        model:          Gemini model identifier e.g. ``'gemini-1.5-pro'``,
-                        ``'gemini-1.5-flash'``, ``'gemini-2.0-flash-exp'``.
+        model:          Gemini model identifier e.g. ``'gemini-3.6-flash'``,
+                        ``'gemini-3.5-flash-lite'``, ``'gemini-3.1-pro-preview'``.
         system_prompt:  Optional system instruction prepended to every conversation.
         cost_cap_usd:   Optional soft cost cap. Raises
                         :exc:`~identark.exceptions.CostCapExceededError`
@@ -156,7 +156,7 @@ class GeminiGateway:
 
         gateway = GeminiGateway(
             api_key="your-api-key",
-            model="gemini-1.5-pro",
+            model="gemini-3.6-flash",
             system_prompt="You are a helpful financial assistant.",
         )
 
@@ -190,7 +190,7 @@ class GeminiGateway:
     def __init__(
         self,
         api_key: str,
-        model: str = "gemini-1.5-pro",
+        model: str = DEFAULT_MODEL,
         system_prompt: str | None = None,
         cost_cap_usd: float | None = None,
         workspace_dir: str = "/workspace",

@@ -344,7 +344,7 @@ async def main() -> None:
     parser = argparse.ArgumentParser(description="IdentArk Research Agent")
     parser.add_argument("query", nargs="?", help="Research query")
     parser.add_argument("--demo", action="store_true", help="Run demo research")
-    parser.add_argument("--model", default="gemini-1.5-flash", help="Gemini model to use")
+    parser.add_argument("--model", default="gemini-3.6-flash", help="Gemini model to use")
     parser.add_argument("--cost-cap", type=float, default=0.50, help="Max cost in USD")
     args = parser.parse_args()
 

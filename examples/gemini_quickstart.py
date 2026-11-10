@@ -27,7 +27,7 @@ async def basic_chat():
 
     gateway = GeminiGateway(
         api_key=os.environ["GEMINI_API_KEY"],
-        model="gemini-1.5-flash",  # Fast and cheap
+        model="gemini-3.6-flash",  # Fast and cheap
         system_prompt="You are a helpful assistant. Be concise.",
     )
 
@@ -50,7 +50,7 @@ async def multi_turn_conversation():
 
     gateway = GeminiGateway(
         api_key=os.environ["GEMINI_API_KEY"],
-        model="gemini-1.5-flash",
+        model="gemini-3.6-flash",
     )
 
     # First turn
@@ -82,7 +82,7 @@ async def tool_calling():
 
     gateway = GeminiGateway(
         api_key=os.environ["GEMINI_API_KEY"],
-        model="gemini-1.5-pro",  # Better at tool calling
+        model="gemini-3.1-pro-preview",  # Better at tool calling
     )
 
     # Define a tool
@@ -141,7 +141,7 @@ async def streaming():
 
     gateway = GeminiGateway(
         api_key=os.environ["GEMINI_API_KEY"],
-        model="gemini-1.5-flash",
+        model="gemini-3.6-flash",
     )
 
     print("User: Write a haiku about AI.")
@@ -167,7 +167,7 @@ async def cost_tracking():
 
     gateway = GeminiGateway(
         api_key=os.environ["GEMINI_API_KEY"],
-        model="gemini-1.5-flash",
+        model="gemini-3.6-flash",
         cost_cap_usd=0.001,  # Very low cap for demo
     )
 
