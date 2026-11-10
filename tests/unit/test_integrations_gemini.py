@@ -59,7 +59,7 @@ def gemini_gateway(mock_genai, tmp_path):
 
     return GeminiGateway(
         api_key="test-api-key",
-        model="gemini-1.5-flash",
+        model="gemini-3.6-flash",
         system_prompt="You are a helpful assistant.",
         workspace_dir=str(tmp_path),
     )
@@ -73,7 +73,7 @@ async def test_basic_invoke(gemini_gateway):
 
     assert response.message.role == Role.ASSISTANT
     assert response.message.content == "Hello! How can I help you?"
-    assert response.model == "gemini-1.5-flash"
+    assert response.model == "gemini-3.6-flash"
     assert response.usage.input_tokens == 10
     assert response.usage.output_tokens == 15
 
@@ -138,7 +138,7 @@ def test_provider_property(gemini_gateway):
 
 def test_model_property(gemini_gateway):
     """Test model property returns configured model."""
-    assert gemini_gateway.model == "gemini-1.5-flash"
+    assert gemini_gateway.model == "gemini-3.6-flash"
 
 
 async def test_request_file_url(gemini_gateway):
@@ -163,13 +163,33 @@ def test_cost_estimation():
     from identark.integrations.gemini import _estimate_gemini_cost
 
     # Flash model (cheap)
-    flash_cost = _estimate_gemini_cost("gemini-1.5-flash", 1000, 1000)
+    flash_cost = _estimate_gemini_cost("gemini-3.6-flash", 1000, 1000)
     assert flash_cost > 0
-    assert flash_cost < 0.001  # Very cheap
+    assert flash_cost < 0.01  # Still cheap
 
     # Pro model (more expensive)
-    pro_cost = _estimate_gemini_cost("gemini-1.5-pro", 1000, 1000)
+    pro_cost = _estimate_gemini_cost("gemini-3.1-pro-preview", 1000, 1000)
     assert pro_cost > flash_cost
+
+
+def test_default_model_has_pricing():
+    """The default model must be priced, so the two cannot drift apart again."""
+    from identark.integrations.gemini import _GEMINI_PRICING, DEFAULT_MODEL
+
+    assert DEFAULT_MODEL in _GEMINI_PRICING
+
+
+def test_unknown_model_uses_most_expensive_rate(caplog):
+    """An unknown model is overestimated, never priced like the cheapest tier."""
+    from identark.integrations.gemini import _GEMINI_PRICING, _estimate_gemini_cost
+
+    most_expensive = max(
+        _estimate_gemini_cost(m, 1_000_000, 1_000_000) for m in _GEMINI_PRICING
+    )
+    with caplog.at_level("WARNING"):
+        cost = _estimate_gemini_cost("gemini-99-pro", 1_000_000, 1_000_000)
+    assert cost == most_expensive
+    assert "Unknown Gemini model gemini-99-pro" in caplog.text
 
 
 def test_missing_api_key():
@@ -180,7 +200,7 @@ def test_missing_api_key():
         from identark.integrations.gemini import GeminiGateway
 
         with pytest.raises(ConfigurationError):
-            GeminiGateway(api_key="", model="gemini-1.5-flash")
+            GeminiGateway(api_key="", model="gemini-3.6-flash")
 
 
 def test_missing_model():
@@ -201,7 +221,7 @@ async def test_cost_cap_enforcement(mock_genai):
 
     gateway = GeminiGateway(
         api_key="test-key",
-        model="gemini-1.5-flash",
+        model="gemini-3.6-flash",
         cost_cap_usd=0.0001,  # Very low cap
     )
 

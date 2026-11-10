@@ -8,6 +8,13 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- **Gemini default model and pricing.** `GeminiGateway` now defaults to
+  `gemini-3.6-flash` instead of the retired `gemini-1.5-pro`, and both pricing
+  tables list current Flash, Flash-Lite and Pro models instead of retired ones.
+  Unknown Gemini models are estimated at the most expensive known rate rather than
+  the Flash rate (#10).
+
 ---
 
 ## [1.3.0] — 2026-10-27
