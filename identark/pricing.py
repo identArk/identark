@@ -48,9 +48,11 @@ _BUNDLED_PRICING: dict[str, ModelPricing] = {
     "open-mistral-nemo": {"input": 0.15, "output": 0.15},
     "codestral-latest": {"input": 0.20, "output": 0.60},
     # Google Gemini
-    "gemini-1.5-pro": {"input": 1.25, "output": 5.00},
-    "gemini-1.5-flash": {"input": 0.075, "output": 0.30},
-    "gemini-2.0-flash-exp": {"input": 0.10, "output": 0.40},
+    "gemini-3.8-flash": {"input": 0.75, "output": 3.75},
+    "gemini-3.6-flash": {"input": 0.75, "output": 3.75},
+    "gemini-3.5-flash-lite": {"input": 0.30, "output": 2.50},
+    "gemini-3.1-flash-lite": {"input": 0.25, "output": 1.50},
+    "gemini-3.1-pro-preview": {"input": 2.00, "output": 12.00},
 }
 
 # Active pricing table — starts as bundled, can be overridden

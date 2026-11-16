@@ -8,6 +8,16 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- **Typed export errors.** A refused export raises `CredentialNotExportableError`
+  (the credential is not exportable) or `CredentialResolveScopeError` (the key
+  lacks `credentials:resolve`, or is bound to an agent). Both subclass
+  `CredentialExportError` → `ControlPlaneError`, with `path` and
+  `required_scope`. Matches `resolveCredential` in the TypeScript SDK.
+- `ControlPlaneError.required_scope` carries the missing scope from a 403
+  `insufficient_scope`, and error codes inside the control plane's
+  `{"detail": {...}}` envelope are now parsed.
+
 ### Deprecated
 - **`ControlPlaneGateway.resolve_credential`** now emits a `DeprecationWarning`.
   Credentials brokered by the control plane are non-exportable by default: the
@@ -18,15 +28,12 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   method keeps its signature for local-development tooling and will be removed
   in a future major release.
 
-### Added
-- **Typed export errors.** A refused export raises `CredentialNotExportableError`
-  (the credential is not exportable) or `CredentialResolveScopeError` (the key
-  lacks `credentials:resolve`, or is bound to an agent). Both subclass
-  `CredentialExportError` → `ControlPlaneError`, with `path` and
-  `required_scope`. Matches `resolveCredential` in the TypeScript SDK.
-- `ControlPlaneError.required_scope` carries the missing scope from a 403
-  `insufficient_scope`, and error codes inside the control plane's
-  `{"detail": {...}}` envelope are now parsed.
+### Fixed
+- **Gemini default model and pricing.** `GeminiGateway` now defaults to
+  `gemini-3.8-flash` instead of the retired `gemini-1.5-pro`, and both pricing
+  tables list current Flash, Flash-Lite and Pro models instead of retired ones.
+  Unknown Gemini models are estimated at the most expensive known rate rather than
+  the Flash rate (#10).
 
 ---
 
