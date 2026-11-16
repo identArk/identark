@@ -61,7 +61,7 @@ logger = logging.getLogger("identark.integrations.gemini")
 # Checked 2026-11-10 against https://ai.google.dev/gemini-api/docs/pricing
 # gemini-3.8-flash and gemini-3.6-flash double on 2027-01-01 (input 1.50, output 7.50).
 # gemini-3.1-pro-preview is the rate for prompts up to 200k tokens.
-DEFAULT_MODEL = "gemini-3.6-flash"
+DEFAULT_MODEL = "gemini-3.8-flash"
 
 _GEMINI_PRICING: dict[str, dict[str, float]] = {
     # Flash
