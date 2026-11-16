@@ -145,8 +145,7 @@ class CredentialNotExportableError(CredentialExportError):
     """The credential is not exportable.
 
     The gateway can still use it server-side. An org owner can mark it
-    exportable from the dashboard if it is genuinely needed for local
-    development.
+    exportable if it is genuinely needed for local development.
     """
 
 

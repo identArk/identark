@@ -594,8 +594,8 @@ def _credential_export_error(exc: ControlPlaneError, path: str) -> CredentialExp
     if exc.error_code == "credential_not_exportable":
         return CredentialNotExportableError(
             f"Credential '{path}' is not exportable. The gateway can use it server-side, but its "
-            "plaintext cannot be read back. An org owner can mark it exportable from the dashboard "
-            "for local development.",
+            "plaintext cannot be read back. An org owner can mark it exportable for local "
+            "development.",
             error_code=exc.error_code,
             path=path,
         )
