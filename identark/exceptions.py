@@ -11,7 +11,10 @@ IdentArkError
 │   ├── ControlPlaneError
 │   │   ├── AuthenticationError
 │   │   ├── CostCapExceededError
-│   │   └── SessionNotFoundError
+│   │   ├── SessionNotFoundError
+│   │   └── CredentialExportError
+│   │       ├── CredentialNotExportableError
+│   │       └── CredentialResolveScopeError
 │   └── NetworkError
 ├── LLMError
 │   ├── RateLimitError
@@ -42,9 +45,10 @@ class ControlPlaneError(GatewayError):
     The control plane returned an error response.
 
     Attributes:
-        status_code: HTTP status code from the control plane.
-        error_code:  Machine-readable error code string.
-        message:     Human-readable error description.
+        status_code:    HTTP status code from the control plane.
+        error_code:     Machine-readable error code string.
+        message:        Human-readable error description.
+        required_scope: For a 403 ``insufficient_scope``, the scope the key lacks.
     """
 
     def __init__(
@@ -52,11 +56,13 @@ class ControlPlaneError(GatewayError):
         message: str,
         status_code: int = 0,
         error_code: str = "unknown",
+        required_scope: str | None = None,
     ) -> None:
         super().__init__(message)
         self.status_code = status_code
         self.error_code = error_code
         self.message = message
+        self.required_scope = required_scope
 
 
 class AuthenticationError(ControlPlaneError):
@@ -107,6 +113,50 @@ class SessionNotFoundError(ControlPlaneError):
             error_code="session_not_found",
         )
         self.session_id = session_id
+
+
+class CredentialExportError(ControlPlaneError):
+    """
+    The control plane refused to export a credential's plaintext (HTTP 403).
+
+    Brokered credentials are non-exportable by default: the gateway uses them
+    server-side, and nothing reads them back. Catch this base class to handle
+    both refusal reasons; catch a subclass to tell them apart.
+
+    Attributes:
+        path:           The credential path that was requested.
+        required_scope: The scope the control plane asked for, if any.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        error_code: str,
+        path: str = "",
+        required_scope: str | None = None,
+    ) -> None:
+        super().__init__(
+            message, status_code=403, error_code=error_code, required_scope=required_scope
+        )
+        self.path = path
+
+
+class CredentialNotExportableError(CredentialExportError):
+    """The credential is not exportable.
+
+    The gateway can still use it server-side. An org owner can mark it
+    exportable from the dashboard if it is genuinely needed for local
+    development.
+    """
+
+
+class CredentialResolveScopeError(CredentialExportError):
+    """The caller may not export credentials.
+
+    Either the API key lacks the ``credentials:resolve`` scope (``org:admin``
+    and presets do not include it — it must be granted by name), or the key is
+    bound to an agent, which can never export credentials.
+    """
 
 
 class NetworkError(GatewayError):

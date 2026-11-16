@@ -13,6 +13,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import warnings
 from collections.abc import AsyncGenerator
 from types import TracebackType
 from typing import Any, Literal, NoReturn
@@ -26,6 +27,9 @@ from identark.exceptions import (
     ContentPolicyError,
     ControlPlaneError,
     CostCapExceededError,
+    CredentialExportError,
+    CredentialNotExportableError,
+    CredentialResolveScopeError,
     NetworkError,
     PathNotAllowedError,
     SessionNotFoundError,
@@ -359,20 +363,45 @@ class ControlPlaneGateway:
         return float(data.get("cost_usd", 0.0))
 
     async def resolve_credential(self, path: str) -> CredentialSession:
-        """Resolve a credential through the control plane for this SDK session.
+        """Export a credential's plaintext from the control plane.
+
+        .. deprecated:: 1.4.0
+            Agents should not hold credentials: let the gateway use them
+            server-side (``invoke_llm``, ``request_capability``, managed tools).
+            The control plane now refuses this call unless the API key holds the
+            ``credentials:resolve`` scope *and* an org owner has marked the
+            credential exportable, so it is only useful for local development
+            tooling. The method keeps its signature and will be removed in a
+            future major release.
 
         Structured credentials retain their complete field map in
         :attr:`CredentialSession.fields`; single-value credentials continue to
-        use :attr:`CredentialSession.value`.  This is the SDK counterpart to
-        ``GET /v1/credentials/resolve`` and avoids application code parsing a
-        raw REST response.
+        use :attr:`CredentialSession.value`.
 
         Treat the returned object as sensitive: do not log it or retain it
         beyond the operation that needs it.
+
+        Raises:
+            CredentialNotExportableError: the credential is not exportable.
+            CredentialResolveScopeError: the key lacks ``credentials:resolve``
+                or is bound to an agent.
         """
+        warnings.warn(
+            "ControlPlaneGateway.resolve_credential() is deprecated: it exports credential "
+            "plaintext, which the control plane now allows only for keys holding "
+            "credentials:resolve and credentials an org owner marked exportable. Let the "
+            "gateway use credentials server-side instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if not path.strip():
             raise ValueError("path must not be empty")
-        data = await self._get("/credentials/resolve", {"path": path})
+        try:
+            data = await self._get("/credentials/resolve", {"path": path})
+        except ControlPlaneError as exc:
+            if exc.status_code == 403:
+                raise _credential_export_error(exc, path) from exc
+            raise
         raw_fields = data.get("fields")
         fields = raw_fields if isinstance(raw_fields, dict) else None
         return CredentialSession(
@@ -484,6 +513,11 @@ class ControlPlaneGateway:
         except Exception:
             body = {}
 
+        # FastAPI wraps structured errors as {"detail": {...}}; read through it
+        # when the top level carries no error_code of its own.
+        detail = body.get("detail") if isinstance(body, dict) else None
+        if isinstance(detail, dict) and "error_code" not in body:
+            body = {**detail, **{k: v for k, v in body.items() if k != "detail"}}
         error_code = body.get("error_code", "unknown")
         message = body.get("message", response.text)
         status = response.status_code
@@ -506,7 +540,12 @@ class ControlPlaneGateway:
         if error_code == "content_policy":
             raise ContentPolicyError(message)
 
-        raise ControlPlaneError(message, status_code=status, error_code=error_code)
+        raise ControlPlaneError(
+            message,
+            status_code=status,
+            error_code=error_code,
+            required_scope=body.get("required_scope"),
+        )
 
     def _parse_llm_response(self, data: dict[str, Any]) -> LLMResponse:
         """Parse the control plane's LLM invoke response into an LLMResponse."""
@@ -544,3 +583,39 @@ class ControlPlaneGateway:
                 cached_tokens=usage_data.get("cached_tokens", 0),
             ),
         )
+
+
+_RESOLVE_SCOPE = "credentials:resolve"
+
+
+def _credential_export_error(exc: ControlPlaneError, path: str) -> CredentialExportError:
+    """Map a 403 from /credentials/resolve to a typed, actionable error."""
+    required_scope = exc.required_scope
+    if exc.error_code == "credential_not_exportable":
+        return CredentialNotExportableError(
+            f"Credential '{path}' is not exportable. The gateway can use it server-side, but its "
+            "plaintext cannot be read back. An org owner can mark it exportable from the dashboard "
+            "for local development.",
+            error_code=exc.error_code,
+            path=path,
+        )
+    if exc.error_code == "agent_key_cannot_export":
+        return CredentialResolveScopeError(
+            "This API key is bound to an agent and can never export credentials. Use a "
+            f"separate, unbound developer key holding {_RESOLVE_SCOPE}, or sign in with "
+            "`identark auth login`.",
+            error_code=exc.error_code,
+            path=path,
+            required_scope=required_scope or _RESOLVE_SCOPE,
+        )
+    if exc.error_code == "insufficient_scope" and (required_scope in (None, _RESOLVE_SCOPE)):
+        return CredentialResolveScopeError(
+            f"This API key lacks the {_RESOLVE_SCOPE} scope. It is never implied by org:admin or a "
+            "preset; grant it explicitly to a developer key (agent keys cannot hold it).",
+            error_code=exc.error_code,
+            path=path,
+            required_scope=_RESOLVE_SCOPE,
+        )
+    return CredentialExportError(
+        exc.message, error_code=exc.error_code, path=path, required_scope=required_scope
+    )
