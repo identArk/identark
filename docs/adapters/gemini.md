@@ -33,12 +33,12 @@ print(f"Cost: ${response.cost_usd:.6f}")
 | Model | Best For | Cost (per 1M tokens) |
 |-------|----------|---------------------|
 | `gemini-3.1-pro-preview` | Complex reasoning, long context | $2.00 in / $12.00 out |
-| `gemini-3.8-flash` (default) | Newest Flash, long-horizon agents | $0.75 in / $3.75 out |
-| `gemini-3.6-flash` | Fast responses, general use | $0.75 in / $3.75 out |
+| `gemini-3.8-flash` (default) | Newest Flash, long-horizon agents | $1.50 in / $7.50 out |
+| `gemini-3.6-flash` | Fast responses, general use | $1.50 in / $7.50 out |
 | `gemini-3.5-flash-lite` | Cheaper, simple tasks | $0.30 in / $2.50 out |
 | `gemini-3.1-flash-lite` | Cheapest, simple tasks | $0.25 in / $1.50 out |
 
-Prices checked 2026-11-10 on Google's pricing page (paid tier, standard; the Pro rate is for prompts up to 200k tokens). `gemini-3.8-flash` and `gemini-3.6-flash` double on 2027-01-01. A model not in this table is estimated at the most expensive rate above.
+Prices checked 2026-11-16 on Google's pricing page (paid tier, standard; the Pro rate is for prompts up to 200k tokens). `gemini-3.8-flash` and `gemini-3.6-flash` doubled on 2027-01-01. A model not in this table is estimated at the most expensive rate above.
 
 ## Configuration Options
 

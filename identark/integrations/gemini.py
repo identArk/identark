@@ -58,15 +58,15 @@ from identark.models import (
 logger = logging.getLogger("identark.integrations.gemini")
 
 # Gemini pricing per 1M tokens (USD), paid tier, standard, text input/output.
-# Checked 2026-11-10 against https://ai.google.dev/gemini-api/docs/pricing
-# gemini-3.8-flash and gemini-3.6-flash double on 2027-01-01 (input 1.50, output 7.50).
+# Checked 2026-11-16 against https://ai.google.dev/gemini-api/docs/pricing
+# gemini-3.8-flash and gemini-3.6-flash doubled on 2027-01-01 (input 1.50, output 7.50).
 # gemini-3.1-pro-preview is the rate for prompts up to 200k tokens.
 DEFAULT_MODEL = "gemini-3.8-flash"
 
 _GEMINI_PRICING: dict[str, dict[str, float]] = {
     # Flash
-    "gemini-3.8-flash": {"input": 0.75, "output": 3.75},
-    "gemini-3.6-flash": {"input": 0.75, "output": 3.75},
+    "gemini-3.8-flash": {"input": 1.50, "output": 7.50},
+    "gemini-3.6-flash": {"input": 1.50, "output": 7.50},
     # Flash-Lite
     "gemini-3.5-flash-lite": {"input": 0.30, "output": 2.50},
     "gemini-3.1-flash-lite": {"input": 0.25, "output": 1.50},
