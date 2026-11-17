@@ -58,8 +58,11 @@ from identark.models import (
 logger = logging.getLogger("identark.integrations.gemini")
 
 # Gemini pricing per 1M tokens (USD), paid tier, standard, text input/output.
-# Checked 2026-11-16 against https://ai.google.dev/gemini-api/docs/pricing
-# gemini-3.8-flash and gemini-3.6-flash doubled on 2027-01-01 (input 1.50, output 7.50).
+# Checked 2026-11-10 against https://ai.google.dev/gemini-api/docs/pricing
+# The rates below for gemini-3.8-flash and gemini-3.6-flash take effect
+# 2027-01-01 (input 1.50, output 7.50). Until 2026-12-31 Google charges
+# $0.75 / $3.75, so estimates for these two models are twice the real cost
+# until then (overestimating is the safe direction).
 # gemini-3.1-pro-preview is the rate for prompts up to 200k tokens.
 DEFAULT_MODEL = "gemini-3.8-flash"
 

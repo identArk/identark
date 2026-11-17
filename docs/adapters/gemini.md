@@ -38,7 +38,7 @@ print(f"Cost: ${response.cost_usd:.6f}")
 | `gemini-3.5-flash-lite` | Cheaper, simple tasks | $0.30 in / $2.50 out |
 | `gemini-3.1-flash-lite` | Cheapest, simple tasks | $0.25 in / $1.50 out |
 
-Prices checked 2026-11-16 on Google's pricing page (paid tier, standard; the Pro rate is for prompts up to 200k tokens). `gemini-3.8-flash` and `gemini-3.6-flash` doubled on 2027-01-01. A model not in this table is estimated at the most expensive rate above.
+Prices checked 2026-11-10 on Google's pricing page (paid tier, standard; the Pro rate is for prompts up to 200k tokens). The `gemini-3.8-flash` and `gemini-3.6-flash` rates above take effect 2027-01-01; until 2026-12-31 Google charges $0.75 in / $3.75 out, so cost estimates for these two models are twice the real cost until then (overestimating is the safe direction). A model not in this table is estimated at the most expensive rate above.
 
 ## Configuration Options
 
