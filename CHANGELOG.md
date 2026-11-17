@@ -28,16 +28,9 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   method keeps its signature for local-development tooling and will be removed
   in a future major release.
 
-### Fixed
-- **Gemini default model and pricing.** `GeminiGateway` now defaults to
-  `gemini-3.8-flash` instead of the retired `gemini-1.5-pro`, and both pricing
-  tables list current Flash, Flash-Lite and Pro models instead of retired ones.
-  Unknown Gemini models are estimated at the most expensive known rate rather than
-  the Flash rate (#10).
-
 ---
 
-## [1.3.0] — 2026-10-27
+## [1.3.0] — 2026-11-16
 
 ### Added
 - **Governed actions.** `ControlPlaneGateway.request_capability(capability,
@@ -67,6 +60,11 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `invoke_llm_stream` read `content` from SSE events, but the control plane
   streams `delta`, so streamed text came back empty. Both are now accepted, and
   an `{"error": ...}` event raises `ControlPlaneError` instead of ending silently.
+- **Gemini default model and pricing.** `GeminiGateway` now defaults to
+  `gemini-3.8-flash` instead of the retired `gemini-1.5-pro`, and both pricing
+  tables list current Flash, Flash-Lite and Pro models instead of retired ones.
+  Unknown Gemini models are estimated at the most expensive known rate rather than
+  the Flash rate (#10).
 
 ---
 
