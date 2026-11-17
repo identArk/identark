@@ -8,6 +8,26 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- **Typed export errors.** A refused export raises `CredentialNotExportableError`
+  (the credential is not exportable) or `CredentialResolveScopeError` (the key
+  lacks `credentials:resolve`, or is bound to an agent). Both subclass
+  `CredentialExportError` → `ControlPlaneError`, with `path` and
+  `required_scope`. Matches `resolveCredential` in the TypeScript SDK.
+- `ControlPlaneError.required_scope` carries the missing scope from a 403
+  `insufficient_scope`, and error codes inside the control plane's
+  `{"detail": {...}}` envelope are now parsed.
+
+### Deprecated
+- **`ControlPlaneGateway.resolve_credential`** now emits a `DeprecationWarning`.
+  Credentials brokered by the control plane are non-exportable by default: the
+  gateway uses them server-side and they are not returned to callers. Export now
+  needs an API key holding the explicit `credentials:resolve` scope (not
+  included in any preset or implied by `org:admin`, and never available to
+  agent-bound keys) **and** a credential an org owner has marked exportable. The
+  method keeps its signature for local-development tooling and will be removed
+  in a future major release.
+
 ---
 
 ## [1.3.0] — 2026-11-16

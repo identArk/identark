@@ -16,7 +16,11 @@ from identark.exceptions import (
     AuthenticationError,
     ConfigurationError,
     ContentPolicyError,
+    ControlPlaneError,
     CostCapExceededError,
+    CredentialExportError,
+    CredentialNotExportableError,
+    CredentialResolveScopeError,
     NetworkError,
     PathNotAllowedError,
     SessionNotFoundError,
@@ -261,7 +265,8 @@ class TestResolveCredential:
             )
         )
 
-        session = await gw.resolve_credential("prod/postgres")
+        with pytest.warns(DeprecationWarning):
+            session = await gw.resolve_credential("prod/postgres")
 
         assert session.kind == "database"
         assert session.fields == {
@@ -270,6 +275,89 @@ class TestResolveCredential:
             "password": "not-logged",
             "database": "prod",
         }
+
+    async def test_is_deprecated_but_keeps_its_signature(self) -> None:
+        gw = _make_gateway()
+        gw._client.request = AsyncMock(
+            return_value=_mock_response(
+                200, {"name": "openai", "path": "dev/openai", "value": "sk-x"}
+            )
+        )
+        with pytest.warns(DeprecationWarning, match="credentials:resolve"):
+            session = await gw.resolve_credential("dev/openai")
+        assert session.value == "sk-x"
+
+    async def test_non_exportable_credential_raises_typed_error(self) -> None:
+        gw = _make_gateway()
+        gw._client.request = AsyncMock(
+            return_value=_mock_response(
+                403,
+                {
+                    "detail": {
+                        "error_code": "credential_not_exportable",
+                        "message": "This credential is not exportable.",
+                        "paths": ["prod/openai"],
+                    }
+                },
+            )
+        )
+        with pytest.warns(DeprecationWarning), pytest.raises(CredentialNotExportableError) as info:
+            await gw.resolve_credential("prod/openai")
+        err = info.value
+        assert isinstance(err, CredentialExportError)
+        assert isinstance(err, ControlPlaneError)
+        assert err.status_code == 403
+        assert err.error_code == "credential_not_exportable"
+        assert err.path == "prod/openai"
+        assert "not exportable" in str(err)
+
+    async def test_missing_resolve_scope_raises_typed_error(self) -> None:
+        gw = _make_gateway()
+        gw._client.request = AsyncMock(
+            return_value=_mock_response(
+                403,
+                {
+                    "detail": {
+                        "error_code": "insufficient_scope",
+                        "message": "This API key lacks the required scope: credentials:resolve",
+                        "required_scope": "credentials:resolve",
+                    }
+                },
+            )
+        )
+        with pytest.warns(DeprecationWarning), pytest.raises(CredentialResolveScopeError) as info:
+            await gw.resolve_credential("prod/openai")
+        assert info.value.required_scope == "credentials:resolve"
+        assert "credentials:resolve" in str(info.value)
+
+    async def test_agent_bound_key_raises_scope_error(self) -> None:
+        gw = _make_gateway()
+        gw._client.request = AsyncMock(
+            return_value=_mock_response(
+                403,
+                {
+                    "detail": {
+                        "error_code": "agent_key_cannot_export",
+                        "message": "no",
+                        "required_scope": "credentials:resolve",
+                    }
+                },
+            )
+        )
+        with pytest.warns(DeprecationWarning), pytest.raises(CredentialResolveScopeError) as info:
+            await gw.resolve_credential("prod/openai")
+        assert info.value.error_code == "agent_key_cannot_export"
+        assert "bound to an agent" in str(info.value)
+
+    async def test_other_errors_are_unchanged(self) -> None:
+        gw = _make_gateway()
+        gw._client.request = AsyncMock(
+            return_value=_mock_response(400, {"detail": "Invalid path format."})
+        )
+        with pytest.warns(DeprecationWarning), pytest.raises(ControlPlaneError) as info:
+            await gw.resolve_credential("prod/")
+        assert not isinstance(info.value, CredentialExportError)
+        assert info.value.status_code == 400
 
 
 # ── Error handling ────────────────────────────────────────────────────────────
@@ -527,3 +615,25 @@ class TestGovernedActions:
         assert seen[0].method == "GET"
         assert seen[0].url.raw_path == b"/v1/gateway/executions/a%2Fb"
         assert execution["status"] == "pending_approval"
+
+
+class TestNestedErrorDetail:
+    async def test_fastapi_detail_envelope_is_parsed(self) -> None:
+        gw = _make_gateway()
+        gw._client.request = AsyncMock(
+            return_value=_mock_response(
+                403,
+                {
+                    "detail": {
+                        "error_code": "insufficient_scope",
+                        "message": "This API key lacks the required scope: audit:read",
+                        "required_scope": "audit:read",
+                    }
+                },
+            )
+        )
+        with pytest.raises(ControlPlaneError) as info:
+            await gw.get_session_cost()
+        assert info.value.error_code == "insufficient_scope"
+        assert info.value.required_scope == "audit:read"
+        assert info.value.message == "This API key lacks the required scope: audit:read"

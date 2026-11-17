@@ -25,6 +25,11 @@ Full documentation: https://github.com/identark/identark#readme
 GitHub: https://github.com/identark/identark
 """
 
+from identark.exceptions import (
+    CredentialExportError,
+    CredentialNotExportableError,
+    CredentialResolveScopeError,
+)
 from identark.gateway import AgentGateway
 from identark.gateways.control_plane import CapabilityProvider, ControlPlaneGateway
 from identark.gateways.direct import DirectGateway
@@ -55,6 +60,10 @@ __all__ = [
     "ControlPlaneGateway",
     "ManagedToolsClient",
     "ManagedToolsError",
+    # Errors
+    "CredentialExportError",
+    "CredentialNotExportableError",
+    "CredentialResolveScopeError",
     # Models
     "Message",
     "Role",
