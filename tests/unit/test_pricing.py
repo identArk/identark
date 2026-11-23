@@ -70,6 +70,20 @@ class TestPricing:
         assert pricing["input"] == 3.00
         assert pricing["output"] == 15.00
 
+    def test_gemini_4_pricing(self) -> None:
+        """Gemini 4 models are bundled at their December 2026 rates."""
+        expected = {
+            "gemini-4-carbon": (4.00, 20.00),
+            "gemini-4-argon": (4.00, 20.00),
+            "gemini-4-neon": (3.00, 15.00),
+            "gemini-4-hydrogen": (1.50, 7.50),
+        }
+        for model, (input_rate, output_rate) in expected.items():
+            pricing = get_pricing(model)
+            assert pricing is not None, model
+            assert pricing["input"] == input_rate
+            assert pricing["output"] == output_rate
+
     def test_mistral_pricing(self) -> None:
         """Mistral models have correct pricing."""
         pricing = get_pricing("mistral-large-latest")
