@@ -47,7 +47,12 @@ _BUNDLED_PRICING: dict[str, ModelPricing] = {
     "mistral-small-latest": {"input": 0.20, "output": 0.60},
     "open-mistral-nemo": {"input": 0.15, "output": 0.15},
     "codestral-latest": {"input": 0.20, "output": 0.60},
-    # Google Gemini
+    # Google Gemini. Gemini 4 Carbon and Argon use the 2026-12-01 rates; until
+    # 2026-11-30 Google charges $2 / $10, so they are overestimated until then.
+    "gemini-4-carbon": {"input": 4.00, "output": 20.00},
+    "gemini-4-argon": {"input": 4.00, "output": 20.00},
+    "gemini-4-neon": {"input": 3.00, "output": 15.00},
+    "gemini-4-hydrogen": {"input": 1.50, "output": 7.50},
     "gemini-3.8-flash": {"input": 0.75, "output": 3.75},
     "gemini-3.6-flash": {"input": 0.75, "output": 3.75},
     "gemini-3.5-flash-lite": {"input": 0.30, "output": 2.50},

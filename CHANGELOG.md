@@ -9,6 +9,13 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Added
+- **Gemini 4 pricing.** `gemini-4-carbon` and `gemini-4-argon` ($4.00 input /
+  $20.00 output per 1M tokens, Google's rate from 1 Dec 2026), `gemini-4-neon`
+  ($3.00 / $15.00) and `gemini-4-hydrogen` ($1.50 / $7.50) now have their own
+  entries in the Gemini integration and the bundled price table. Until 30 Nov
+  2026 Google charges $2.00 / $10.00 for Carbon and Argon, so their estimates
+  run high until then. Unknown Gemini models are still estimated at the most
+  expensive known rate, which is now $4.00 / $20.00 (was $2.00 / $12.00).
 - **Typed export errors.** A refused export raises `CredentialNotExportableError`
   (the credential is not exportable) or `CredentialResolveScopeError` (the key
   lacks `credentials:resolve`, or is bound to an agent). Both subclass

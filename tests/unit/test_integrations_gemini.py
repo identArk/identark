@@ -192,6 +192,33 @@ def test_unknown_model_uses_most_expensive_rate(caplog):
     assert "Unknown Gemini model gemini-99-pro" in caplog.text
 
 
+@pytest.mark.parametrize(
+    ("model", "input_rate", "output_rate"),
+    [
+        ("gemini-4-carbon", 4.00, 20.00),
+        ("gemini-4-argon", 4.00, 20.00),
+        ("gemini-4-neon", 3.00, 15.00),
+        ("gemini-4-hydrogen", 1.50, 7.50),
+    ],
+)
+def test_gemini_4_models_have_own_pricing(caplog, model, input_rate, output_rate):
+    """Each Gemini 4 model is priced from its own entry, without the fallback warning."""
+    from identark.integrations.gemini import _estimate_gemini_cost
+
+    with caplog.at_level("WARNING"):
+        assert _estimate_gemini_cost(model, 1_000_000, 0) == pytest.approx(input_rate)
+        assert _estimate_gemini_cost(model, 0, 1_000_000) == pytest.approx(output_rate)
+    assert "Unknown Gemini model" not in caplog.text
+
+
+def test_unknown_model_fallback_is_gemini_4_rate():
+    """Adding Gemini 4 raises the unknown-model fallback to $4 / $20."""
+    from identark.integrations.gemini import _estimate_gemini_cost
+
+    assert _estimate_gemini_cost("gemini-99-pro", 1_000_000, 0) == pytest.approx(4.00)
+    assert _estimate_gemini_cost("gemini-99-pro", 0, 1_000_000) == pytest.approx(20.00)
+
+
 def test_missing_api_key():
     """Test error when API key is missing."""
     from identark.exceptions import ConfigurationError
