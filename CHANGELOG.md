@@ -8,6 +8,10 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+---
+
+## [1.4.0] — 2026-11-23
+
 ### Added
 - **Gemini 4 pricing.** `gemini-4-carbon` and `gemini-4-argon` ($4.00 input /
   $20.00 output per 1M tokens, Google's rate from 1 Dec 2026), `gemini-4-neon`
@@ -133,6 +137,7 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+[1.4.0]: https://github.com/identark/identark/releases/tag/v1.4.0
 [1.3.0]: https://github.com/identark/identark/releases/tag/v1.3.0
 [1.2.1]: https://github.com/identark/identark/releases/tag/v1.2.1
 [1.2.0]: https://github.com/identark/identark/releases/tag/v1.2.0
