@@ -67,19 +67,16 @@ mypy identark/
 ruff check identark/ tests/
 ```
 
-### A warning about plain `pytest`
+### Plain `pytest` runs the integration suite too
 
-**Running `pytest` with no path also runs `tests/integration/`, and those tests currently fail —
-around 40 of them — unless the mock control plane in `tests/integration/mock_server.py` is
-running.** They fail on an unmodified `main` too, so if you see them, you have not broken
-anything.
+Running `pytest` with no path also runs `tests/integration/`. Those tests need no server: they
+use an in-process mock control plane (`tests/integration/mock_server.py`) and mocked provider
+clients, and they fail if anything tries to make a real HTTP request. They should pass on an
+unmodified `main`; if they fail, treat it as a real regression.
 
-CI only runs `tests/unit/`, which is why it stays green. Use `pytest tests/unit/` for day-to-day
-work, and see `tests/integration/README.md` if you want to run the integration suite properly.
-
-This is a wart, not a design decision. [#19](https://github.com/identArk/identark/issues/19)
-tracks making those tests *skip* rather than fail when their dependency is absent, and it is
-labelled `good first issue` if you would like to fix it.
+CI only runs `tests/unit/`, so use `pytest tests/unit/` for the quick check and plain `pytest`
+before you open a PR. A test marked `xfail(strict=True)` records a known library bug. Once the
+bug is fixed it will XPASS and fail the run, so remove the marker in the same PR.
 
 ---
 

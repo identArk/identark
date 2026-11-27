@@ -42,20 +42,22 @@ class TestRequestPayloadFormat:
                 captured_requests.append(kwargs["json"])
             resp = MagicMock()
             resp.status_code = 200
-            resp.json = AsyncMock(return_value={
-                "message": {"role": "assistant", "content": "Test"},
-                "cost_usd": 0.001,
-                "model": "gpt-4o",
-                "finish_reason": "stop",
-                "usage": {
-                    "input_tokens": 10,
-                    "output_tokens": 20,
-                    "total_tokens": 30,
-                },
-            })
+            resp.json = MagicMock(
+                return_value={
+                    "message": {"role": "assistant", "content": "Test"},
+                    "cost_usd": 0.001,
+                    "model": "gpt-4o",
+                    "finish_reason": "stop",
+                    "usage": {
+                        "input_tokens": 10,
+                        "output_tokens": 20,
+                        "total_tokens": 30,
+                    },
+                }
+            )
             return resp
 
-        with patch("httpx.AsyncClient.request", side_effect=mock_request):
+        with patch("httpx.AsyncClient.request", autospec=True, side_effect=mock_request):
             await gateway.invoke_llm([Message(role=Role.USER, content="Test")])
 
         # Verify request structure
@@ -85,13 +87,15 @@ class TestRequestPayloadFormat:
                 captured_requests.append(kwargs["json"])
             resp = MagicMock()
             resp.status_code = 200
-            resp.json = AsyncMock(return_value={
-                "message": {"role": "assistant", "content": "Test"},
-                "cost_usd": 0.001,
-                "model": "gpt-4o",
-                "finish_reason": "stop",
-                "usage": {"input_tokens": 10, "output_tokens": 20, "total_tokens": 30},
-            })
+            resp.json = MagicMock(
+                return_value={
+                    "message": {"role": "assistant", "content": "Test"},
+                    "cost_usd": 0.001,
+                    "model": "gpt-4o",
+                    "finish_reason": "stop",
+                    "usage": {"input_tokens": 10, "output_tokens": 20, "total_tokens": 30},
+                }
+            )
             return resp
 
         tools = [
@@ -108,7 +112,7 @@ class TestRequestPayloadFormat:
             }
         ]
 
-        with patch("httpx.AsyncClient.request", side_effect=mock_request):
+        with patch("httpx.AsyncClient.request", autospec=True, side_effect=mock_request):
             await gateway.invoke_llm([Message(role=Role.USER, content="Test")], tools=tools)
 
         request = captured_requests[0]
@@ -135,16 +139,18 @@ class TestRequestPayloadFormat:
             captured_headers.append(dict(self_.headers))
             resp = MagicMock()
             resp.status_code = 200
-            resp.json = AsyncMock(return_value={
-                "message": {"role": "assistant", "content": "Test"},
-                "cost_usd": 0.001,
-                "model": "gpt-4o",
-                "finish_reason": "stop",
-                "usage": {"input_tokens": 10, "output_tokens": 20, "total_tokens": 30},
-            })
+            resp.json = MagicMock(
+                return_value={
+                    "message": {"role": "assistant", "content": "Test"},
+                    "cost_usd": 0.001,
+                    "model": "gpt-4o",
+                    "finish_reason": "stop",
+                    "usage": {"input_tokens": 10, "output_tokens": 20, "total_tokens": 30},
+                }
+            )
             return resp
 
-        with patch("httpx.AsyncClient.request", side_effect=mock_request):
+        with patch("httpx.AsyncClient.request", autospec=True, side_effect=mock_request):
             await gateway.invoke_llm([Message(role=Role.USER, content="Test")])
 
         headers = captured_headers[0]
@@ -168,27 +174,28 @@ class TestResponseParsing:
             url="https://api.identark.io/v1",
         )
 
-        async def mock_response(request: any) -> Response:
-            return Response(200, json={
-                "message": {
-                    "role": "assistant",
-                    "content": "Complete answer",
+        async def mock_response(self_: any, method: str, path: str, **kwargs: any) -> Response:
+            assert (method, path) == ("POST", "/llm/invoke")
+            return Response(
+                200,
+                json={
+                    "message": {
+                        "role": "assistant",
+                        "content": "Complete answer",
+                    },
+                    "cost_usd": 0.0234,
+                    "model": "gpt-4o-turbo",
+                    "finish_reason": "stop",
+                    "usage": {
+                        "input_tokens": 150,
+                        "output_tokens": 75,
+                        "total_tokens": 225,
+                        "cached_tokens": 50,
+                    },
                 },
-                "cost_usd": 0.0234,
-                "model": "gpt-4o-turbo",
-                "finish_reason": "stop",
-                "usage": {
-                    "input_tokens": 150,
-                    "output_tokens": 75,
-                    "total_tokens": 225,
-                    "cached_tokens": 50,
-                },
-            })
+            )
 
-        router = mock_control_plane.mocked()
-        router.post("https://api.identark.io/v1/llm/invoke").mock(side_effect=mock_response)
-
-        with router:
+        with patch("httpx.AsyncClient.request", autospec=True, side_effect=mock_response):
             response = await gateway.invoke_llm([Message(role=Role.USER, content="Test")])
 
         assert response.message.content == "Complete answer"
@@ -211,20 +218,20 @@ class TestResponseParsing:
             url="https://api.identark.io/v1",
         )
 
-        async def mock_response(request: any) -> Response:
-            return Response(200, json={
-                "url": "https://s3.aws.amazon.com/bucket/key?signature=xyz",
-                "expires_at": "2025-12-31T23:59:59Z",
-                "method": "PUT",
-                "file_path": "/workspace/output.txt",
-            })
+        async def mock_response(self_: any, method: str, path: str, **kwargs: any) -> Response:
+            assert (method, path) == ("POST", "/files/presigned-urls")
+            assert kwargs["json"]["file_path"] == "/workspace/output.txt"
+            return Response(
+                200,
+                json={
+                    "url": "https://s3.aws.amazon.com/bucket/key?signature=xyz",
+                    "expires_at": "2025-12-31T23:59:59Z",
+                    "method": "PUT",
+                    "file_path": "/workspace/output.txt",
+                },
+            )
 
-        router = mock_control_plane.mocked()
-        router.post("https://api.identark.io/v1/files/presigned-urls").mock(
-            side_effect=mock_response
-        )
-
-        with router:
+        with patch("httpx.AsyncClient.request", autospec=True, side_effect=mock_response):
             url_obj = await gateway.request_file_url("/workspace/output.txt")
 
         assert url_obj.url == "https://s3.aws.amazon.com/bucket/key?signature=xyz"
@@ -250,11 +257,15 @@ class TestErrorResponseMapping:
             url="https://api.identark.io/v1",
         )
 
-        mock_control_plane.inject_error("invoke_llm", 401, {
-            "error_code": "authentication_failed",
-            "message": "Invalid token",
-            "reason": "expired",
-        })
+        mock_control_plane.inject_error(
+            "invoke_llm",
+            401,
+            {
+                "error_code": "authentication_failed",
+                "message": "Invalid token",
+                "reason": "expired",
+            },
+        )
 
         with mock_control_plane.mocked():
             with pytest.raises(AuthenticationError) as exc:
@@ -274,12 +285,16 @@ class TestErrorResponseMapping:
             url="https://api.identark.io/v1",
         )
 
-        mock_control_plane.inject_error("invoke_llm", 402, {
-            "error_code": "cost_cap_exceeded",
-            "message": "Cap exceeded",
-            "cap_usd": 10.0,
-            "consumed_usd": 10.5,
-        })
+        mock_control_plane.inject_error(
+            "invoke_llm",
+            402,
+            {
+                "error_code": "cost_cap_exceeded",
+                "message": "Cap exceeded",
+                "cap_usd": 10.0,
+                "consumed_usd": 10.5,
+            },
+        )
 
         with mock_control_plane.mocked():
             with pytest.raises(CostCapExceededError) as exc:
@@ -300,11 +315,15 @@ class TestErrorResponseMapping:
             session_id="expired",
         )
 
-        mock_control_plane.inject_error("invoke_llm", 404, {
-            "error_code": "session_not_found",
-            "message": "Not found",
-            "session_id": "expired",
-        })
+        mock_control_plane.inject_error(
+            "invoke_llm",
+            404,
+            {
+                "error_code": "session_not_found",
+                "message": "Not found",
+                "session_id": "expired",
+            },
+        )
 
         with mock_control_plane.mocked():
             with pytest.raises(SessionNotFoundError) as exc:
@@ -322,10 +341,14 @@ class TestErrorResponseMapping:
             url="https://api.identark.io/v1",
         )
 
-        mock_control_plane.inject_error("invoke_llm", 400, {
-            "error_code": "content_policy",
-            "message": "Request violates content policy",
-        })
+        mock_control_plane.inject_error(
+            "invoke_llm",
+            400,
+            {
+                "error_code": "content_policy",
+                "message": "Request violates content policy",
+            },
+        )
 
         with mock_control_plane.mocked():
             with pytest.raises(ContentPolicyError):
@@ -342,10 +365,14 @@ class TestErrorResponseMapping:
             url="https://api.identark.io/v1",
         )
 
-        mock_control_plane.inject_error("invoke_llm", 418, {
-            "error_code": "teapot",
-            "message": "I am a teapot",
-        })
+        mock_control_plane.inject_error(
+            "invoke_llm",
+            418,
+            {
+                "error_code": "teapot",
+                "message": "I am a teapot",
+            },
+        )
 
         with mock_control_plane.mocked():
             with pytest.raises(ControlPlaneError) as exc:
@@ -369,22 +396,25 @@ class TestStreamingSSEFormat:
             url="https://api.identark.io/v1",
         )
 
-        async def mock_stream_request(
+        # AsyncClient.stream() is a plain call returning an async context manager.
+        def mock_stream_request(
             self_: any,
             method: str,
             path: str,
             **kwargs: any,
         ) -> MagicMock:
-            sse_events = "\n".join([
-                'data: {"content": "Hello", "finish_reason": null, "model": "gpt-4o"}',
-                'data: {"content": " ", "finish_reason": null, "model": "gpt-4o"}',
-                'data: {"content": "world", "finish_reason": null, "model": "gpt-4o"}',
-                (
-                    'data: {"content": "", "finish_reason": "stop", "model": "gpt-4o", '
-                    '"input_tokens": 10, "output_tokens": 15}'
-                ),
-                "data: [DONE]",
-            ])
+            sse_events = "\n".join(
+                [
+                    'data: {"content": "Hello", "finish_reason": null, "model": "gpt-4o"}',
+                    'data: {"content": " ", "finish_reason": null, "model": "gpt-4o"}',
+                    'data: {"content": "world", "finish_reason": null, "model": "gpt-4o"}',
+                    (
+                        'data: {"content": "", "finish_reason": "stop", "model": "gpt-4o", '
+                        '"input_tokens": 10, "output_tokens": 15}'
+                    ),
+                    "data: [DONE]",
+                ]
+            )
 
             resp = MagicMock()
             resp.status_code = 200
@@ -400,7 +430,7 @@ class TestStreamingSSEFormat:
             resp.aread = AsyncMock()
             return resp
 
-        with patch("httpx.AsyncClient.stream", side_effect=mock_stream_request):
+        with patch("httpx.AsyncClient.stream", autospec=True, side_effect=mock_stream_request):
             chunks = []
             async for chunk in gateway.invoke_llm_stream([Message(role=Role.USER, content="Test")]):
                 chunks.append(chunk)
