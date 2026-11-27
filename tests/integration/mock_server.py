@@ -74,8 +74,9 @@ class MockControlPlane:
         if self._latency > 0:
             await asyncio.sleep(self._latency)
 
-    def _mock_response(self, status: int, json_data: dict[str, Any] | None = None,
-                       text: str | None = None) -> MagicMock:
+    def _mock_response(
+        self, status: int, json_data: dict[str, Any] | None = None, text: str | None = None
+    ) -> MagicMock:
         """Create a mock httpx Response."""
         resp = AsyncMock()
         resp.status_code = status
@@ -131,13 +132,16 @@ class MockControlPlane:
         chunks = [
             "data: " + json.dumps({"content": "Hello ", "finish_reason": None, "model": "gpt-4o"}),
             "data: " + json.dumps({"content": "world!", "finish_reason": None, "model": "gpt-4o"}),
-            "data: " + json.dumps({
-                "content": "",
-                "finish_reason": "stop",
-                "model": "gpt-4o",
-                "input_tokens": 10,
-                "output_tokens": 20,
-            }),
+            "data: "
+            + json.dumps(
+                {
+                    "content": "",
+                    "finish_reason": "stop",
+                    "model": "gpt-4o",
+                    "input_tokens": 10,
+                    "output_tokens": 20,
+                }
+            ),
             "data: [DONE]",
         ]
         sse_text = "\n".join(chunks) + "\n"
@@ -204,6 +208,7 @@ class MockControlPlane:
     @contextmanager
     def mocked(self) -> Any:
         """Context manager that mocks httpx client requests."""
+
         async def mock_request(self_: Any, method: str, path: str, **kwargs: Any) -> Any:
             # Route to appropriate handler based on method and path
             if method == "POST" and path == "/llm/invoke":

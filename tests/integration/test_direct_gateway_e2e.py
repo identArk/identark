@@ -63,9 +63,7 @@ def _openai_stream_chunk(
     )
     return MagicMock(
         choices=choices,
-        usage=(
-            MagicMock(prompt_tokens=usage[0], completion_tokens=usage[1]) if usage else None
-        ),
+        usage=(MagicMock(prompt_tokens=usage[0], completion_tokens=usage[1]) if usage else None),
     )
 
 
@@ -339,9 +337,7 @@ class TestStreaming:
             )
 
             chunks = []
-            async for chunk in gateway.invoke_llm_stream(
-                [Message(role=Role.USER, content="Test")]
-            ):
+            async for chunk in gateway.invoke_llm_stream([Message(role=Role.USER, content="Test")]):
                 chunks.append(chunk)
 
             assert len(chunks) >= 2
@@ -393,9 +389,7 @@ class TestStreaming:
             )
 
             chunks = []
-            async for chunk in gateway.invoke_llm_stream(
-                [Message(role=Role.USER, content="Test")]
-            ):
+            async for chunk in gateway.invoke_llm_stream([Message(role=Role.USER, content="Test")]):
                 chunks.append(chunk)
 
             final_chunk = chunks[-1]
