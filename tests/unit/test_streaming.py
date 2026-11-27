@@ -4,9 +4,16 @@ Tests for invoke_llm_stream across all gateway implementations.
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
+from types import SimpleNamespace
+from typing import Any
+
 import pytest
 
+from identark import DirectGateway
+from identark.exceptions import CostCapExceededError
 from identark.models import LLMResponse, Message, Role, StreamChunk, TokenUsage
+from identark.pricing import estimate_cost
 from identark.testing import MockGateway
 
 # ── MockGateway streaming ─────────────────────────────────────────────────────
@@ -157,3 +164,126 @@ class TestStreamChunkModel:
         final = StreamChunk(content="", finish_reason="stop", model="m")
         assert mid.finish_reason is None
         assert final.finish_reason is not None
+
+
+# ── DirectGateway OpenAI streaming ────────────────────────────────────────────
+
+
+def _chunk(
+    content: str | None = None,
+    finish_reason: str | None = None,
+    usage: SimpleNamespace | None = None,
+    *,
+    no_choices: bool = False,
+) -> SimpleNamespace:
+    """Build an OpenAI ``ChatCompletionChunk``-shaped object."""
+    choices = (
+        []
+        if no_choices
+        else [
+            SimpleNamespace(
+                delta=SimpleNamespace(content=content),
+                finish_reason=finish_reason,
+            )
+        ]
+    )
+    return SimpleNamespace(choices=choices, usage=usage)
+
+
+def _usage(prompt_tokens: int, completion_tokens: int) -> SimpleNamespace:
+    return SimpleNamespace(prompt_tokens=prompt_tokens, completion_tokens=completion_tokens)
+
+
+class _FakeOpenAIStreamClient:
+    """Minimal ``AsyncOpenAI`` stand-in whose ``create`` returns a chunk stream."""
+
+    def __init__(self, *streams: list[SimpleNamespace]) -> None:
+        self._streams = list(streams)
+        self.calls = 0
+        self.chat = SimpleNamespace(completions=SimpleNamespace(create=self._create))
+
+    async def _create(self, **kwargs: Any) -> AsyncIterator[SimpleNamespace]:
+        self.calls += 1
+        chunks = self._streams.pop(0)
+
+        async def gen() -> AsyncIterator[SimpleNamespace]:
+            for c in chunks:
+                yield c
+
+        return gen()
+
+
+# Usage arrives in a trailing chunk with empty ``choices``, after the chunk that
+# carries ``finish_reason``. This is what OpenAI sends with include_usage=True.
+_TRAILING_USAGE = [
+    _chunk("Hel"),
+    _chunk("lo"),
+    _chunk(finish_reason="stop"),
+    _chunk(usage=_usage(1000, 500), no_choices=True),
+]
+
+# Usage attached to the finish chunk itself, as some providers do.
+_USAGE_ON_FINISH = [
+    _chunk("Hel"),
+    _chunk("lo"),
+    _chunk(finish_reason="stop", usage=_usage(1000, 500)),
+]
+
+
+class TestDirectGatewayOpenAIStream:
+    async def _drain(self, gw: DirectGateway) -> list[StreamChunk]:
+        return [
+            c
+            async for c in gw.invoke_llm_stream(
+                new_messages=[Message(role=Role.USER, content="Hi")]
+            )
+        ]
+
+    @pytest.mark.parametrize(
+        "stream",
+        [_TRAILING_USAGE, _USAGE_ON_FINISH],
+        ids=["trailing-usage-chunk", "usage-on-finish-chunk"],
+    )
+    async def test_final_chunk_has_usage_and_cost_is_booked(
+        self, stream: list[SimpleNamespace]
+    ) -> None:
+        gw = DirectGateway(
+            llm_client=_FakeOpenAIStreamClient(stream), model="gpt-4o", provider="openai"
+        )
+        chunks = await self._drain(gw)
+
+        assert "".join(c.content for c in chunks) == "Hello"
+        finals = [c for c in chunks if c.finish_reason is not None]
+        assert len(finals) == 1
+        assert chunks[-1] is finals[0]
+        assert finals[0].finish_reason == "stop"
+        assert finals[0].input_tokens == 1000
+        assert finals[0].output_tokens == 500
+
+        expected = estimate_cost("gpt-4o", 1000, 500, "openai")
+        assert expected > 0
+        assert await gw.get_session_cost() == pytest.approx(expected)
+
+    async def test_cost_cap_blocks_the_next_stream(self) -> None:
+        one_call = estimate_cost("gpt-4o", 1000, 500, "openai")
+        client = _FakeOpenAIStreamClient(_TRAILING_USAGE, _TRAILING_USAGE)
+        gw = DirectGateway(
+            llm_client=client, model="gpt-4o", provider="openai", cost_cap_usd=one_call / 2
+        )
+
+        await self._drain(gw)  # soft cap: checked before the call, so this one runs
+
+        with pytest.raises(CostCapExceededError):
+            await self._drain(gw)
+        assert client.calls == 1
+
+    async def test_no_final_chunk_without_finish_reason(self) -> None:
+        gw = DirectGateway(
+            llm_client=_FakeOpenAIStreamClient([_chunk("partial")]),
+            model="gpt-4o",
+            provider="openai",
+        )
+        chunks = await self._drain(gw)
+
+        assert [c.content for c in chunks] == ["partial"]
+        assert all(c.finish_reason is None for c in chunks)

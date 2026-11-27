@@ -548,9 +548,11 @@ class DirectGateway:
         try:
             stream = await self._client.chat.completions.create(**kwargs)
             input_tokens = output_tokens = 0
+            finish_reason: str | None = None
             async for chunk in stream:
                 choice = chunk.choices[0] if chunk.choices else None
-                # Usage is populated on the final chunk by some providers
+                # Some providers attach usage to the finish chunk; OpenAI with
+                # include_usage sends it in a trailing chunk with empty choices.
                 if chunk.usage:
                     input_tokens = chunk.usage.prompt_tokens or 0
                     output_tokens = chunk.usage.completion_tokens or 0
@@ -559,7 +561,6 @@ class DirectGateway:
                     continue
 
                 delta_content = choice.delta.content or ""
-                finish_reason = choice.finish_reason
 
                 if delta_content:
                     yield StreamChunk(
@@ -568,16 +569,22 @@ class DirectGateway:
                         model=self._model,
                     )
 
-                if finish_reason:
-                    cost = _estimate_cost(self._model, input_tokens, output_tokens, self._provider)
-                    self._total_cost += cost
-                    yield StreamChunk(
-                        content="",
-                        finish_reason=finish_reason,
-                        model=self._model,
-                        input_tokens=input_tokens,
-                        output_tokens=output_tokens,
-                    )
+                if choice.finish_reason:
+                    finish_reason = choice.finish_reason
+
+            # Book cost and emit the final chunk only once the stream is
+            # exhausted, so a trailing usage-only chunk is counted. Booking at
+            # finish_reason recorded $0 and let streams slip past the cost cap.
+            if finish_reason is not None:
+                cost = _estimate_cost(self._model, input_tokens, output_tokens, self._provider)
+                self._total_cost += cost
+                yield StreamChunk(
+                    content="",
+                    finish_reason=finish_reason,
+                    model=self._model,
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens,
+                )
         except Exception as exc:
             self._classify_openai_error(exc)
 
