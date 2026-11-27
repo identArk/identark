@@ -41,6 +41,9 @@ Your agent code is **identical** in both environments. The switch is two lines.
 
 ## Quick start
 
+Looking for a specific provider, framework, or local setup? See the [example index](examples/README.md) for prerequisites and runnable scripts.
+
+
 ```bash
 pip install identark[openai]
 ```
