@@ -21,7 +21,8 @@ from __future__ import annotations
 import asyncio
 import json
 import uuid
-from contextlib import contextmanager
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager, contextmanager
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -79,10 +80,10 @@ class MockControlPlane:
         resp = AsyncMock()
         resp.status_code = status
         if json_data is not None:
-            resp.json = AsyncMock(return_value=json_data)
+            resp.json = MagicMock(return_value=json_data)
             resp.text = json.dumps(json_data)
         else:
-            resp.json = AsyncMock(return_value={})
+            resp.json = MagicMock(return_value={})
             resp.text = text or ""
         return resp
 
@@ -170,8 +171,8 @@ class MockControlPlane:
 
         return self._mock_response(200, {"success": True})
 
-    async def _request_file_url_handler(self) -> MagicMock:
-        """Handle POST /files/presigned-urls."""
+    async def _request_file_url_handler(self, payload: dict[str, Any]) -> MagicMock:
+        """Handle POST /files/presigned-urls, echoing the requested path and method."""
         self._request_count += 1
         await self._apply_latency()
 
@@ -184,8 +185,8 @@ class MockControlPlane:
             {
                 "url": f"https://s3.example.com/presigned/{uuid.uuid4()}",
                 "expires_at": "2025-12-31T23:59:59Z",
-                "method": "PUT",
-                "file_path": "/workspace/test.txt",
+                "method": payload["method"],
+                "file_path": payload["file_path"],
             },
         )
 
@@ -207,17 +208,28 @@ class MockControlPlane:
             # Route to appropriate handler based on method and path
             if method == "POST" and path == "/llm/invoke":
                 return await self._invoke_llm_handler()
-            elif method == "POST" and path == "/llm/stream":
-                return await self._invoke_llm_stream_handler()
             elif method == "POST" and path == "/messages/persist":
                 return await self._persist_messages_handler()
             elif method == "POST" and path == "/files/presigned-urls":
-                return await self._request_file_url_handler()
+                return await self._request_file_url_handler(kwargs["json"])
             elif method == "GET" and path == "/sessions/cost":
                 return await self._get_session_cost_handler()
             else:
                 # Fallback
                 raise ValueError(f"Unexpected request: {method} {path}")
 
-        with patch("httpx.AsyncClient.request", side_effect=mock_request):
+        @asynccontextmanager
+        async def mock_stream(
+            self_: Any, method: str, url: str, **kwargs: Any
+        ) -> AsyncIterator[Any]:
+            # ControlPlaneGateway streams via AsyncClient.stream(), not .request()
+            if method == "POST" and url == "/llm/stream":
+                yield await self._invoke_llm_stream_handler()
+            else:
+                raise ValueError(f"Unexpected stream request: {method} {url}")
+
+        with (
+            patch("httpx.AsyncClient.request", autospec=True, side_effect=mock_request),
+            patch("httpx.AsyncClient.stream", autospec=True, side_effect=mock_stream),
+        ):
             yield self

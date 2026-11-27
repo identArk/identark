@@ -9,6 +9,11 @@ Provides:
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from typing import Any
+from unittest.mock import patch
+
+import httpx
 import pytest
 
 from identark.gateways.control_plane import ControlPlaneGateway
@@ -19,6 +24,19 @@ from tests.integration.mock_server import MockControlPlane
 def pytest_configure(config: pytest.Config) -> None:
     """Register custom markers."""
     config.addinivalue_line("markers", "integration: integration test requiring mock server")
+
+
+@pytest.fixture(autouse=True)
+def _no_network() -> Iterator[None]:
+    """Fail loudly if a test reaches a real HTTP transport instead of a mock."""
+
+    async def refuse(self_: Any, request: httpx.Request) -> httpx.Response:
+        raise AssertionError(
+            f"integration test made a real request: {request.method} {request.url}"
+        )
+
+    with patch.object(httpx.AsyncHTTPTransport, "handle_async_request", refuse):
+        yield
 
 
 @pytest.fixture

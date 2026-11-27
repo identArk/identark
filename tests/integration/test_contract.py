@@ -42,7 +42,7 @@ class TestRequestPayloadFormat:
                 captured_requests.append(kwargs["json"])
             resp = MagicMock()
             resp.status_code = 200
-            resp.json = AsyncMock(return_value={
+            resp.json = MagicMock(return_value={
                 "message": {"role": "assistant", "content": "Test"},
                 "cost_usd": 0.001,
                 "model": "gpt-4o",
@@ -55,7 +55,7 @@ class TestRequestPayloadFormat:
             })
             return resp
 
-        with patch("httpx.AsyncClient.request", side_effect=mock_request):
+        with patch("httpx.AsyncClient.request", autospec=True, side_effect=mock_request):
             await gateway.invoke_llm([Message(role=Role.USER, content="Test")])
 
         # Verify request structure
@@ -85,7 +85,7 @@ class TestRequestPayloadFormat:
                 captured_requests.append(kwargs["json"])
             resp = MagicMock()
             resp.status_code = 200
-            resp.json = AsyncMock(return_value={
+            resp.json = MagicMock(return_value={
                 "message": {"role": "assistant", "content": "Test"},
                 "cost_usd": 0.001,
                 "model": "gpt-4o",
@@ -108,7 +108,7 @@ class TestRequestPayloadFormat:
             }
         ]
 
-        with patch("httpx.AsyncClient.request", side_effect=mock_request):
+        with patch("httpx.AsyncClient.request", autospec=True, side_effect=mock_request):
             await gateway.invoke_llm([Message(role=Role.USER, content="Test")], tools=tools)
 
         request = captured_requests[0]
@@ -135,7 +135,7 @@ class TestRequestPayloadFormat:
             captured_headers.append(dict(self_.headers))
             resp = MagicMock()
             resp.status_code = 200
-            resp.json = AsyncMock(return_value={
+            resp.json = MagicMock(return_value={
                 "message": {"role": "assistant", "content": "Test"},
                 "cost_usd": 0.001,
                 "model": "gpt-4o",
@@ -144,7 +144,7 @@ class TestRequestPayloadFormat:
             })
             return resp
 
-        with patch("httpx.AsyncClient.request", side_effect=mock_request):
+        with patch("httpx.AsyncClient.request", autospec=True, side_effect=mock_request):
             await gateway.invoke_llm([Message(role=Role.USER, content="Test")])
 
         headers = captured_headers[0]
@@ -168,7 +168,8 @@ class TestResponseParsing:
             url="https://api.identark.io/v1",
         )
 
-        async def mock_response(request: any) -> Response:
+        async def mock_response(self_: any, method: str, path: str, **kwargs: any) -> Response:
+            assert (method, path) == ("POST", "/llm/invoke")
             return Response(200, json={
                 "message": {
                     "role": "assistant",
@@ -185,10 +186,7 @@ class TestResponseParsing:
                 },
             })
 
-        router = mock_control_plane.mocked()
-        router.post("https://api.identark.io/v1/llm/invoke").mock(side_effect=mock_response)
-
-        with router:
+        with patch("httpx.AsyncClient.request", autospec=True, side_effect=mock_response):
             response = await gateway.invoke_llm([Message(role=Role.USER, content="Test")])
 
         assert response.message.content == "Complete answer"
@@ -211,7 +209,9 @@ class TestResponseParsing:
             url="https://api.identark.io/v1",
         )
 
-        async def mock_response(request: any) -> Response:
+        async def mock_response(self_: any, method: str, path: str, **kwargs: any) -> Response:
+            assert (method, path) == ("POST", "/files/presigned-urls")
+            assert kwargs["json"]["file_path"] == "/workspace/output.txt"
             return Response(200, json={
                 "url": "https://s3.aws.amazon.com/bucket/key?signature=xyz",
                 "expires_at": "2025-12-31T23:59:59Z",
@@ -219,12 +219,7 @@ class TestResponseParsing:
                 "file_path": "/workspace/output.txt",
             })
 
-        router = mock_control_plane.mocked()
-        router.post("https://api.identark.io/v1/files/presigned-urls").mock(
-            side_effect=mock_response
-        )
-
-        with router:
+        with patch("httpx.AsyncClient.request", autospec=True, side_effect=mock_response):
             url_obj = await gateway.request_file_url("/workspace/output.txt")
 
         assert url_obj.url == "https://s3.aws.amazon.com/bucket/key?signature=xyz"
@@ -369,7 +364,8 @@ class TestStreamingSSEFormat:
             url="https://api.identark.io/v1",
         )
 
-        async def mock_stream_request(
+        # AsyncClient.stream() is a plain call returning an async context manager.
+        def mock_stream_request(
             self_: any,
             method: str,
             path: str,
@@ -400,7 +396,7 @@ class TestStreamingSSEFormat:
             resp.aread = AsyncMock()
             return resp
 
-        with patch("httpx.AsyncClient.stream", side_effect=mock_stream_request):
+        with patch("httpx.AsyncClient.stream", autospec=True, side_effect=mock_stream_request):
             chunks = []
             async for chunk in gateway.invoke_llm_stream([Message(role=Role.USER, content="Test")]):
                 chunks.append(chunk)

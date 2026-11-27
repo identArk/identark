@@ -48,6 +48,35 @@ def _mock_openai_client() -> Any:
     return client
 
 
+def _openai_stream_chunk(
+    content: str | None = None,
+    finish_reason: str | None = None,
+    usage: tuple[int, int] | None = None,
+    *,
+    with_choice: bool = True,
+) -> Any:
+    """Build a ChatCompletionChunk-shaped mock as the OpenAI SDK streams them."""
+    choices = (
+        [MagicMock(delta=MagicMock(content=content), finish_reason=finish_reason)]
+        if with_choice
+        else []
+    )
+    return MagicMock(
+        choices=choices,
+        usage=(
+            MagicMock(prompt_tokens=usage[0], completion_tokens=usage[1]) if usage else None
+        ),
+    )
+
+
+def _as_stream(*chunks: Any) -> Any:
+    async def gen() -> Any:
+        for chunk in chunks:
+            yield chunk
+
+    return gen()
+
+
 @pytest.mark.integration
 class TestDirectGatewayBasics:
     """Test basic DirectGateway functionality."""
@@ -116,7 +145,7 @@ class TestConversationHistory:
             await gateway.invoke_llm([msg2])
 
             # Verify history was maintained
-            assert len(gateway._conversation_history) >= 2
+            assert len(gateway.history) >= 2
 
     @pytest.mark.asyncio
     async def test_persist_messages_adds_to_history(self) -> None:
@@ -135,7 +164,7 @@ class TestConversationHistory:
             ]
             await gateway.persist_messages(messages)
 
-            assert len(gateway._conversation_history) == 2
+            assert len(gateway.history) == 2
 
 
 @pytest.mark.integration
@@ -155,11 +184,11 @@ class TestCostTracking:
 
             # First call
             await gateway.invoke_llm([Message(role=Role.USER, content="Test 1")])
-            cost_after_1 = gateway._accumulated_cost
+            cost_after_1 = await gateway.get_session_cost()
 
             # Second call
             await gateway.invoke_llm([Message(role=Role.USER, content="Test 2")])
-            cost_after_2 = gateway._accumulated_cost
+            cost_after_2 = await gateway.get_session_cost()
 
             assert cost_after_2 > cost_after_1
 
@@ -181,18 +210,28 @@ class TestCostTracking:
 
     @pytest.mark.asyncio
     async def test_cost_cap_enforcement(self) -> None:
-        """Test that cost cap is enforced."""
+        """Test that cost cap is enforced.
+
+        The cap is checked before each call: the call that crosses it completes,
+        and the next one is refused without reaching the provider.
+        """
         with tempfile.TemporaryDirectory() as tmpdir:
             client = _mock_openai_client()
             gateway = DirectGateway(
                 llm_client=client,
                 model="gpt-4o-mini",
                 workspace_dir=tmpdir,
-                cost_cap_usd=0.0001,  # Very low cap
+                cost_cap_usd=0.00001,  # Below the ~$0.0000135 cost of one mock call
             )
 
-            with pytest.raises(CostCapExceededError):
+            await gateway.invoke_llm([Message(role=Role.USER, content="Test")])
+
+            with pytest.raises(CostCapExceededError) as exc_info:
                 await gateway.invoke_llm([Message(role=Role.USER, content="Test")])
+
+            assert exc_info.value.cap_usd == 0.00001
+            assert exc_info.value.consumed_usd >= 0.00001
+            assert client.chat.completions.create.await_count == 1
 
     @pytest.mark.asyncio
     async def test_reset_clears_cost_and_history(self) -> None:
@@ -207,14 +246,14 @@ class TestCostTracking:
 
             # Accumulate state
             await gateway.invoke_llm([Message(role=Role.USER, content="Test")])
-            assert gateway._accumulated_cost > 0
-            assert len(gateway._conversation_history) > 0
+            assert await gateway.get_session_cost() > 0
+            assert len(gateway.history) > 0
 
             # Reset
             gateway.reset()
 
-            assert gateway._accumulated_cost == 0.0
-            assert len(gateway._conversation_history) == 0
+            assert await gateway.get_session_cost() == 0.0
+            assert len(gateway.history) == 0
 
 
 @pytest.mark.integration
@@ -284,27 +323,14 @@ class TestStreaming:
         with tempfile.TemporaryDirectory() as tmpdir:
             client = _mock_openai_client()
 
-            # Mock streaming response
-            async def mock_stream() -> Any:
-                yield StreamChunk(
-                    content="Hello ",
-                    finish_reason=None,
-                    model="gpt-4o-mini",
+            # The OpenAI SDK streams ChatCompletionChunk objects, not StreamChunks
+            client.chat.completions.create = AsyncMock(
+                return_value=_as_stream(
+                    _openai_stream_chunk("Hello "),
+                    _openai_stream_chunk("world!"),
+                    _openai_stream_chunk(None, "stop", usage=(10, 20)),
                 )
-                yield StreamChunk(
-                    content="world!",
-                    finish_reason=None,
-                    model="gpt-4o-mini",
-                )
-                yield StreamChunk(
-                    content="",
-                    finish_reason="stop",
-                    model="gpt-4o-mini",
-                    input_tokens=10,
-                    output_tokens=20,
-                )
-
-            client.chat.completions.create = AsyncMock(return_value=mock_stream())
+            )
 
             gateway = DirectGateway(
                 llm_client=client,
@@ -319,29 +345,46 @@ class TestStreaming:
                 chunks.append(chunk)
 
             assert len(chunks) >= 2
+            assert all(isinstance(c, StreamChunk) for c in chunks)
             assert chunks[0].content == "Hello "
 
     @pytest.mark.asyncio
-    async def test_streaming_final_chunk_has_metadata(self) -> None:
+    @pytest.mark.parametrize(
+        "provider_chunks",
+        [
+            pytest.param(
+                lambda: _as_stream(
+                    _openai_stream_chunk("Response"),
+                    _openai_stream_chunk(None, "stop", usage=(5, 10)),
+                ),
+                id="usage-on-finish-chunk",
+            ),
+            pytest.param(
+                # What OpenAI sends with stream_options={"include_usage": True}:
+                # usage arrives in a separate trailing chunk with empty choices,
+                # after the chunk carrying finish_reason.
+                lambda: _as_stream(
+                    _openai_stream_chunk("Response"),
+                    _openai_stream_chunk(None, "stop"),
+                    _openai_stream_chunk(usage=(5, 10), with_choice=False),
+                ),
+                id="openai-trailing-usage-chunk",
+                marks=pytest.mark.xfail(
+                    strict=True,
+                    reason=(
+                        "DirectGateway._stream_openai emits the final StreamChunk (and "
+                        "books cost) when it sees finish_reason, before OpenAI's trailing "
+                        "usage-only chunk arrives, so token counts and streamed cost are 0"
+                    ),
+                ),
+            ),
+        ],
+    )
+    async def test_streaming_final_chunk_has_metadata(self, provider_chunks: Any) -> None:
         """Test that final chunk includes token counts."""
         with tempfile.TemporaryDirectory() as tmpdir:
             client = _mock_openai_client()
-
-            async def mock_stream() -> Any:
-                yield StreamChunk(
-                    content="Response",
-                    finish_reason=None,
-                    model="gpt-4o-mini",
-                )
-                yield StreamChunk(
-                    content="",
-                    finish_reason="stop",
-                    model="gpt-4o-mini",
-                    input_tokens=5,
-                    output_tokens=10,
-                )
-
-            client.chat.completions.create = AsyncMock(return_value=mock_stream())
+            client.chat.completions.create = AsyncMock(return_value=provider_chunks())
 
             gateway = DirectGateway(
                 llm_client=client,

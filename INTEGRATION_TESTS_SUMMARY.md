@@ -19,7 +19,7 @@ A comprehensive integration test suite has been created for the IdentArk SDK to 
 
 3. **tests/integration/mock_server.py** (204 lines)
    - MockControlPlane implementation
-   - Mocks httpx.AsyncClient.request without external dependencies
+   - Mocks httpx.AsyncClient.request and .stream without external dependencies
    - Error injection, latency simulation, request tracking
    - Supports all 5 control plane endpoints
 

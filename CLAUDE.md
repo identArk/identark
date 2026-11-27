@@ -70,7 +70,7 @@ tests/
 │   ├── test_exceptions.py
 │   ├── test_gateways.py
 │   └── test_integrations.py
-└── integration/             # Requires live identark-cloud (skip in CI by default)
+└── integration/             # In-process mock control plane, no server needed (CI runs unit only)
 ```
 
 ---
