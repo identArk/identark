@@ -8,6 +8,15 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- **Streamed OpenAI calls now book their cost.** With `include_usage`, OpenAI
+  sends token usage in a trailing chunk after the one that carries
+  `finish_reason`. `DirectGateway.invoke_llm_stream` booked cost at
+  `finish_reason`, so streamed OpenAI calls added $0 to `get_session_cost()`,
+  the final chunk reported 0 tokens, and the soft cost cap never tripped on
+  streaming. Cost and the final chunk now come after the stream ends. Expect
+  streamed calls to start counting toward the cost cap.
+
 ---
 
 ## [1.4.0] — 2026-11-23
