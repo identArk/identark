@@ -69,17 +69,17 @@ ruff check identark/ tests/
 
 ### A warning about plain `pytest`
 
-**Running `pytest` with no path also runs `tests/integration/`, and those tests currently fail —
-around 40 of them — unless the mock control plane in `tests/integration/mock_server.py` is
-running.** They fail on an unmodified `main` too, so if you see them, you have not broken
+**Running `pytest` with no path also runs `tests/integration/`, and around 40 of those tests
+currently fail.** They fail on an unmodified `main` too, so if you see them, you have not broken
 anything.
 
-CI only runs `tests/unit/`, which is why it stays green. Use `pytest tests/unit/` for day-to-day
-work, and see `tests/integration/README.md` if you want to run the integration suite properly.
+Nothing needs to be running for them: the mock control plane is built in-process by
+`tests/integration/conftest.py`. The failures are bugs in the test harness itself, plus some
+tests that have drifted from the SDK.
 
-This is a wart, not a design decision. [#19](https://github.com/identArk/identark/issues/19)
-tracks making those tests *skip* rather than fail when their dependency is absent, and it is
-labelled `good first issue` if you would like to fix it.
+CI only runs `tests/unit/`, which is why it stays green. Use `pytest tests/unit/` for day-to-day
+work. [#19](https://github.com/identArk/identark/issues/19) tracks fixing the integration suite,
+and this note goes away once it passes.
 
 ---
 
