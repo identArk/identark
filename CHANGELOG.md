@@ -12,7 +12,9 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **Gemini Flash pricing.** `gemini-3.8-flash` and `gemini-3.6-flash` now use the
   2027-01-01 paid-tier rates of $1.50 input / $7.50 output per 1M tokens
   (previously $0.75 / $3.75), so default-model cost estimates do not undercount
-  after the price increase.
+  after the price increase. Note: these rates take effect 2027-01-01; until
+  2026-12-31 Google still charges $0.75 / $3.75, so estimates for these two
+  models are twice the real cost until then.
 
 ---
 
