@@ -61,7 +61,10 @@ logger = logging.getLogger("identark.integrations.gemini")
 # Checked 2026-11-23 against https://ai.google.dev/gemini-api/docs/pricing
 # gemini-4-carbon and gemini-4-argon use the 2026-12-01 rates; until 2026-11-30
 # Google charges $2 / $10, so they are overestimated until then.
-# gemini-3.8-flash and gemini-3.6-flash double on 2027-01-01 (input 1.50, output 7.50).
+# The rates below for gemini-3.8-flash and gemini-3.6-flash take effect
+# 2027-01-01 (input 1.50, output 7.50). Until 2026-12-31 Google charges
+# $0.75 / $3.75, so estimates for these two models are twice the real cost
+# until then (overestimating is the safe direction).
 # gemini-3.1-pro-preview is the rate for prompts up to 200k tokens.
 DEFAULT_MODEL = "gemini-3.8-flash"
 
@@ -72,8 +75,8 @@ _GEMINI_PRICING: dict[str, dict[str, float]] = {
     "gemini-4-neon": {"input": 3.00, "output": 15.00},
     "gemini-4-hydrogen": {"input": 1.50, "output": 7.50},
     # Flash
-    "gemini-3.8-flash": {"input": 0.75, "output": 3.75},
-    "gemini-3.6-flash": {"input": 0.75, "output": 3.75},
+    "gemini-3.8-flash": {"input": 1.50, "output": 7.50},
+    "gemini-3.6-flash": {"input": 1.50, "output": 7.50},
     # Flash-Lite
     "gemini-3.5-flash-lite": {"input": 0.30, "output": 2.50},
     "gemini-3.1-flash-lite": {"input": 0.25, "output": 1.50},

@@ -37,12 +37,12 @@ print(f"Cost: ${response.cost_usd:.6f}")
 | `gemini-4-neon` | Fast end-to-end tasks, 1M-token context | $3.00 in / $15.00 out |
 | `gemini-4-hydrogen` | Everyday coding and agentic work | $1.50 in / $7.50 out |
 | `gemini-3.1-pro-preview` | Complex reasoning, long context | $2.00 in / $12.00 out |
-| `gemini-3.8-flash` (default) | Newest Flash, long-horizon agents | $0.75 in / $3.75 out |
-| `gemini-3.6-flash` | Fast responses, general use | $0.75 in / $3.75 out |
+| `gemini-3.8-flash` (default) | Newest Flash, long-horizon agents | $1.50 in / $7.50 out |
+| `gemini-3.6-flash` | Fast responses, general use | $1.50 in / $7.50 out |
 | `gemini-3.5-flash-lite` | Cheaper, simple tasks | $0.30 in / $2.50 out |
 | `gemini-3.1-flash-lite` | Cheapest, simple tasks | $0.25 in / $1.50 out |
 
-Prices checked 2026-11-23 on Google's pricing page (paid tier, standard; the Pro rate is for prompts up to 200k tokens). `gemini-4-carbon` and `gemini-4-argon` are listed at their 2026-12-01 rates; until 2026-11-30 Google charges $2.00 in / $10.00 out, so estimates for them run high until then. `gemini-3.8-flash` and `gemini-3.6-flash` double on 2027-01-01. A model not in this table is estimated at the most expensive rate above.
+Prices checked 2026-11-23 on Google's pricing page (paid tier, standard; the Pro rate is for prompts up to 200k tokens). `gemini-4-carbon` and `gemini-4-argon` are listed at their 2026-12-01 rates; until 2026-11-30 Google charges $2.00 in / $10.00 out, so estimates for them run high until then. The `gemini-3.8-flash` and `gemini-3.6-flash` rates above take effect 2027-01-01; until 2026-12-31 Google charges $0.75 in / $3.75 out, so cost estimates for these two models are twice the real cost until then (overestimating is the safe direction). A model not in this table is estimated at the most expensive rate above.
 
 ## Configuration Options
 
