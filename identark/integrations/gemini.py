@@ -72,8 +72,8 @@ _GEMINI_PRICING: dict[str, dict[str, float]] = {
     "gemini-4-neon": {"input": 3.00, "output": 15.00},
     "gemini-4-hydrogen": {"input": 1.50, "output": 7.50},
     # Flash
-    "gemini-3.8-flash": {"input": 0.75, "output": 3.75},
-    "gemini-3.6-flash": {"input": 0.75, "output": 3.75},
+    "gemini-3.8-flash": {"input": 1.50, "output": 7.50},
+    "gemini-3.6-flash": {"input": 1.50, "output": 7.50},
     # Flash-Lite
     "gemini-3.5-flash-lite": {"input": 0.30, "output": 2.50},
     "gemini-3.1-flash-lite": {"input": 0.25, "output": 1.50},
